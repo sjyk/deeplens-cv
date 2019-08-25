@@ -72,18 +72,37 @@ def unstack_block(sfile, path):
 	tf.extractall(path)
 	return [os.path.join(path, n) for n in tf.getnames()]
 
-def write_video(vstream, output, encoding):
+
+def write_video(vstream, \
+				output, \
+				encoding, \
+				scratch = '/tmp/', \
+				frame_rate=30.0, \
+				header_cmp=RAW):
 	"""Writes a video to disk from a stream
 	"""
 	# Define the codec and create VideoWriter object
 	fourcc = cv2.VideoWriter_fourcc(*encoding)
-	out = cv2.VideoWriter(output,fourcc, 30.0, (1280, 720),True)
+	start = True
+	tags = []
 
+	#tmp file for the video
+	r_name = ''.join(random.choice(string.ascii_lowercase) for i in range(10))
+	file_name = os.path.join(scratch, r_name) +'.avi'
+	
 	for frame in vstream:
+
+		if start:
+			out = cv2.VideoWriter(file_name,fourcc, frame_rate, (vstream.width, vstream.height),True)
+			start = False
+
 		out.write(frame['data'])
+		tags.append(frame['tags'])
 
-	return output
 
-
+	file = write_block(tags, scratch)
+	final = stack_block([file_name, file], output, compression=header_cmp)	
+			
+	return final
 
 

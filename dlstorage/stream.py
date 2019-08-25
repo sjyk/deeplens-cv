@@ -34,6 +34,11 @@ class VideoStream():
 		"""
 
 		self.cap = cv2.VideoCapture(self.src)
+
+		#set sizes after the video is opened
+		self.width = int(self.cap.get(3))   # float
+		self.height = int(self.cap.get(4)) # float
+
 		self.frame_count = 0
 
 		return self

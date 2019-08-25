@@ -101,7 +101,8 @@ def write_video(vstream, \
 
 
 	file = write_block(tags, scratch)
-	final = stack_block([file_name, file], output, compression=header_cmp)	
+	header = stack_block([file], os.path.join(scratch, r_name)+'.head', compression=header_cmp)	
+	final = stack_block([file_name, header], output, compression=RAW)	
 			
 	return final
 

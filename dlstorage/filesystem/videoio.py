@@ -7,6 +7,7 @@ from dlstorage.stream import *
 
 import cv2
 import os
+import time
 
 
 def write_video(vstream, \
@@ -157,3 +158,31 @@ def read_if(output, condition, scratch = DEFAULT_TEMP):
 			break
 
 	return streams
+
+
+
+def diag_sizeof(output):
+	seq = 0
+	size = 0
+
+	while True:
+
+		try:
+			file = add_ext(output, '.seq', seq) 
+			size += os.path.getsize(file)
+			seq += 1
+
+		except FileNotFoundError:
+			break
+
+	return size
+
+
+def diag_timeof(vstreams):
+	now = time.time()
+
+	for vstream in vstreams:
+		list(vstream) #materialize
+
+	return (time.time() - now)
+

@@ -124,9 +124,12 @@ def write_video(vstream, \
 		out.write(frame['data'])
 		tags.append(frame['tags'])
 
-	_build_fmt_file(tags, file_name, scratch, output, header_cmp, RAW)
-		
-	return final
+	return _build_fmt_file(tags, \
+						   file_name, \
+						   scratch, \
+						   output, 
+						   header_cmp, \
+						   RAW)
 
 
 
@@ -148,6 +151,8 @@ def write_video_clips(vstream, \
 
 	#tmp file for the video
 	r_name = _get_rnd_strng()
+
+	output_files = []
 	
 	for frame in vstream:
 
@@ -159,7 +164,11 @@ def write_video_clips(vstream, \
 		tags.append(frame['tags'])
 
 		if counter == clip_size:
-			_build_fmt_file(tags, file_name, scratch, output + '.'+str(seq), header_cmp, RAW)
+			output_files.append(_build_fmt_file(tags, \
+												file_name, \
+												scratch, output + '.'+str(seq), \
+												header_cmp, \
+												RAW))
 
 			counter = 0
 			seq += 1
@@ -168,5 +177,5 @@ def write_video_clips(vstream, \
 
 		counter += 1
 		
-	return final
+	return output_files
 

@@ -102,9 +102,8 @@ def _build_fmt_file(header_data, \
 	"""Helper method to write the archive file with the headers and the data
 	"""
 
-	file = write_block(header_data, scratch)
+	file = write_block(header_data, path)
 	r_name = _get_rnd_strng()
-
 
 	header = stack_block([file],
 						 _add_ext(os.path.join(path, r_name), '.head'), 
@@ -117,11 +116,13 @@ def _build_fmt_file(header_data, \
 def write_video(vstream, \
 				output, \
 				encoding, \
+				header,
 				scratch = '/tmp/', \
 				frame_rate=30.0, \
 				header_cmp=RAW):
 	"""Writes a video to disk from a stream
 	"""
+
 	# Define the codec and create VideoWriter object
 	fourcc = cv2.VideoWriter_fourcc(*encoding)
 	start = True
@@ -137,21 +138,23 @@ def write_video(vstream, \
 			out = cv2.VideoWriter(file_name,fourcc, frame_rate, (vstream.width, vstream.height),True)
 			start = False
 
+		header.update(frame)
+
 		out.write(frame['data'])
 		tags.append(frame['tags'])
 
-	return _build_fmt_file(tags, \
+	return _build_fmt_file(header.getHeader(), \
 						   file_name, \
 						   scratch, \
-						   output, 
+						   _add_ext(output, '.seq', 0), 
 						   header_cmp, \
 						   RAW)
-
 
 
 def write_video_clips(vstream, \
 						output, \
 						encoding, \
+						header,
 						clip_size,
 						scratch = '/tmp/', \
 						frame_rate=30.0, \
@@ -173,16 +176,15 @@ def write_video_clips(vstream, \
 	for frame in vstream:
 
 		if counter == 0:
-
-			
 			file_name = _add_ext(os.path.join(scratch, r_name), '.avi', seq)
 			out = cv2.VideoWriter(file_name,fourcc, frame_rate, (vstream.width, vstream.height),True)
 
 		out.write(frame['data'])
 		tags.append(frame['tags'])
+		header.update(frame)
 
 		if counter == clip_size:
-			output_files.append(_build_fmt_file(tags, \
+			output_files.append(_build_fmt_file(header.getHeader(), \
 												file_name, \
 												scratch, \
 												_add_ext(output, '.seq', seq), \
@@ -192,7 +194,6 @@ def write_video_clips(vstream, \
 			counter = 0
 			seq += 1
 			tags = []
-
 
 		counter += 1
 		

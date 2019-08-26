@@ -49,7 +49,7 @@ class TestTagger(VideoTransform):
 
 	def _get_tags(self, img):
 		tags = []
-		label_set = {}
+		
 		for i in range(10):
 			label = random.choice(string.ascii_lowercase)
 			bb = (int(random.random()*self.vstream.width),
@@ -57,9 +57,8 @@ class TestTagger(VideoTransform):
 			      int(random.random()*self.vstream.width),
 			      int(random.random()*self.vstream.height))
 			tags.append((label, bb))
-			label_set.add(label)
 
-		return (sorted(list(label_set)), tags)
+		return tags
 
 	def __next__(self):
 		out = next(self.input_iter)

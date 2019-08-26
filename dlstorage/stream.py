@@ -52,7 +52,7 @@ class VideoStream():
 
 		   	if ret:
 		   		self.frame_count += 1
-		   		return {'data': frame}
+		   		return {'data': frame, 'frame': (self.frame_count - 1)}
 
 		   	else:
 		   		raise StopIteration("Iterator is closed")

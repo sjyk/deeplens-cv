@@ -14,6 +14,10 @@ GZ,BZ2,RAW = 'w:gz','w:bz2','w'
 #encoding constants
 XVID, DIVX, H264, MP4V = 'XVID', 'DIVX', 'X264', 'FMP4'
 
+def _get_rnd_strng():
+	return ''.join(random.choice(string.ascii_lowercase) for i in range(10))
+
+
 def write_block(data, path):
 	"""Writes a dictionary of serializable data to a file.
 
@@ -22,7 +26,7 @@ def write_block(data, path):
 	"""
 
 	#generate a random temp file
-	r_name = ''.join(random.choice(string.ascii_lowercase) for i in range(10))
+	r_name = _get_rnd_strng()
 	file_name = os.path.join(path, r_name)
 
 	#open the file
@@ -73,6 +77,20 @@ def unstack_block(sfile, path):
 	return [os.path.join(path, n) for n in tf.getnames()]
 
 
+def _build_fmt_file(header_data, \
+					video, \
+					path, \
+					output, \
+					header_cmp,\
+					meta_cmp):
+
+	file = write_block(header_data, scratch)
+	r_name = _get_rnd_strng()
+	header = stack_block([file], os.path.join(path, r_name)+'.head', compression=header_cmp)	
+	return stack_block([video, header], output, compression=meta_cmp)
+
+
+
 def write_video(vstream, \
 				output, \
 				encoding, \
@@ -87,7 +105,7 @@ def write_video(vstream, \
 	tags = []
 
 	#tmp file for the video
-	r_name = ''.join(random.choice(string.ascii_lowercase) for i in range(10))
+	r_name = _get_rnd_strng()
 	file_name = os.path.join(scratch, r_name) +'.avi'
 	
 	for frame in vstream:
@@ -99,11 +117,49 @@ def write_video(vstream, \
 		out.write(frame['data'])
 		tags.append(frame['tags'])
 
-
-	file = write_block(tags, scratch)
-	header = stack_block([file], os.path.join(scratch, r_name)+'.head', compression=header_cmp)	
-	final = stack_block([file_name, header], output, compression=RAW)	
-			
+	_build_fmt_file(tags, file_name, scratch, output, header_cmp, RAW)
+		
 	return final
 
+
+
+def write_video_clips(vstream, \
+						output, \
+						encoding, \
+						clip_size,
+						scratch = '/tmp/', \
+						frame_rate=30.0, \
+						header_cmp=RAW):
+	"""Writes a video to disk from a stream
+	"""
+
+	# Define the codec and create VideoWriter object
+	fourcc = cv2.VideoWriter_fourcc(*encoding)
+	counter = 0
+	seq = 0
+	tags = []
+
+	#tmp file for the video
+	r_name = _get_rnd_strng()
+	
+	for frame in vstream:
+
+		if counter == 0:
+			file_name = os.path.join(scratch, r_name) +'.' + str(seq) +'.avi'
+			out = cv2.VideoWriter(file_name,fourcc, frame_rate, (vstream.width, vstream.height),True)
+
+		out.write(frame['data'])
+		tags.append(frame['tags'])
+
+		if counter == clip_size:
+			_build_fmt_file(tags, file_name, scratch, output + '.'+str(seq), header_cmp, RAW)
+
+			counter = 0
+			seq += 1
+			tags = []
+
+
+		counter += 1
+		
+	return final
 

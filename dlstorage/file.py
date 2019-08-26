@@ -1,4 +1,9 @@
-"""This module contains the basic file I/O methods
+"""file.py contains the basic file I/O methods in the deeplens storage manager. It
+   provies the basic routines for compressing and formatting video files on disk.
+   
+   The basic file format is as follows:
+       * headers (labels/bounding boxes of objects in a particular frame), compressed in gzip or bzip2
+       * video (encoded in a supported encoding format)
 """
 
 import pickle
@@ -83,6 +88,8 @@ def _build_fmt_file(header_data, \
 					output, \
 					header_cmp,\
 					meta_cmp):
+	"""Helper method to write the archive file with the headers and the data
+	"""
 
 	file = write_block(header_data, scratch)
 	r_name = _get_rnd_strng()
@@ -130,7 +137,7 @@ def write_video_clips(vstream, \
 						scratch = '/tmp/', \
 						frame_rate=30.0, \
 						header_cmp=RAW):
-	"""Writes a video to disk from a stream
+	"""Writes a video to disk from a stream in clips of a specified size
 	"""
 
 	# Define the codec and create VideoWriter object

@@ -22,6 +22,17 @@ XVID, DIVX, H264, MP4V = 'XVID', 'DIVX', 'X264', 'FMP4'
 def _get_rnd_strng():
 	return ''.join(random.choice(string.ascii_lowercase) for i in range(10))
 
+def _add_ext(name, ext, seq=-1):
+
+	#add period if not
+	if '.' not in ext[0]:
+		ext = '.' + ext 
+
+	if seq != -1:
+		ext = str(seq) + ext 
+	
+	return name + ext
+
 
 def write_block(data, path):
 	"""Writes a dictionary of serializable data to a file.
@@ -93,7 +104,12 @@ def _build_fmt_file(header_data, \
 
 	file = write_block(header_data, scratch)
 	r_name = _get_rnd_strng()
-	header = stack_block([file], os.path.join(path, r_name)+'.head', compression=header_cmp)	
+
+
+	header = stack_block([file],
+						 _add_ext(os.path.join(path, r_name), '.head'), 
+						 compression=header_cmp)	
+
 	return stack_block([video, header], output, compression=meta_cmp)
 
 
@@ -113,7 +129,7 @@ def write_video(vstream, \
 
 	#tmp file for the video
 	r_name = _get_rnd_strng()
-	file_name = os.path.join(scratch, r_name) +'.avi'
+	file_name = _add_ext(os.path.join(scratch, r_name), '.avi')
 	
 	for frame in vstream:
 
@@ -157,7 +173,9 @@ def write_video_clips(vstream, \
 	for frame in vstream:
 
 		if counter == 0:
-			file_name = os.path.join(scratch, r_name) +'.' + str(seq) +'.avi'
+
+			
+			file_name = _add_ext(os.path.join(scratch, r_name), '.avi', seq)
 			out = cv2.VideoWriter(file_name,fourcc, frame_rate, (vstream.width, vstream.height),True)
 
 		out.write(frame['data'])
@@ -166,7 +184,8 @@ def write_video_clips(vstream, \
 		if counter == clip_size:
 			output_files.append(_build_fmt_file(tags, \
 												file_name, \
-												scratch, output + '.'+str(seq), \
+												scratch, \
+												_add_ext(output, '.seq', seq), \
 												header_cmp, \
 												RAW))
 

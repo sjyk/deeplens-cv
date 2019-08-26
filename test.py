@@ -8,4 +8,4 @@ v = VideoStream(0, 300)
 v = v[TestTagger()]
 
 write_video_clips(v, 'bear', MP4V, ObjectHeader(), 50)
-print(read_if('bear', lambda x: True ))
+print(read_if('bear', startsBefore(10)))

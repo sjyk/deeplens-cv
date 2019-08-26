@@ -18,6 +18,8 @@ class Header(object):
 		raise NotImplemented("All headers must implement a reset call")
 
 
+
+
 class TimeHeader(Header):
 	"""TimeHeader represents the most basic header type
 	that accounts for temporally segmented clips.
@@ -40,6 +42,8 @@ class TimeHeader(Header):
 	def reset(self):
 		self.start = float("inf")
 		self.end = -1
+
+
 
 
 class ObjectHeader(TimeHeader):
@@ -79,4 +83,32 @@ class ObjectHeader(TimeHeader):
 		super(ObjectHeader, self).reset()
 
 
+
+#language constructs
+def TRUE(x):
+	return True
+
+def FALSE(x):
+	return False
+
+def hasLabel(l):
+	return lambda x: l in x['label_set']
+
+def startsBefore(time):
+	return lambda x: time >= x['start']
+
+def startsAfter(time):
+	return lambda x: time < x['start']
+
+def endsBefore(time):
+	return lambda x: time >= x['end']
+
+def endsAfter(time):
+	return lambda x: time < x['end']
+
+def AND(f1, f2):
+	return lambda x: f1(x) and f2(x)
+
+def OR(f1, f2):
+	return lambda x: f1(x) or f2(x)
 

@@ -5,8 +5,13 @@ the database group (chidata).
 debug.py defines some primitives that are useful for debuging and evaluating
 performance.
 """
-from xform import VideoTransform
+from dlstorage.xform import VideoTransform
 from dlstorage.filesystem.file import add_ext
+
+import random
+import string
+import time
+import os
 
 """Calculates the size of files on disk for a particular cached stream
 """

@@ -54,16 +54,22 @@ def add_ext(name, ext, seq=-1):
 
 
 
-def write_block(data, path):
+def write_block(data, path, name=None):
 	"""Writes a dictionary of serializable data to a file.
 
 	Args:  
 		data (dict) - dictionary
 		path (string)- a temp directory path to write to
+		name (string) - optional write to a specific file
 	"""
 
 	#generate a random temp file
-	r_name = get_rnd_strng()
+	if name == None:
+		r_name = get_rnd_strng()
+		
+	else:
+		r_name = name
+
 	file_name = os.path.join(path, r_name)
 
 	#open the file

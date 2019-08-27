@@ -1,4 +1,9 @@
-"""This module handles reading and writing videos
+"""This file is part of DeepLens which is released under MIT License and 
+is copyrighted by the University of Chicago. This project is developed by
+the database group (chidata).
+
+videoio.py uses opencv (cv2) to read and write files to disk. It contains
+primitives to encode and decode archived and regular video formats.
 """
 
 from dlstorage.filesystem.file import *
@@ -10,6 +15,7 @@ import os
 import time
 
 
+
 def write_video(vstream, \
 				output, \
 				encoding, \
@@ -17,7 +23,18 @@ def write_video(vstream, \
 				scratch= DEFAULT_TEMP, \
 				frame_rate=DEFAULT_FRAME_RATE, \
 				header_cmp=RAW):
-	"""Writes a video to disk from a stream
+	"""write_video takes a stream of video and writes
+	it to disk. It includes the specified header 
+	information as a part of the video file.
+
+	Args:
+		vstream - a videostream or videotransform
+		output - output file
+		header - a header object that constructs the right
+		header information
+		scratch - temporary space to use
+		frame_rate - the frame_rate of the video
+		header_cmp - compression if any on the header
 	"""
 
 	# Define the codec and create VideoWriter object
@@ -58,6 +75,8 @@ def write_video(vstream, \
 
 
 
+
+
 def write_video_clips(vstream, \
 						output, \
 						encoding, \
@@ -66,7 +85,21 @@ def write_video_clips(vstream, \
 						scratch = DEFAULT_TEMP, \
 						frame_rate=DEFAULT_FRAME_RATE, \
 						header_cmp=RAW):
-	"""Writes a video to disk from a stream in clips of a specified size
+	"""write_video_clips takes a stream of video and writes
+	it to disk. It includes the specified header 
+	information as a part of the video file. The difference is that 
+	it writes a video to disk from a stream in clips of a specified 
+	size
+
+	Args:
+		vstream - a videostream or videotransform
+		output - output file
+		header - a header object that constructs the right
+		header information
+		clip_size - how many frames in each clip
+		scratch - temporary space to use
+		frame_rate - the frame_rate of the video
+		header_cmp - compression if any on the header
 	"""
 
 	# Define the codec and create VideoWriter object
@@ -132,6 +165,14 @@ def write_video_clips(vstream, \
 
 
 def read_if(output, condition, scratch = DEFAULT_TEMP):
+	"""read_if takes a written archive file and reads only
+	those video clips that satisfy a certain header condition.
+
+	Args:
+		output (string) - archive file
+		condition (lambda) - a condition on the header content
+		scratch (string) - a temporary file path
+	"""
 	seq = 0
 	streams = []
 
@@ -158,31 +199,3 @@ def read_if(output, condition, scratch = DEFAULT_TEMP):
 			break
 
 	return streams
-
-
-
-def diag_sizeof(output):
-	seq = 0
-	size = 0
-
-	while True:
-
-		try:
-			file = add_ext(output, '.seq', seq) 
-			size += os.path.getsize(file)
-			seq += 1
-
-		except FileNotFoundError:
-			break
-
-	return size
-
-
-def diag_timeof(vstreams):
-	now = time.time()
-
-	for vstream in vstreams:
-		list(vstream) #materialize
-
-	return (time.time() - now)
-

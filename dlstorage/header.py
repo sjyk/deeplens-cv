@@ -1,11 +1,15 @@
-"""header.py defines the formats for the headers that
-denote which clips have what objects.
+"""This file is part of DeepLens which is released under MIT License and 
+is copyrighted by the University of Chicago. This project is developed by
+the database group (chidata).
+
+header.py defines the formats for the headers that denote which clips have 
+what objects.
 """
 
 #abstract header class
 class Header(object):
 	'''
-	Just a place holder for error checking
+	Just a placeholder for error checking
 	'''
 
 	def update(self, frame):
@@ -81,6 +85,7 @@ class ObjectHeader(TimeHeader):
 		self.label_set = set()
 		self.bounding_boxes = []
 		super(ObjectHeader, self).reset()
+
 
 
 

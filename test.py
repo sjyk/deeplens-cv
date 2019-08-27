@@ -5,9 +5,9 @@ from dlstorage.xform import *
 from dlstorage.header import *
 from dlstorage.debug import *
 
-v = VideoStream(0, 100)
+v = VideoStream(0, 10)
 v = v[TestTagger()]
 
-write_video_clips(v, 'bear', MP4V, ObjectHeader(), 50)
+write_video_clips(v, 'bear', MP4V, ObjectHeader(), 5)
 print(timeof(read_if('bear', TRUE)))
 print(sizeof('bear'))

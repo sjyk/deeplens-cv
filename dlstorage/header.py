@@ -39,7 +39,6 @@ class TimeHeader(Header):
 		self.end = int(max(self.end, frame['frame']))
 
 	def getHeader(self):
-		llist = sorted(list(self.label_set))
 		return {'start': self.start, 
 				'end': self.end}
 

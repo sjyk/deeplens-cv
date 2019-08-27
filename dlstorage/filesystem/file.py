@@ -66,11 +66,11 @@ def write_block(data, path, name=None):
 	#generate a random temp file
 	if name == None:
 		r_name = get_rnd_strng()
-		
+		file_name = os.path.join(path, r_name)
 	else:
-		r_name = name
+		file_name = name
 
-	file_name = os.path.join(path, r_name)
+	
 
 	#open the file
 	f = open(file_name, 'wb')

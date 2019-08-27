@@ -9,6 +9,7 @@ primitives to encode and decode archived and regular video formats.
 from dlstorage.filesystem.file import *
 from dlstorage.constants import *
 from dlstorage.stream import *
+from dlstorage.header import TimeHeader
 
 import cv2
 import os
@@ -47,6 +48,8 @@ def write_video(vstream, \
 	seg_name = os.path.join(scratch, r_name)
 
 	file_name = add_ext(seg_name, AVI)
+
+	global_time_header = TimeHeader()
 	
 	for frame in vstream:
 
@@ -64,13 +67,21 @@ def write_video(vstream, \
 		out.write(frame['data'])
 		tags.append(frame['tags'])
 
-	return build_fmt_file(header.getHeader(), \
+		global_time_header.update(frame)
+
+
+	seg_start_file = write_block(global_time_header.getHeader(), \
+									None ,\
+									add_ext(output, '.start'))
+
+	return [seg_start_file, \
+			build_fmt_file(header.getHeader(), \
 						   file_name, \
 						   scratch, \
 						   add_ext(output, '.seq', 0), 
 						   header_cmp, \
 						   RAW,\
-						   seg_name)
+						   seg_name)]
 
 
 
@@ -107,7 +118,9 @@ def write_video_clips(vstream, \
 	seq = 0
 
 	output_files = []
-	
+
+	global_time_header = TimeHeader()
+
 	for frame in vstream:
 
 		if counter == 0:
@@ -127,6 +140,7 @@ def write_video_clips(vstream, \
 
 		out.write(frame['data'])
 		header.update(frame)
+		global_time_header.update(frame)
 
 		if counter == clip_size:
 			output_files.append(build_fmt_file(header.getHeader(), \
@@ -158,7 +172,12 @@ def write_video_clips(vstream, \
 
 		header.reset()
 		out.release()
-		
+	
+
+	output_files.append(write_block(global_time_header.getHeader(), \
+									None ,\
+									add_ext(output, '.start')))
+
 	return output_files
 
 
@@ -174,6 +193,9 @@ def read_if(output, condition, scratch = DEFAULT_TEMP):
 	"""
 	seq = 0
 	streams = []
+
+	#seg_start_data = read_block(add_ext(output, '.start'))
+	#print(seg_start_data)
 
 	while True:
 

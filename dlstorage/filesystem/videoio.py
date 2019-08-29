@@ -10,6 +10,7 @@ from dlstorage.filesystem.file import *
 from dlstorage.constants import *
 from dlstorage.stream import *
 from dlstorage.header import TimeHeader
+from dlstorage.utils.clip import *
 
 import cv2
 import os
@@ -180,8 +181,9 @@ def write_video_clips(vstream, \
 
 	return output_files
 
+
 #counter using the start and end
-def read_if(output, condition, scratch = DEFAULT_TEMP):
+def read_if(output, condition, clip_size=5, scratch = DEFAULT_TEMP):
 	"""read_if takes a written archive file and reads only
 	those video clips that satisfy a certain header condition.
 
@@ -191,10 +193,17 @@ def read_if(output, condition, scratch = DEFAULT_TEMP):
 		scratch (string) - a temporary file path
 	"""
 	seq = 0
-	streams = []
+	
 
-	#seg_start_data = read_block(add_ext(output, '.start'))
-	#print(seg_start_data)
+	#read the meta data
+	seg_start_data = read_block(add_ext(output, '.start'))
+	clips = clip_boundaries(seg_start_data['start'],\
+							seg_start_data['end'],\
+							clip_size)
+
+	boundaries = []
+	streams = []
+	relevant_clips = set()
 
 	while True:
 
@@ -211,11 +220,21 @@ def read_if(output, condition, scratch = DEFAULT_TEMP):
 			header_data = read_block(header[0])
 
 			if condition(header_data):
-				streams.append(VideoStream(parsed[video]))
+				pstart, pend = find_clip_boundaries((header_data['start'], \
+													 header_data['end']), \
+													 clips)
+
+				relevant_clips.update(range(pstart, pend+1))
+				boundaries.append((header_data['start'],header_data['end']))
+			
+			streams.append(VideoStream(parsed[video]))
 
 			seq += 1
 
 		except FileNotFoundError:
 			break
 
-	return streams
+	#sort the list
+	relevant_clips = sorted(list(relevant_clips))
+
+	return [materialize_clip(clips[i], boundaries, streams) for i in relevant_clips]

@@ -1,6 +1,6 @@
 import itertools
 
-from dlstorage.xform import Cut
+from dlstorage.xform import VideoTransform, Cut
 
 #gets the boundaries of the clips
 def clip_boundaries(start,end,size):
@@ -50,5 +50,6 @@ def materialize_clip(clip, boundaries, streams):
 		index, bounds = crop
 		subiterators.append(streams[index][Cut(*bounds)])
 
+	#v = VideoTransform()
 	return itertools.chain(*subiterators)
 

@@ -159,8 +159,8 @@ def write_video_clips(vstream, \
 			counter = 0
 			seq += 1
 			
-
-		counter += 1
+		else:
+			counter += 1
 
 
 	if counter != 1:
@@ -210,7 +210,7 @@ def read_if(output, condition, clip_size=5, scratch = DEFAULT_TEMP):
 
 		try:
 			file = add_ext(output, '.seq', seq) 
-			parsed = unstack_block(file, scratch)
+			parsed = ncpy_unstack_block(file)
 
 			if '.head' in parsed[0]:
 				head, video = 0, 1

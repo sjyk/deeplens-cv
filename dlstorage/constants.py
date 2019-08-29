@@ -9,7 +9,7 @@ constants.py defines encoding and numerical constants.
 GZ,BZ2,RAW = 'w:gz','w:bz2','w'
 
 #encoding constants
-XVID, DIVX, H264, MP4V = 'XVID', 'DIVX', 'X264', 'FMP4'
+XVID, DIVX, H264, MP4V, UNENC, GSC = 'XVID', 'DIVX', 'X264', 'FMP4', 'MJPG', 'Y800'
 
 #default file out
 AVI = '.avi'

@@ -123,6 +123,16 @@ def unstack_block(sfile, path):
 	return [os.path.join(path, n) for n in tf.getnames()]
 
 
+def ncpy_stack_block(files, sfile):
+	os.mkdir(sfile)
+	for file in files:
+		os.rename(file, \
+				  os.path.join(sfile,os.path.basename(file)))
+	return sfile
+
+def ncpy_unstack_block(sfile):
+	return [os.path.join(sfile, n) for n in os.listdir(sfile)]
+
 """This is the main method that interfaces with the video storage system, 
 it constructs an archive file with header information as well as the video
 information.
@@ -156,5 +166,5 @@ def build_fmt_file(header_data, \
 						 add_ext(os.path.join(path, header_name), '.head'), 
 						 compression=header_cmp)	
 
-	return stack_block([video, header], output, compression=meta_cmp)
+	return ncpy_stack_block([video, header], output)
 

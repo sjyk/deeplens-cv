@@ -11,6 +11,7 @@ def clip_boundaries(start,end,size):
 #reconciles boundaries
 def find_clip_boundaries(clip, boundaries):
 	c_start,c_end = clip
+	c_end = min(c_end, max([gend for _,gend in boundaries]))
 
 	start_clip = None
 	end_clip = None

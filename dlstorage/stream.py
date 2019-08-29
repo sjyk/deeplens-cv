@@ -50,7 +50,7 @@ class VideoStream():
 
 	def __next__(self):
 		if self.cap.isOpened() and \
-		   (self.limit < 0 or self.frame_count < self.limit):
+		   (self.limit < 0 or self.frame_count <= self.limit):
 
 		   	ret, frame = self.cap.read()
 

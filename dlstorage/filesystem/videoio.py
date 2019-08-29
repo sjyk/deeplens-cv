@@ -121,6 +121,7 @@ def write_video_clips(vstream, \
 	output_files = []
 
 	global_time_header = TimeHeader()
+	#clip_size = min(global_time_header.end, clip_size)
 
 	for frame in vstream:
 

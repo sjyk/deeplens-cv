@@ -74,3 +74,23 @@ class Sample(VideoTransform):
 		else:
 			return self.__next__()
 
+
+class Cut(VideoTransform): 
+	"""Cut is a video transformation that returns the clip that lies within a range 
+	"""
+
+	def __init__(self, start, end):
+		self.cut_start = start
+		self.cut_end = end
+		super(Cut, self).__init__()
+
+
+	def __next__(self):
+		"""This implements the skipping logic for the Sampling transformation
+		"""
+		out = next(self.input_iter)
+		if out['frame'] >= self.cut_start and \
+		   out['frame'] <= self.cut_end:
+			return out
+		else:
+			return self.__next__()

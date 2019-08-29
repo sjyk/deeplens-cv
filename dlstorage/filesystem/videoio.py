@@ -180,7 +180,6 @@ def write_video_clips(vstream, \
 
 	return output_files
 
-
 #counter using the start and end
 def read_if(output, condition, scratch = DEFAULT_TEMP):
 	"""read_if takes a written archive file and reads only

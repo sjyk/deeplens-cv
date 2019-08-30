@@ -55,9 +55,10 @@ class ObjectHeader(TimeHeader):
 	a clip. It also keeps track of time inheriting from TimeHeader
 	"""
 
-	def __init__(self):
+	def __init__(self, store_bounding_boxes=True):
 		self.label_set = set()
 		self.bounding_boxes = []
+		self.store_bounding_boxes = store_bounding_boxes
 		super(ObjectHeader, self).__init__()
 
 	#handle the update
@@ -68,7 +69,8 @@ class ObjectHeader(TimeHeader):
 		for label, bb in frame['tags']:
 			self.label_set.add(label)
 		
-		self.bounding_boxes.append(frame['tags'])
+		if self.store_bounding_boxes:
+			self.bounding_boxes.append(frame['tags'])
 
 		super(ObjectHeader, self).update(frame)
 

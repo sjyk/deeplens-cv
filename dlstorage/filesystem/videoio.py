@@ -9,7 +9,7 @@ primitives to encode and decode archived and regular video formats.
 from dlstorage.filesystem.file import *
 from dlstorage.constants import *
 from dlstorage.stream import *
-from dlstorage.header import TimeHeader
+from dlstorage.header import ObjectHeader
 from dlstorage.utils.clip import *
 
 import cv2
@@ -50,7 +50,7 @@ def write_video(vstream, \
 
 	file_name = add_ext(seg_name, AVI)
 
-	global_time_header = TimeHeader()
+	global_time_header = ObjectHeader(store_bounding_boxes=False)
 	
 	for frame in vstream:
 
@@ -120,7 +120,7 @@ def write_video_clips(vstream, \
 
 	output_files = []
 
-	global_time_header = TimeHeader()
+	global_time_header = ObjectHeader(store_bounding_boxes=False)
 	#clip_size = min(global_time_header.end, clip_size)
 
 	for frame in vstream:

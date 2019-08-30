@@ -28,8 +28,6 @@ def find_clip_boundaries(clip, boundaries):
 		   end >= c_end:
 		   end_clip = i
 
-	print(start_clip, end_clip)
-
 	return start_clip, end_clip
 
 #clip mask

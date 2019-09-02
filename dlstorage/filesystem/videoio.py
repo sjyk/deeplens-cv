@@ -15,7 +15,7 @@ from dlstorage.utils.clip import *
 import cv2
 import os
 import time
-
+import shutil
 
 
 def write_video(vstream, \
@@ -181,6 +181,19 @@ def write_video_clips(vstream, \
 									add_ext(output, '.start')))
 
 	return output_files
+
+
+#delete a video
+def delete_video(output):
+	os.remove(add_ext(output, '.start'))
+	seq = 0
+
+	while True:
+		try:
+			shutil.rmtree(add_ext(output, '.seq', seq))
+			seq += 1
+		except FileNotFoundError:
+			break
 
 
 #counter using the start and end

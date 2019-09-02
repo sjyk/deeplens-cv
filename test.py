@@ -7,10 +7,11 @@ from dlstorage.utils.clip import *
 from dlstorage.utils.debug import *
 
 
-v = VideoStream(0, 300)
+v = VideoStream('/Users/sanjaykrishnan/Downloads/BigBuckBunny.mp4', 1000)
 v = v[TestTagger()]
 
-write_video_clips(v, 'bear', 'Y800', ObjectHeader(), 10)
-print(timeof(read_if('bear', AND(startsAfter(0), endsBefore(60)), 30)))
+delete_video("bear")
+print(timeof(write_video_clips(v, 'bear', 'Y800', ObjectHeader(), 100)))
+print(timeof(read_if('bear', startsBefore(300) , 250)))
 
 

@@ -1,3 +1,10 @@
+"""This file is part of DeepLens which is released under MIT License and 
+is copyrighted by the University of Chicago. This project is developed by
+the database group (chidata).
+
+This file contains a bunch of primitives for manipulating clip boundaries.
+"""
+
 import itertools
 
 from dlstorage.xform import VideoTransform, Cut

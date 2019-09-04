@@ -184,8 +184,14 @@ def write_video_clips(vstream, \
 
 
 #delete a video
-def delete_video(output):
-	os.remove(add_ext(output, '.start'))
+def delete_video_if_exists(output):
+
+	start_file = add_ext(output, '.start')
+
+	if not os.path.exists(start_file):
+		return
+
+	os.remove(start_file)
 	seq = 0
 
 	while True:

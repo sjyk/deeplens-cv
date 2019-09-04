@@ -43,6 +43,11 @@ class VideoTransform():
 		self.height = self.vstream.height
 		return self
 
+	def __getitem__(self, xform):
+		"""Applies a transformation to the video stream
+		"""
+		return xform.apply(self)
+
 
 	#Must be implemented by any derived classes
 	def __next__(self):

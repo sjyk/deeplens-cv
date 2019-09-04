@@ -19,3 +19,31 @@ DEFAULT_FRAME_RATE = 30.0
 
 #temp files
 DEFAULT_TEMP = '/tmp'
+
+#language constructs
+def TRUE(x):
+	return True
+
+def FALSE(x):
+	return False
+
+def hasLabel(l):
+	return lambda x: l in x['label_set']
+
+def startsBefore(time):
+	return lambda x: time >= x['start']
+
+def startsAfter(time):
+	return lambda x: time < x['start']
+
+def endsBefore(time):
+	return lambda x: time >= x['end']
+
+def endsAfter(time):
+	return lambda x: time < x['end']
+
+def AND(f1, f2):
+	return lambda x: f1(x) and f2(x)
+
+def OR(f1, f2):
+	return lambda x: f1(x) or f2(x)

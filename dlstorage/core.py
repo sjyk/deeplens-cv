@@ -10,23 +10,23 @@ class StorageManager():
 	"""The StorageManager is the basic abstract class that represents a
 	storage manager.
 	"""
-	def __init__(content_tagger):
+	def __init__(self, content_tagger):
 		self.content_tagger = content_tagger
 
-
-	def putFromFile(filename, target):
+	def put(self, filename, target, args):
 		"""putFromFile adds a video to the storage manager from a file
 		"""
 		raise NotImplemented("putFromFile not implemented")
 
-
-	def putFromDevice(filenane, target):
-		"""putFromDevice adds a video to the storage manager from a device
-		"""
-		raise NotImplemented("putFromDevice not implemented")
-
-	#TODO
-	def getIf(name, condition, clip_size):
+	def get(self, name, condition, clip_size):
 		"""retrievies a clip of a certain size satisfying the condition
 		"""
-		pass
+		raise NotImplemented("getIf not implemented")
+
+	def delete(self,name):
+		raise NotImplemented("delete not implemented")
+
+	def list(self):
+		raise NotImplemented("list() not implemented")
+
+

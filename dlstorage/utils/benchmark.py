@@ -29,7 +29,7 @@ class PerformanceTest():
 
 	def putClipOneMin(self):
 		for size in range(5,60,5):
-			args = {'encoding': H264, 'size': size*DEFAULT_FRAME_RATE, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
+			args = {'encoding': MP4V, 'size': size*DEFAULT_FRAME_RATE, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
 
 			#time put
 			now = time.time()
@@ -47,7 +47,7 @@ class PerformanceTest():
 
 	def getClipSizeOneMin(self):
 		for size in range(5,60,5):
-			args = {'encoding': H264, 'size': -1, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
+			args = {'encoding': MP4V, 'size': -1, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
 
 			#time put
 			self.sm.put(self.test_video, 'test', args)
@@ -63,7 +63,7 @@ class PerformanceTest():
 
 	def getClipSizeTenSec(self):
 		for size in range(5,66,10):
-			args = {'encoding': H264, 'size': size, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
+			args = {'encoding': MP4V, 'size': size, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
 
 			#time put
 			self.sm.put(self.test_video, 'test', args)
@@ -95,7 +95,7 @@ class PerformanceTest():
 
 	def getSelTenTenSec(self):
 		for size in range(0,70,10):
-			args = {'encoding': H264, 'size': 10*DEFAULT_FRAME_RATE, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
+			args = {'encoding': MP4V, 'size': 10*DEFAULT_FRAME_RATE, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
 
 			#time put
 			self.sm.put(self.test_video, 'test', args)
@@ -112,11 +112,11 @@ class PerformanceTest():
 	def runAll(self):
 		print('[dlstorage] put() for different encodings and a video of 1 min')
 		self.putEncodingOneMin()
-		print('[dlstorage] put() for h264 and varying clip size for a video of 1 min')
+		print('[dlstorage] put() for MP4V and varying clip size for a video of 1 min')
 		self.putClipOneMin()
-		print('[dlstorage] get() for h264 full video of different clip sizes')
+		print('[dlstorage] get() for MP4V full video of different clip sizes')
 		self.getClipSizeOneMin()
-		print('[dlstorage] get() for h264 10 sec clips of different get clip sizes')
+		print('[dlstorage] get() for MP4V 10 sec clips of different get clip sizes')
 		self.getClipSizeTenSec()
 		print('[dlstorage] get() for different encodings 10 sec clips of different 10 sec sizes')
 		self.getEncTenTenSec()

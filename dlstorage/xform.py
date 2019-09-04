@@ -89,13 +89,36 @@ class Cut(VideoTransform):
 		self.cut_end = end
 		super(Cut, self).__init__()
 
+	def __iter__(self):
+		"""__iter__() initializes the iterator. We use this steps to cache 
+		height and width data.
+		"""
+		self.input_iter = iter(self.vstream)
+		self.width = self.vstream.width
+		self.height = self.vstream.height
+
+
+		try:
+			out = next(self.input_iter)
+
+			while out['frame'] < self.cut_start:
+				out = next(self.input_iter)
+
+		except StopIteration:
+
+			self.input_iter = iter([])
+
+
+		return self
+
 
 	def __next__(self):
-		"""This implements the skipping logic for the Sampling transformation
+		"""This implements the skipping logic for the cutting transformation
 		"""
 		out = next(self.input_iter)
-		if out['frame'] >= self.cut_start and \
-		   out['frame'] <= self.cut_end:
+
+		if out['frame'] <= self.cut_end:
 			return out
 		else:
-			return self.__next__()
+			raise StopIteration()
+

@@ -60,4 +60,21 @@ class FileSystemStorageManager(StorageManager):
 	def list(self):
 		return list(self.videos)
 
+	def size(self, name):
+		seq = 0
+		size = 0
+		physical_clip = os.path.join(self.basedir, name)
+
+		while True:
+
+			try:
+				file = add_ext(physical_clip, '.seq', seq) 
+				size += sum(os.path.getsize(os.path.join(file,f)) for f in os.listdir(file))
+				seq += 1
+
+			except FileNotFoundError:
+				break
+
+		return size
+
 

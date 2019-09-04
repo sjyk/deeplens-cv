@@ -29,4 +29,7 @@ class StorageManager():
 	def list(self):
 		raise NotImplemented("list() not implemented")
 
+	def size(self, name):
+		raise NotImplemented("size() not implemented")
+
 

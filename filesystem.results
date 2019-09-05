@@ -1,54 +1,21 @@
 [dlstorage] put() for different encodings and a video of 1 min
-{"time": 18.22079062461853, "space": 50376946, "encoding": "XVID", "size": -1, "limit": 1800.0, "sample": 1.0}
-{"time": 15.811796188354492, "space": 50376946, "encoding": "DIVX", "size": -1, "limit": 1800.0, "sample": 1.0}
-{"time": 9.723968029022217, "space": 93668312, "encoding": "X264", "size": -1, "limit": 1800.0, "sample": 1.0}
-{"time": 16.31409192085266, "space": 50376946, "encoding": "FMP4", "size": -1, "limit": 1800.0, "sample": 1.0}
-{"time": 27.284008979797363, "space": 205122780, "encoding": "MJPG", "size": -1, "limit": 1800.0, "sample": 1.0}
-{"time": 14.104865074157715, "space": 2490261398, "encoding": "Y800", "size": -1, "limit": 1800.0, "sample": 1.0}
+{"time": 16.16415286064148, "space": 50376946, "encoding": "XVID", "size": -1, "limit": 1800.0, "sample": 1.0}
+{"time": 16.449257373809814, "space": 50376946, "encoding": "DIVX", "size": -1, "limit": 1800.0, "sample": 1.0}
+{"time": 10.049389123916626, "space": 93668312, "encoding": "X264", "size": -1, "limit": 1800.0, "sample": 1.0}
+{"time": 19.135586977005005, "space": 50376946, "encoding": "FMP4", "size": -1, "limit": 1800.0, "sample": 1.0}
+{"time": 29.06146812438965, "space": 205122780, "encoding": "MJPG", "size": -1, "limit": 1800.0, "sample": 1.0}
+{"time": 13.08385181427002, "space": 2490261398, "encoding": "Y800", "size": -1, "limit": 1800.0, "sample": 1.0}
 [dlstorage] put() for MP4V and varying clip size for a video of 1 min
-{"time": 17.05678415298462, "space": 50669432, "encoding": "FMP4", "size": 150.0, "limit": 1800.0, "sample": 1.0}
-{"time": 17.61936116218567, "space": 50176500, "encoding": "FMP4", "size": 300.0, "limit": 1800.0, "sample": 1.0}
-{"time": 17.96882200241089, "space": 50504404, "encoding": "FMP4", "size": 450.0, "limit": 1800.0, "sample": 1.0}
-{"time": 17.758570909500122, "space": 50476746, "encoding": "FMP4", "size": 600.0, "limit": 1800.0, "sample": 1.0}
-{"time": 18.9010591506958, "space": 50554842, "encoding": "FMP4", "size": 750.0, "limit": 1800.0, "sample": 1.0}
-{"time": 17.687161207199097, "space": 50429742, "encoding": "FMP4", "size": 900.0, "limit": 1800.0, "sample": 1.0}
-{"time": 17.599915742874146, "space": 50533176, "encoding": "FMP4", "size": 1050.0, "limit": 1800.0, "sample": 1.0}
-{"time": 17.855712890625, "space": 50425474, "encoding": "FMP4", "size": 1200.0, "limit": 1800.0, "sample": 1.0}
-{"time": 17.579885005950928, "space": 50405996, "encoding": "FMP4", "size": 1350.0, "limit": 1800.0, "sample": 1.0}
-{"time": 17.624567985534668, "space": 50378754, "encoding": "FMP4", "size": 1500.0, "limit": 1800.0, "sample": 1.0}
-{"time": 18.608326196670532, "space": 50417116, "encoding": "FMP4", "size": 1650.0, "limit": 1800.0, "sample": 1.0}
+{"time": 17.64329504966736, "space": 50669432, "encoding": "FMP4", "size": 150.0, "limit": 1800.0, "sample": 1.0}
+{"time": 18.011319160461426, "space": 50176500, "encoding": "FMP4", "size": 300.0, "limit": 1800.0, "sample": 1.0}
+{"time": 18.465731859207153, "space": 50504404, "encoding": "FMP4", "size": 450.0, "limit": 1800.0, "sample": 1.0}
+{"time": 17.931363105773926, "space": 50476746, "encoding": "FMP4", "size": 600.0, "limit": 1800.0, "sample": 1.0}
+{"time": 18.03572916984558, "space": 50554842, "encoding": "FMP4", "size": 750.0, "limit": 1800.0, "sample": 1.0}
+{"time": 17.623605966567993, "space": 50429742, "encoding": "FMP4", "size": 900.0, "limit": 1800.0, "sample": 1.0}
+{"time": 19.57346820831299, "space": 50533176, "encoding": "FMP4", "size": 1050.0, "limit": 1800.0, "sample": 1.0}
+{"time": 17.32724618911743, "space": 50425474, "encoding": "FMP4", "size": 1200.0, "limit": 1800.0, "sample": 1.0}
+{"time": 17.36462378501892, "space": 50405996, "encoding": "FMP4", "size": 1350.0, "limit": 1800.0, "sample": 1.0}
+{"time": 17.30021905899048, "space": 50378754, "encoding": "FMP4", "size": 1500.0, "limit": 1800.0, "sample": 1.0}
+{"time": 17.628708124160767, "space": 50417116, "encoding": "FMP4", "size": 1650.0, "limit": 1800.0, "sample": 1.0}
 [dlstorage] get() for MP4V full video of different clip sizes
-{"time": 30.33311176300049, "retr_clip_size": 5, "encoding": "FMP4", "size": -1, "limit": 1800.0, "sample": 1.0}
-{"time": 17.836099863052368, "retr_clip_size": 10, "encoding": "FMP4", "size": -1, "limit": 1800.0, "sample": 1.0}
-{"time": 13.327150106430054, "retr_clip_size": 15, "encoding": "FMP4", "size": -1, "limit": 1800.0, "sample": 1.0}
-{"time": 13.172057151794434, "retr_clip_size": 20, "encoding": "FMP4", "size": -1, "limit": 1800.0, "sample": 1.0}
-{"time": 14.048555135726929, "retr_clip_size": 25, "encoding": "FMP4", "size": -1, "limit": 1800.0, "sample": 1.0}
-{"time": 11.574313163757324, "retr_clip_size": 30, "encoding": "FMP4", "size": -1, "limit": 1800.0, "sample": 1.0}
-{"time": 10.7668616771698, "retr_clip_size": 35, "encoding": "FMP4", "size": -1, "limit": 1800.0, "sample": 1.0}
-{"time": 11.402456045150757, "retr_clip_size": 40, "encoding": "FMP4", "size": -1, "limit": 1800.0, "sample": 1.0}
-{"time": 12.28793478012085, "retr_clip_size": 45, "encoding": "FMP4", "size": -1, "limit": 1800.0, "sample": 1.0}
-{"time": 12.637733936309814, "retr_clip_size": 50, "encoding": "FMP4", "size": -1, "limit": 1800.0, "sample": 1.0}
-{"time": 13.687278032302856, "retr_clip_size": 55, "encoding": "FMP4", "size": -1, "limit": 1800.0, "sample": 1.0}
-[dlstorage] get() for MP4V 10 sec clips of different get clip sizes
-{"time": 8.198369979858398, "retr_clip_size": 5, "encoding": "FMP4", "size": 5, "limit": 1800.0, "sample": 1.0}
-{"time": 5.582764625549316, "retr_clip_size": 15, "encoding": "FMP4", "size": 15, "limit": 1800.0, "sample": 1.0}
-{"time": 5.179222106933594, "retr_clip_size": 25, "encoding": "FMP4", "size": 25, "limit": 1800.0, "sample": 1.0}
-{"time": 5.73689603805542, "retr_clip_size": 35, "encoding": "FMP4", "size": 35, "limit": 1800.0, "sample": 1.0}
-{"time": 5.147392988204956, "retr_clip_size": 45, "encoding": "FMP4", "size": 45, "limit": 1800.0, "sample": 1.0}
-{"time": 5.437104225158691, "retr_clip_size": 55, "encoding": "FMP4", "size": 55, "limit": 1800.0, "sample": 1.0}
-{"time": 5.151630878448486, "retr_clip_size": 65, "encoding": "FMP4", "size": 65, "limit": 1800.0, "sample": 1.0}
-[dlstorage] get() for different encodings 10 sec clips of different 10 sec sizes
-{"time": 7.658314943313599, "retr_clip_size": 10, "encoding": "XVID", "size": 300.0, "limit": 1800.0, "sample": 1.0}
-{"time": 7.680643081665039, "retr_clip_size": 10, "encoding": "DIVX", "size": 300.0, "limit": 1800.0, "sample": 1.0}
-{"time": 15.752623081207275, "retr_clip_size": 10, "encoding": "X264", "size": 300.0, "limit": 1800.0, "sample": 1.0}
-{"time": 7.829553127288818, "retr_clip_size": 10, "encoding": "FMP4", "size": 300.0, "limit": 1800.0, "sample": 1.0}
-{"time": 16.404937028884888, "retr_clip_size": 10, "encoding": "MJPG", "size": 300.0, "limit": 1800.0, "sample": 1.0}
-{"time": 9.223043203353882, "retr_clip_size": 10, "encoding": "Y800", "size": 300.0, "limit": 1800.0, "sample": 1.0}
-[dlstorage] get() for different selectivities 10 sec clips of different 10 sec sizes
-{"time": 1.695878028869629, "retr_clip_size": 0, "sel": 0.0, "encoding": "FMP4", "size": 300.0, "limit": 1800.0, "sample": 1.0}
-{"time": 1.8343050479888916, "retr_clip_size": 10, "sel": 0.16666666666666666, "encoding": "FMP4", "size": 300.0, "limit": 1800.0, "sample": 1.0}
-{"time": 3.0102949142456055, "retr_clip_size": 20, "sel": 0.3333333333333333, "encoding": "FMP4", "size": 300.0, "limit": 1800.0, "sample": 1.0}
-{"time": 4.45025372505188, "retr_clip_size": 30, "sel": 0.5, "encoding": "FMP4", "size": 300.0, "limit": 1800.0, "sample": 1.0}
-{"time": 5.92834210395813, "retr_clip_size": 40, "sel": 0.6666666666666666, "encoding": "FMP4", "size": 300.0, "limit": 1800.0, "sample": 1.0}
-{"time": 7.303808927536011, "retr_clip_size": 50, "sel": 0.8333333333333334, "encoding": "FMP4", "size": 300.0, "limit": 1800.0, "sample": 1.0}
-{"time": 7.619250297546387, "retr_clip_size": 60, "sel": 1.0, "encoding": "FMP4", "size": 300.0, "limit": 1800.0, "sample": 1.0}
+{"time": 35.36519503593445, "planner": 0.024079084396362305, "retr_clip_size": 5, "encoding": "FMP4", "size": -1, "limit": 1800.0, "sample": 1.0}

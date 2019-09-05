@@ -74,7 +74,6 @@ class ObjectHeader(TimeHeader):
 
 		super(ObjectHeader, self).update(frame)
 
-
 	def getHeader(self):
 		llist = sorted(list(self.label_set))
 		return {'start': self.start, 

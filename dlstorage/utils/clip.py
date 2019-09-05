@@ -62,3 +62,26 @@ def materialize_clip(clip, boundaries, streams):
 	#v = VideoTransform()
 	return itertools.chain(*subiterators)
 
+
+def cut_header(header, start, end):
+	start_index = max(0, start - header['start'])
+	end_index = min(end - start, header['end'] - header['start'])
+
+	if start_index == 0 and \
+	   end_index == header['end'] - header['start']:
+	   return header
+
+	bounding_boxes = header['bounding_boxes'][start_index:end_index]
+
+	label_set = set()
+	for frame in bounding_boxes:
+		for label, bb in frame:
+			label_set.add(label)
+
+	return {'start': start, 
+			'end': end, 
+			'label_set': list(label_set), 
+			'bounding_boxes': bounding_boxes}
+
+			
+

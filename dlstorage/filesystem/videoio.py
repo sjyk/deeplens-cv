@@ -244,7 +244,13 @@ def read_if(output, condition, clip_size=5, scratch = DEFAULT_TEMP):
 													 header_data['end']), \
 													 clips)
 
-				relevant_clips.update(range(pstart, pend+1))
+				for rel_clip in range(pstart, pend+1):
+					
+					cH = cut_header(header_data, clips[rel_clip][0], clips[rel_clip][1])
+
+					if condition(cH):
+						relevant_clips.add(rel_clip)
+
 				boundaries.append((header_data['start'],header_data['end']))
 			
 			streams.append(VideoStream(parsed[video]))

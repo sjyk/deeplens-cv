@@ -3,6 +3,9 @@ from dlstorage.constants import *
 from dlstorage.utils.debug import *
 import json
 
+from multiprocessing import Pool
+
+
 class PerformanceTest():
 
 	def __init__(self, storage_manager, test_video):
@@ -55,7 +58,7 @@ class PerformanceTest():
 			now = time.time()
 			time_result = timeof(self.sm.get('test', TRUE, int(size*DEFAULT_FRAME_RATE)))
 			full_time_result = (time.time() - now)
-			log = {'time': time_result,'planner': full_time_result - time_result, 'retr_clip_size': size}
+			log = {'time': time_result,'first_frame': full_time_result - time_result, 'retr_clip_size': size}
 			log.update(args)
 
 			self.sm.delete('test')
@@ -73,7 +76,7 @@ class PerformanceTest():
 			now = time.time()
 			time_result = timeof(self.sm.get('test', TRUE, int(10*DEFAULT_FRAME_RATE)))
 			full_time_result = (time.time() - now)
-			log = {'time': time_result,'planner': full_time_result - time_result, 'retr_clip_size': 10}
+			log = {'time': time_result,'first_frame': full_time_result - time_result, 'retr_clip_size': 10}
 			log.update(args)
 
 			self.sm.delete('test')
@@ -91,7 +94,7 @@ class PerformanceTest():
 			now = time.time()
 			time_result = timeof(self.sm.get('test', TRUE, int(10*DEFAULT_FRAME_RATE)))
 			full_time_result = (time.time() - now)
-			log = {'time': time_result,'planner': full_time_result - time_result, 'retr_clip_size': 10}
+			log = {'time': time_result,'first_frame': full_time_result - time_result, 'retr_clip_size': 10}
 			log.update(args)
 
 			self.sm.delete('test')
@@ -108,7 +111,25 @@ class PerformanceTest():
 			now = time.time()
 			time_result = timeof(self.sm.get('test', startsBefore(size*DEFAULT_FRAME_RATE), int(10*DEFAULT_FRAME_RATE)))
 			full_time_result = (time.time() - now)
-			log = {'time': time_result,'planner': full_time_result - time_result, 'retr_clip_size': size, 'sel': size/60}
+			log = {'time': time_result,'first_frame': full_time_result - time_result, 'retr_clip_size': size, 'sel': size/60}
+			log.update(args)
+
+			self.sm.delete('test')
+
+			print(json.dumps(log))
+
+
+	def getParaTenTenSec(self):
+		for para in range(1,5):
+			args = {'encoding': MP4V, 'size': 10*DEFAULT_FRAME_RATE, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
+
+			#time put
+			self.sm.put(self.test_video, 'test', args)
+
+			now = time.time()
+			time_result = timeof(self.sm.get('test', TRUE, int(10*DEFAULT_FRAME_RATE), threads=Pool(para)))
+			full_time_result = (time.time() - now)
+			log = {'time': time_result,'first_frame': full_time_result - time_result, 'retr_clip_size': 10, 'para': para}
 			log.update(args)
 
 			self.sm.delete('test')
@@ -128,6 +149,8 @@ class PerformanceTest():
 		print('[dlstorage] get() for different encodings 10 sec clips of different 10 sec sizes')
 		self.getEncTenTenSec()
 		print('[dlstorage] get() for different selectivities 10 sec clips of different 10 sec sizes')
+		self.getSelTenTenSec()
+		print('[dlstorage] get() for different number of threads 10 sec clips of different 10 sec sizes')
 		self.getSelTenTenSec()
 
 		

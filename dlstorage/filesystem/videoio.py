@@ -17,7 +17,6 @@ import os
 import time
 import shutil
 
-
 def write_video(vstream, \
 				output, \
 				encoding, \
@@ -201,9 +200,40 @@ def delete_video_if_exists(output):
 		except FileNotFoundError:
 			break
 
+#gets a file of a particular index
+def _file_get(file):
+	parsed = ncpy_unstack_block(file)
+
+	if '.head' in parsed[0]:
+		head, video = 0, 1
+	else:
+		head, video = 1, 0
+
+	header = unstack_block(parsed[head], DEFAULT_TEMP, compression_hint=RAW)
+	header_data = read_block(header[0])
+	return header_data, parsed[video]
+
+
+def _all_files(output):
+	rtn = []
+
+	seq = 0
+	while True:
+		file = add_ext(output, '.seq', seq)
+
+		if not os.path.exists(file):
+			return rtn
+
+		rtn.append(file)
+		seq += 1
+
+	return rtn
+
+
+
 
 #counter using the start and end
-def read_if(output, condition, clip_size=5, scratch = DEFAULT_TEMP):
+def read_if(output, condition, clip_size=5, scratch = DEFAULT_TEMP, threads=None):
 	"""read_if takes a written archive file and reads only
 	those video clips that satisfy a certain header condition.
 
@@ -225,40 +255,28 @@ def read_if(output, condition, clip_size=5, scratch = DEFAULT_TEMP):
 	streams = []
 	relevant_clips = set()
 
-	while True:
+	if threads == None:
+		pre_parsed = [_file_get(file, scratch) for file in _all_files(output)]
+	else:
+		pre_parsed = threads.map(_file_get, _all_files(output))
 
-		try:
-			file = add_ext(output, '.seq', seq) 
-			parsed = ncpy_unstack_block(file)
+	for header_data, video in pre_parsed:
 
-			if '.head' in parsed[0]:
-				head, video = 0, 1
-			else:
-				head, video = 1, 0
+		if condition(header_data):
+			pstart, pend = find_clip_boundaries((header_data['start'], \
+											     header_data['end']), \
+												 clips)
 
-			header = unstack_block(parsed[head], scratch)
-			header_data = read_block(header[0])
-
-			if condition(header_data):
-				pstart, pend = find_clip_boundaries((header_data['start'], \
-													 header_data['end']), \
-													 clips)
-
-				for rel_clip in range(pstart, pend+1):
+			for rel_clip in range(pstart, pend+1):
 					
-					cH = cut_header(header_data, clips[rel_clip][0], clips[rel_clip][1])
+				cH = cut_header(header_data, clips[rel_clip][0], clips[rel_clip][1])
 
-					if condition(cH):
-						relevant_clips.add(rel_clip)
+				if condition(cH):
+					relevant_clips.add(rel_clip)
 
-				boundaries.append((header_data['start'],header_data['end']))
+			boundaries.append((header_data['start'],header_data['end']))
 			
-			streams.append(VideoStream(parsed[video]))
-
-			seq += 1
-
-		except FileNotFoundError:
-			break
+		streams.append(VideoStream(video))
 
 	#sort the list
 	relevant_clips = sorted(list(relevant_clips))

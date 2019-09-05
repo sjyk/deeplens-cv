@@ -6,7 +6,8 @@ from dlstorage.utils.benchmark import *
 f = FileSystemStorageManager(TestTagger(), 'videos')
 <<<<<<< HEAD
 p = PerformanceTest(f, '/Users/sanjaykrishnan/Downloads/BigBuckBunny.mp4')
-p.runAll()
+p.getParaTenTenSec()
+#p.runAll()
 
 =======
 f.put('/Users/sanjaykrishnan/Downloads/BigBuckBunny.mp4', 'bunny')

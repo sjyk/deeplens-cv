@@ -14,6 +14,7 @@ import string
 into into a VideoTransform object. Like VideoStreams these objects are also 
 iterators over frames
 """
+
 class VideoTransform(): 
 	"""The VideoTransform class is the basic abstract class for all video 
 	transformations. All derived classes must implement a __next__() method.

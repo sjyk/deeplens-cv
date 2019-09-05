@@ -100,17 +100,20 @@ def stack_block(files, sfile, compression=RAW):
 		compression- a meta compression scheme over the blocks
 	"""
 
-	tf = tarfile.open(sfile, mode=compression)
-	
-	for file in files:
-		tf.add(file, arcname=os.path.basename(file))
+	if len(files) == 1 and compression == RAW:
+		os.rename(files[0], sfile)
+	else:
+		tf = tarfile.open(sfile, mode=compression)
+		
+		for file in files:
+			tf.add(file, arcname=os.path.basename(file))
 
-	tf.close()
+		tf.close()
 
 	return sfile
 
 
-def unstack_block(sfile, path):
+def unstack_block(sfile, path, compression_hint=RAW):
 	"""Given a stacked file returns pointers to all of the constituent
 	   extracted and decompressed files.
 
@@ -118,9 +121,12 @@ def unstack_block(sfile, path):
 	   		sfile- stacked file name to extract
 	   		path- directory to extract all to
 	"""
-	tf = tarfile.open(sfile)
-	tf.extractall(path)
-	return [os.path.join(path, n) for n in tf.getnames()]
+	if compression_hint == RAW:
+		return [sfile]
+	else:
+		tf = tarfile.open(sfile)
+		tf.extractall(path)
+		return [os.path.join(path, n) for n in tf.getnames()]
 
 
 def ncpy_stack_block(files, sfile):

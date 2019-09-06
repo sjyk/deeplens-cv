@@ -38,3 +38,10 @@ class VDMSStorageManager(StorageManager):
             add_video(filename, v, args['encoding'], ObjectHeader())
         else:
             add_video_clips(filename, v, args['encoding'], ObjectHeader(), args['size'])
+    
+    def get(self, name, condition, clip_size):
+        """
+        get() retrieves all the clips with the given name that satisfy the given condition.
+        """
+        return find_video(name, condition, clip_size)
+        

@@ -99,3 +99,29 @@ def add_video_clips(fname, \
     response, res_arr = db.query(all_queries, [[blob]])
     print(response)
     db.disconnect()
+    
+
+def find_video(vname, \
+               condition, \
+               size):
+    db = vdms.vdms()
+    db.connect("localhost")
+    
+    all_queries = []
+    findVideo = {}
+    constrs = {}
+    constrs["name"] = ["==", name]
+    #add more filters based on the conditions
+    
+    findVideo["constraints"] = constrs
+    findVideo["container"] = "mp4"
+    findVideo["codec"] = "h264"
+    
+    query = {}
+    query["FindVideo"] = findVideo
+    
+    all_queries.append(query)
+    response, vid_arr = db.query(all_queries)
+    print(response)
+    db.disconnect()
+    return vid_arr

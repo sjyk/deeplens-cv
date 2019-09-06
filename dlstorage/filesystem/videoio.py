@@ -256,7 +256,7 @@ def read_if(output, condition, clip_size=5, scratch = DEFAULT_TEMP, threads=None
 	relevant_clips = set()
 
 	if threads == None:
-		pre_parsed = [_file_get(file, scratch) for file in _all_files(output)]
+		pre_parsed = [_file_get(file) for file in _all_files(output)]
 	else:
 		pre_parsed = threads.map(_file_get, _all_files(output))
 

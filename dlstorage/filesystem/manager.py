@@ -44,7 +44,7 @@ class FileSystemStorageManager(StorageManager):
 		self.videos.add(target)
 
 
-	def get(self, name, condition, clip_size, threads=1):
+	def get(self, name, condition, clip_size, threads=None):
 		"""retrievies a clip of a certain size satisfying the condition
 		"""
 		if name not in self.videos:

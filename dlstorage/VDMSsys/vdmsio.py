@@ -23,10 +23,11 @@ def add_video(fname, \
               header):
     
     tags = []
-    
-    for frame in vstream:
+    totalFrames = 0
+    for i,frame in enumerate(vstream):
         header.update(frame)
         tags.append(frame['tags'])
+        totalFrames = i
     
     db = vdms.vdms()
     db.connect('localhost')
@@ -40,14 +41,17 @@ def add_video(fname, \
     else:
         addVideo["codec"] = "xvid"
     
-    addVideo["properties"] = header.getHeader()
+    header_dat = header.getHeader()
+    props = {}
+    props[0] = header_dat
+    addVideo["properties"] = props
     query = {}
     query["AddVideo"] = addVideo
     all_queries.append(query)
     response, res_arr = db.query(all_queries, [[blob]])
     print(response)
     db.disconnect()
-
+    return totalFrames,props
 
 def add_video_clips(fname, \
                     vstream, \
@@ -69,15 +73,20 @@ def add_video_clips(fname, \
     counter = 0
     clipCnt = 0
     props = {}
-    for frame in vstream:
+    totalFrames = 0
+    for i,frame in enumerate(vstream):
         header.update(frame)
         tags.append(frame['tags'])
         
         if counter == numFrames:
             props[clipCnt] = header.getHeader()
+            props[clipCnt]["clipNo"] = clipCnt #add a clip number for easy
+            #retrieval
+            props[clipCnt]["numFrames"] = numFrames
             header.reset()
             counter = 0
             clipCnt += 1
+        totalFrames = i
     
     db = vdms.vdms()
     db.connect('localhost')
@@ -104,18 +113,23 @@ def add_video_clips(fname, \
     response, res_arr = db.query(all_queries, [[blob]])
     print(response)
     db.disconnect()
+    return totalFrames,props
     
 
-def find_video(vname, \
+def find_clip(vname, \
                condition, \
-               size):
+               size, \
+               headers, \
+               clip_no):
+    
     db = vdms.vdms()
     db.connect("localhost")
     
     all_queries = []
     findVideo = {}
     constrs = {}
-    constrs["name"] = ["==", name]
+    constrs["name"] = ["==", vname]
+    constrs["clipNo"] = ["==", clip_no]
     #add more filters based on the conditions
     
     findVideo["constraints"] = constrs
@@ -130,3 +144,38 @@ def find_video(vname, \
     print(response)
     db.disconnect()
     return vid_arr
+
+def find_video(vname, \
+               condition, \
+               size, \
+               headers, \
+               totalFrames):
+    
+    clips = clip_boundaries(0, totalFrames-1, size)
+    boundaries = []
+    streams = []
+    relevant_clips = set()
+    #vid_arr is an array of video blobs, which we can't use in this case.
+    #Therefore, we have to write them to disk first and then materialize them
+    #using pre-stored header info and 
+    for i in range(len(headers)):
+        header_data = headers[i]
+        ithblob = find_clip(vname, condition, size, headers, i)
+        #write the blob to file
+        ithname = vname + str(i) + "tmp.mp4"
+        ithf = open(ithname, 'wb')
+        ithf.write(ithblob)
+        ithf.close()
+        if condition(header_data):
+            pstart, pend = find_clip_boundaries((header_data['start'], \
+                                                 header_data['end']), \
+                                                 clips)
+    
+            relevant_clips.update(range(pstart, pend+1))
+            boundaries.append((header_data['start'],header_data['end']))
+        
+        streams.append(VideoStream(ithname))
+    
+    relevant_clips = sorted(list(relevant_clips))
+    
+    return [materialize_clip(clips[i], boundaries, streams) for i in relevant_clips]

@@ -11,7 +11,8 @@ GZ,BZ2,RAW = 'w:gz','w:bz2','w'
 #encoding constants
 XVID, DIVX, H264, MP4V, UNENC, GSC = 'XVID', 'DIVX', 'X264', 'FMP4', 'MJPG', 'Y800'
 
-ENCODINGS = [XVID, DIVX, H264, MP4V, UNENC, GSC]
+#ENCODINGS = [XVID, DIVX, H264, MP4V, UNENC, GSC]
+ENCODINGS = [XVID]
 FORMATS = [GZ,BZ2,RAW]
 
 #default file out

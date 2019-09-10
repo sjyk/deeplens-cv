@@ -1,6 +1,7 @@
 from dlstorage.filesystem.manager import *
 from dlstorage.constants import *
 from dlstorage.utils.debug import *
+from dlstorage.VDMSsys.VDMSmanager import *
 import json
 
 from multiprocessing import Pool

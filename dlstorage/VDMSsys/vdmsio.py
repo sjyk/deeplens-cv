@@ -31,7 +31,7 @@ def add_video(fname, \
     
     db = vdms.vdms()
     db.connect('localhost')
-    fd = open(fname)
+    fd = open(fname, 'rb')
     blob = fd.read()
     all_queries = []
     addVideo = {}
@@ -90,7 +90,7 @@ def add_video_clips(fname, \
     
     db = vdms.vdms()
     db.connect('localhost')
-    fd = open(fname)
+    fd = open(fname, 'rb')
     blob = fd.read()
     all_queries = []
     addVideo = {}

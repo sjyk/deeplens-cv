@@ -1,5 +1,6 @@
 from dlstorage.utils.benchmark import *
 
+<<<<<<< HEAD
 
 
 """
@@ -14,6 +15,8 @@ f.put('/Users/sanjaykrishnan/Downloads/BigBuckBunny.mp4', 'bunny')
 print(f.get('bunny', TRUE, 60*30))
 """
 >>>>>>> removed filesys test
+=======
+>>>>>>> Update test.py
 vd = VDMSStorageManager(TestTagger())
 vd.put('enter actual directory here', 'desired name')
 print(vd.get('desired name', TRUE, 438))

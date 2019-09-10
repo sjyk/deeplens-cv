@@ -27,12 +27,14 @@ class VDMSStorageManager(StorageManager):
         self.clip_headers = []
         self.totalFrames = -1
     
-    def put(self, filename, args=DEFAULT_ARGS):
+    def put(self, filename, target, args=DEFAULT_ARGS):
         """In this case, put() adds the file to VDMS, along with
         the header, which we might be able to send either as a long string
         of metadata, or as extra properties (which is still a lot of metadata)
         Note: we are going to suffer the performance penalty for acquiring
         header information in a frame-by-frame fashion
+        Also Note: target is a dummy variable in this case, for the purposes
+        of running the same benchmark
         """
         v = VideoStream(filename, args['limit'])
         v = v[Sample(args['sample'])]

@@ -26,7 +26,7 @@ class FileSystemStorageManager(StorageManager):
 		if not os.path.exists(basedir):
 			os.makedirs(basedir)
 
-	def put(self, filename, target, args=DEFAULT_ARGS):
+	def put(self, filename, target, args=DEFAULT_ARGS, offset=0):
 		"""putFromFile adds a video to the storage manager from a file
 		"""
 		v = VideoStream(filename, args['limit'])
@@ -37,9 +37,9 @@ class FileSystemStorageManager(StorageManager):
 		delete_video_if_exists(physical_clip)
 
 		if args['size'] == -1:
-			write_video(v, physical_clip, args['encoding'], ObjectHeader())
+			write_video(v, physical_clip, args['encoding'], ObjectHeader(offset=offset))
 		else:
-			write_video_clips(v, physical_clip, args['encoding'], ObjectHeader(), args['size'])
+			write_video_clips(v, physical_clip, args['encoding'], ObjectHeader(offset=offset), args['size'])
 
 		self.videos.add(target)
 

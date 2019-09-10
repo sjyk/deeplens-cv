@@ -29,8 +29,9 @@ class TimeHeader(Header):
 	that accounts for temporally segmented clips.
 	"""
 
-	def __init__(self):
+	def __init__(self, offset=0):
 		self.start = float("inf")
+		self.offset = offset
 		self.end = -1
 
 	#keeps track of the start and the end time of the clips
@@ -39,8 +40,8 @@ class TimeHeader(Header):
 		self.end = int(max(self.end, frame['frame']))
 
 	def getHeader(self):
-		return {'start': self.start, 
-				'end': self.end}
+		return {'start': self.start + self.offset, 
+				'end': self.end + self.offset}
 
 	def reset(self):
 		self.start = float("inf")
@@ -55,11 +56,11 @@ class ObjectHeader(TimeHeader):
 	a clip. It also keeps track of time inheriting from TimeHeader
 	"""
 
-	def __init__(self, store_bounding_boxes=True):
+	def __init__(self, store_bounding_boxes=True, offset=0):
 		self.label_set = set()
 		self.bounding_boxes = []
 		self.store_bounding_boxes = store_bounding_boxes
-		super(ObjectHeader, self).__init__()
+		super(ObjectHeader, self).__init__(offset)
 
 	#handle the update
 	def update(self, frame):
@@ -76,8 +77,9 @@ class ObjectHeader(TimeHeader):
 
 	def getHeader(self):
 		llist = sorted(list(self.label_set))
-		return {'start': self.start, 
-				'end': self.end, 
+
+		return {'start': self.start + self.offset, 
+				'end': self.end + self.offset, 
 				'label_set': llist, 
 				'bounding_boxes': self.bounding_boxes}
 

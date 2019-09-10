@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 absl-py==0.8.0
 astor==0.8.0
 cycler==0.10.0
@@ -23,3 +24,7 @@ tensorflow-estimator==1.14.0
 termcolor==1.1.0
 Werkzeug==0.15.6
 wrapt==1.11.2
+=======
+numpy==1.17.2
+opencv-python==4.1.1.26
+>>>>>>> Updated to clean up and make clear installation directions.

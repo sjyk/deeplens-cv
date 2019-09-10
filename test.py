@@ -7,7 +7,11 @@ from dlstorage.utils.benchmark import *
 f = FileSystemStorageManager(TestTagger(), 'videos')
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 p = PerformanceTest(f, '/Users/sanjaykrishnan/Downloads/BigBuckBunny.mp4')
+=======
+p = PerformanceTest(f, 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4')
+>>>>>>> Updated to clean up and make clear installation directions.
 p.getParaTenTenSec()
 #p.runAll()
 

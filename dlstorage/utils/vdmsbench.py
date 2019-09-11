@@ -5,6 +5,7 @@ from dlstorage.VDMSsys.VDMSmanager import *
 from dlstorage.utils.benchmark import *
 import json
 
+import os
 from multiprocessing import Pool
 
 class VDMSPerfTest(PerformanceTest):
@@ -27,6 +28,7 @@ class VDMSPerfTest(PerformanceTest):
             log.update(args)
 
             self.sm.delete('test')
+            os.system("sh cleandir.sh")
 
             print(json.dumps(log))
 
@@ -44,6 +46,7 @@ class VDMSPerfTest(PerformanceTest):
             log.update(args)
 
             self.sm.delete('test')
+            os.system("sh cleandir.sh")
 
             print(json.dumps(log))
             
@@ -61,6 +64,7 @@ class VDMSPerfTest(PerformanceTest):
             log.update(args)
 
             self.sm.delete('test')
+            os.system("sh cleandir.sh")
 
             print(json.dumps(log))
 
@@ -78,6 +82,7 @@ class VDMSPerfTest(PerformanceTest):
             log.update(args)
 
             self.sm.delete('test')
+            os.system("sh cleandir.sh")
 
             print(json.dumps(log))
 
@@ -95,6 +100,7 @@ class VDMSPerfTest(PerformanceTest):
             log.update(args)
 
             self.sm.delete('test')
+            os.system("sh cleandir.sh")
 
             print(json.dumps(log))
 
@@ -112,6 +118,7 @@ class VDMSPerfTest(PerformanceTest):
             log.update(args)
 
             self.sm.delete('test')
+            os.system("sh cleandir.sh")
 
             print(json.dumps(log))
 
@@ -130,6 +137,7 @@ class VDMSPerfTest(PerformanceTest):
             log.update(args)
 
             self.sm.delete('test')
+            os.system("sh cleandir.sh")
 
             print(json.dumps(log))
 

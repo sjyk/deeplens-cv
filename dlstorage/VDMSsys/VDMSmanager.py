@@ -65,7 +65,7 @@ class VDMSStorageManager(StorageManager):
             x = time.strptime(acdur.split('.')[0], '%H:%M:%S')
             fdur = datetime.timedelta(hours=x.tm_hour,minutes=x.tm_min,seconds=x.tm_sec).total_seconds()
             idur = int(fdur)
-            clip_size = idur / numClips
+            clip_size = int(idur / numClips)
             #load the clips into VDMS
             tf, headers = add_video_clips(filename, v, args['encoding'], ObjectHeader(), clip_size)
             self.clip_headers = headers

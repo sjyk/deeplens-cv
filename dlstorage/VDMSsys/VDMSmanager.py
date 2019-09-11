@@ -14,6 +14,10 @@ from dlstorage.xform import *
 from dlstorage.VDMSsys.vdmsio import *
 
 import os
+import math
+import subprocess
+import datetime
+import time
 
 class VDMSStorageManager(StorageManager):
     #NOTE: Here, size refers to the duration of the clip, 
@@ -39,9 +43,31 @@ class VDMSStorageManager(StorageManager):
         v = VideoStream(filename, args['limit'])
         v = v[Sample(args['sample'])]
         v = v[self.content_tagger]
-        
-        if args['size'] == -1:
+        #find the size of the inputted file: if it's greater than 32MB, VDMS is going to have issues,
+        #so we'll have to split the file into clips anyway
+        fsize = os.path.getsize(filename) / 1000000.0
+  
+        if args['size'] == -1 and fsize <= 32.0:
             tf, headers = add_video(filename, v, args['encoding'], ObjectHeader())
+            self.clip_headers = headers
+            self.totalFrames = tf
+        elif fsize > 32.0:
+            #compute the number of clips we would need for each to be 32 MB
+            numClips = math.ceil(fsize / 32.0)
+            #find duration of video file to compute clip duration
+            result = subprocess.Popen(['ffprobe', filename], \
+                                      stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+            dur = [x for x in result.stdout.readlines() if "Duration" in x]
+            #convert duration string to seconds
+            inf = dur[0].split(',')
+            dInfo = "".join(inf[0].split())
+            acdur = dInfo[len("Duration:"):]
+            x = time.strptime(acdur.split('.')[0], '%H:%M:%S')
+            fdur = datetime.timedelta(hours=x.tm_hour,minutes=x.tm_min,seconds=x.tm_sec).total_seconds()
+            idur = int(fdur)
+            clip_size = idur / numClips
+            #load the clips into VDMS
+            tf, headers = add_video_clips(filename, v, args['encoding'], ObjectHeader(), clip_size)
             self.clip_headers = headers
             self.totalFrames = tf
         else:

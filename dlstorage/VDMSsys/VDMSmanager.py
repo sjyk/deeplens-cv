@@ -84,6 +84,7 @@ class VDMSStorageManager(StorageManager):
     def get(self, name, condition, clip_size):
         """
         get() retrieves all the clips with the given name that satisfy the given condition.
+        NOTE: clip_size is in FRAMES, not duration
         """
         return find_video(name, condition, clip_size, self.clip_headers)
     

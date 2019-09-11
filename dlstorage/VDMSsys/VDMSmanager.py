@@ -48,7 +48,7 @@ class VDMSStorageManager(StorageManager):
         fsize = os.path.getsize(filename) / 1000000.0
   
         if args['size'] == -1 and fsize <= 32.0:
-            tf, headers = add_video(filename, v, args['encoding'], ObjectHeader())
+            tf, headers = add_video(filename, target, v, args['encoding'], ObjectHeader())
             self.clip_headers = headers
             self.totalFrames = tf
         elif fsize > 32.0:
@@ -67,11 +67,11 @@ class VDMSStorageManager(StorageManager):
             idur = int(fdur)
             clip_size = int(idur / numClips)
             #load the clips into VDMS
-            tf, headers = add_video_clips(filename, v, args['encoding'], ObjectHeader(), clip_size)
+            tf, headers = add_video_clips(filename, target, v, args['encoding'], ObjectHeader(), clip_size)
             self.clip_headers = headers
             self.totalFrames = tf
         else:
-            tf, headers = add_video_clips(filename, v, args['encoding'], ObjectHeader(), args['size'])
+            tf, headers = add_video_clips(filename, target, v, args['encoding'], ObjectHeader(), args['size'])
             self.clip_headers = headers
             self.totalFrames = tf
     

@@ -18,6 +18,7 @@ import cv2 #it looks like there's no choice but to use opencv because we need
 #the original video
 
 def add_video(fname, \
+              vname, \
               vstream, \
               encoding, \
               header):
@@ -44,8 +45,13 @@ def add_video(fname, \
     header_dat = header.getHeader()
     props = {}
     props[0] = header_dat
+    props[0]["isFull"] = True
+    props[0]["name"] = vname
     #addVideo["properties"] = props
-    addVideo["properties"] = header_dat
+    vprops = {}
+    vprops["name"] = vname
+    vprops["isFull"] = True
+    addVideo["properties"] = vprops
     query = {}
     query["AddVideo"] = addVideo
     all_queries.append(query)
@@ -55,6 +61,7 @@ def add_video(fname, \
     return totalFrames,props
 
 def add_video_clips(fname, \
+                    vname, \
                     vstream, \
                     encoding, \
                     header, \
@@ -74,6 +81,7 @@ def add_video_clips(fname, \
     counter = 0
     clipCnt = 0
     props = {}
+    vprops = {}
     totalFrames = 0
     for i,frame in enumerate(vstream):
         header.update(frame)
@@ -84,7 +92,14 @@ def add_video_clips(fname, \
             props[clipCnt]["clipNo"] = clipCnt #add a clip number for easy
             #retrieval
             props[clipCnt]["numFrames"] = numFrames
+            props[clipCnt]["isFull"] = False
+            props[clipCnt]["name"] = vname
             header.reset()
+            ithprops = {}
+            ithprops["clipNo"] = clipCnt
+            ithprops["name"] = vname
+            ithprops["isFull"] = False
+            vprops[clipCnt] = ithprops
             counter = 0
             clipCnt += 1
         totalFrames = i
@@ -106,7 +121,7 @@ def add_video_clips(fname, \
     
     addVideo["accessTime"] = 2
     
-    addVideo["properties"] = props
+    addVideo["properties"] = vprops
     
     query = {}
     query["AddVideoBL"] = addVideo
@@ -121,7 +136,8 @@ def find_clip(vname, \
                condition, \
                size, \
                headers, \
-               clip_no):
+               clip_no, \
+               isFull):
     
     db = vdms.vdms()
     db.connect("localhost")
@@ -130,7 +146,10 @@ def find_clip(vname, \
     findVideo = {}
     constrs = {}
     constrs["name"] = ["==", vname]
-    constrs["clipNo"] = ["==", clip_no]
+    if isFull:
+        constrs["isFull"] = ["==", isFull]
+    else:
+        constrs["clipNo"] = ["==", clip_no]
     #add more filters based on the conditions
     
     findVideo["constraints"] = constrs
@@ -159,9 +178,11 @@ def find_video(vname, \
     #vid_arr is an array of video blobs, which we can't use in this case.
     #Therefore, we have to write them to disk first and then materialize them
     #using pre-stored header info and 
+        
     for i in range(len(headers)):
         header_data = headers[i]
-        ithblob = find_clip(vname, condition, size, headers, i)
+        isFull = header_data["isFull"]
+        ithblob = find_clip(vname, condition, size, headers, i, isFull)
         #write the blob to file
         ithname = vname + str(i) + "tmp.mp4"
         ithf = open(ithname, 'wb')

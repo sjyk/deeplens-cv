@@ -34,6 +34,7 @@ class VDMSStorageManager(StorageManager):
         self.content_tagger = content_tagger
         self.clip_headers = []
         self.totalFrames = -1
+        self.videos = set()
     
     def put(self, filename, target, args=DEFAULT_ARGS):
         """In this case, put() adds the file to VDMS, along with
@@ -44,6 +45,7 @@ class VDMSStorageManager(StorageManager):
         Also Note: target is a dummy variable in this case, for the purposes
         of running the same benchmark
         """
+        self.videos.add(target)
         v = VideoStream(filename, args['limit'])
         v = v[Sample(args['sample'])]
         v = v[self.content_tagger]
@@ -84,6 +86,18 @@ class VDMSStorageManager(StorageManager):
         get() retrieves all the clips with the given name that satisfy the given condition.
         """
         return find_video(name, condition, clip_size, self.clip_headers)
+    
+    def delete(self, name):
+        """
+        Note that VDMS currently does not support delete operations, making
+        it impossible to delete the clips on the physical level. Therefore,
+        we simply 'forget' the clips on the deeplens level for now
+        """
+        self.clip_headers = [] #assuming all header info is for one file
+        self.videos.remove(name)
+    
+    def list(self):
+        return list(self.videos)
     
     def size(self, name):
         """

@@ -8,9 +8,12 @@ from dlstorage.core import *
 from dlstorage.constants import *
 from dlstorage.stream import *
 from dlstorage.filesystem.videoio import *
+from dlstorage.filesystem.ffmpeg import *
 from dlstorage.header import *
 from dlstorage.xform import *
 from dlstorage.error import *
+
+from multiprocessing import Pool
 
 import os
 
@@ -23,6 +26,8 @@ class FileSystemStorageManager(StorageManager):
 		self.content_tagger = content_tagger
 		self.basedir = basedir
 		self.videos = set()
+		self.threads = None
+		self.STORAGE_BLOCK_SIZE = 60 #in seconds
 
 		if not os.path.exists(basedir):
 			try:
@@ -32,6 +37,25 @@ class FileSystemStorageManager(StorageManager):
 
 
 	def put(self, filename, target, args=DEFAULT_ARGS):
+
+		#optimized for big puts
+		if not self._parallelEligible(filename, args['limit']):
+			self.doPut(filename, target, args)
+		else:
+			block_put(self,filename, target, block_size=self.STORAGE_BLOCK_SIZE, args=args)
+
+
+	def _parallelEligible(self, filename, limit):
+		if 'http://' in filename or filename == 0:
+			return False
+		elif get_duration(filename) < 2*self.STORAGE_BLOCK_SIZE:
+			return False
+		elif limit != -1:
+			return False
+		else:
+			return True
+
+	def doPut(self, filename, target, args=DEFAULT_ARGS):
 		"""putFromFile adds a video to the storage manager from a file
 		"""
 		v = VideoStream(filename, args['limit'])
@@ -54,8 +78,19 @@ class FileSystemStorageManager(StorageManager):
 
 		self.videos.add(target)
 
+	def setThreadPool(self, workers):
+		if workers == None:
+			self.threads = None
+		else:
+			self.threads = workers
 
-	def get(self, name, condition, clip_size, threads=None):
+	def get(self, name, condition, clip_size):
+		if name in self.videos:
+			return self.doGet(name, condition, clip_size)
+
+		return block_get(self, name, condition, clip_size)
+
+	def doGet(self, name, condition, clip_size):
 		"""retrievies a clip of a certain size satisfying the condition
 		"""
 		if name not in self.videos:
@@ -64,7 +99,10 @@ class FileSystemStorageManager(StorageManager):
 
 		physical_clip = os.path.join(self.basedir, name)
 
-		return read_if(physical_clip, condition, clip_size, threads=threads)
+		if self.threads == None:
+			return read_if(physical_clip, condition, clip_size, threads=None)
+		else:
+			return read_if(physical_clip, condition, clip_size, threads=Pool(self.threads))
 
 
 	def delete(self, name):
@@ -96,5 +134,3 @@ class FileSystemStorageManager(StorageManager):
 				break
 
 		return size
-
-

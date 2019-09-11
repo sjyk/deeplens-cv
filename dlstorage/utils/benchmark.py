@@ -4,9 +4,6 @@ from dlstorage.utils.debug import *
 from dlstorage.VDMSsys.VDMSmanager import *
 import json
 
-from multiprocessing import Pool
-
-
 class PerformanceTest():
 
 	def __init__(self, storage_manager, test_video):
@@ -123,12 +120,12 @@ class PerformanceTest():
 	def getParaTenTenSec(self):
 		for para in range(1,5):
 			args = {'encoding': MP4V, 'size': 10*DEFAULT_FRAME_RATE, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0, 'offset': 0}
-
+			self.sm.setThreadPool(para)
 			#time put
 			self.sm.put(self.test_video, 'test', args)
 
 			now = time.time()
-			time_result = timeof(self.sm.get('test', TRUE, int(10*DEFAULT_FRAME_RATE), threads=Pool(para)))
+			time_result = timeof(self.sm.get('test', TRUE, int(10*DEFAULT_FRAME_RATE)))
 			full_time_result = (time.time() - now)
 			log = {'time': time_result,'first_frame': full_time_result - time_result, 'retr_clip_size': 10, 'para': para}
 			log.update(args)
@@ -136,6 +133,8 @@ class PerformanceTest():
 			self.sm.delete('test')
 
 			print(json.dumps(log))
+
+		self.sm.setThreadPool(None)
 
 
 	def runAll(self):
@@ -154,5 +153,41 @@ class PerformanceTest():
 		#print('[dlstorage] get() for different number of threads 10 sec clips of different 10 sec sizes')
 		#self.getSelTenTenSec()
 
-		
+
+#tests large inserts
+class BulkTest():
+	def __init__(self, storage_manager, test_video, max_workers):
+		self.sm = storage_manager
+		self.test_video = test_video
+		self.max_workers = max_workers
+
+
+	def putOneHr(self):
+
+		for para in range(1, self.max_workers+1):
+			args = {'encoding': MP4V, 'size': -1, 'limit': -1, 'sample': 1.0, 'offset': 0, 'para': para}
+			
+			self.sm.setThreadPool(para)
+
+			now = time.time()
+			
+			self.sm.put(self.test_video, 'test1', args)
+			#self.sm.put(self.test_video, 'test2', args)
+			#self.sm.put(self.test_video, 'test3', args)
+			#self.sm.put(self.test_video, 'test4', args)
+			#self.sm.put(self.test_video, 'test5', args)
+			#self.sm.put(self.test_video, 'test6', args)
+			
+			time_result = (time.time() - now)
+			size_result = 0
+
+			log = {'time': time_result, 'space': size_result}
+			log.update(args)
+
+			self.sm.delete('test1')
+
+			print(json.dumps(log))
+
+
+
 

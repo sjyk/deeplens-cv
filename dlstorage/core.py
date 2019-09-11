@@ -23,6 +23,9 @@ class StorageManager():
 		"""
 		raise NotImplemented("getIf not implemented")
 
+	def setThreadPool(self):
+		raise ValueError("This storage manager does not support threading")
+
 	def delete(self,name):
 		raise NotImplemented("delete not implemented")
 

@@ -57,7 +57,7 @@ class VDMSStorageManager(StorageManager):
             #find duration of video file to compute clip duration
             result = subprocess.Popen(['ffprobe', filename], \
                                       stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
-            dur = [x for x in result.stdout.readlines() if "Duration" in x]
+            dur = [x for x in result.stdout.readlines() if b"Duration" in x]
             #convert duration string to seconds
             inf = dur[0].split(',')
             dInfo = "".join(inf[0].split())

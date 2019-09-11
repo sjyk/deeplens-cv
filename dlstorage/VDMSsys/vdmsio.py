@@ -44,7 +44,8 @@ def add_video(fname, \
     header_dat = header.getHeader()
     props = {}
     props[0] = header_dat
-    addVideo["properties"] = props
+    #addVideo["properties"] = props
+    addVideo["properties"] = header_dat
     query = {}
     query["AddVideo"] = addVideo
     all_queries.append(query)

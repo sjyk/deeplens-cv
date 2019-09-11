@@ -37,11 +37,14 @@ def add_video(fname, \
     all_queries = []
     addVideo = {}
     addVideo["container"] = "mp4"
+    """
     if encoding == H264:
         addVideo["codec"] = "h264"
     else:
         addVideo["codec"] = "xvid"
-    
+        Actually, I think you can only use h264 on VDMS
+    """
+    addVideo["codec"] = "h264"
     header_dat = header.getHeader()
     props = {}
     props[0] = header_dat

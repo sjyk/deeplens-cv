@@ -53,7 +53,7 @@ class VDMSStorageManager(StorageManager):
             self.totalFrames = tf
         elif fsize > 32.0:
             #compute the number of clips we would need for each to be 32 MB
-            numClips = math.ceil(fsize / 32.0)
+            numClips = int(math.ceil(fsize / 32.0))
             #find duration of video file to compute clip duration
             result = subprocess.Popen(['ffprobe', filename], \
                                       stdout = subprocess.PIPE, stderr = subprocess.STDOUT)

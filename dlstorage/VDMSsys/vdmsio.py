@@ -69,7 +69,7 @@ def add_video_clips(fname, \
     else:
         fps = video.get(cv2.CAP_PROP_FPS)
     
-    numFrames = fps * size
+    numFrames = int(fps * size)
     counter = 0
     clipCnt = 0
     props = {}

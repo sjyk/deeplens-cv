@@ -18,12 +18,16 @@ import math
 import subprocess
 import datetime
 import time
+import vdms
+import sys
 
 class VDMSStorageManager(StorageManager):
     #NOTE: Here, size refers to the duration of the clip, 
     #and NOT the number of frames!
     #Another NOTE: We assume that if a VDMSStorageManager instance is used to 
     #put clips in VDMS, then the same instance must be used to get() the clips
+    #Yet another NOTE: we are also assuming a VDMSStorageManager instance has
+    #to be used to put() and get() exactly one file, for now
     DEFAULT_ARGS = {'encoding': H264, 'size': -1, 'limit': -1, 'sample': 1.0}
     
     def __init__(self, content_tagger):
@@ -80,4 +84,41 @@ class VDMSStorageManager(StorageManager):
         get() retrieves all the clips with the given name that satisfy the given condition.
         """
         return find_video(name, condition, clip_size, self.clip_headers)
+    
+    def size(self, name):
+        """
+        retrieve all clips with given name,
+        and add together their sizes
+        """
+        db = vdms.vdms()
+        db.connect("localhost")
         
+        all_queries = []
+        findVideo = {}
+        constrs = {}
+        constrs["name"] = ["==", name]
+        #Assumption: The header information has not been overwritten by
+        #header information for a different file
+        if len(self.clip_headers) > 1:
+            constrs["isFull"] = ["==", False]
+        else:
+            constrs["isFull"] = ["==", True]
+        findVideo["constraints"] = constrs
+        findVideo["container"] = "mp4"
+        findVideo["codec"] = "h264"
+        
+        query = {}
+        query["FindVideo"] = findVideo
+        all_queries.append(query)
+        response, vid_arr = db.query(all_queries)
+        print(response)
+        db.disconnect()
+        
+        if len(vid_arr) < 1:
+            return -1
+        
+        size = 0
+        for v in vid_arr:
+            size += sys.getsizeof(v)
+        
+        return size

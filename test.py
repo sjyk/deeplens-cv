@@ -39,7 +39,7 @@ print(vd.get('desired name', TRUE, 438))
 #p.runAll()
 
 vd = VDMSStorageManager(TestTagger())
-p2 = PerformanceTest(vd, 'TrafficTimeLapse.mp4')
+p2 = PerformanceTest(vd, 'f20sec.mp4')
 #p2.getParaTenTenSec()
 p2.runAll()
 >>>>>>> changed constants, directories, for Ubuntu

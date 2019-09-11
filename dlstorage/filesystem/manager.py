@@ -10,13 +10,14 @@ from dlstorage.stream import *
 from dlstorage.filesystem.videoio import *
 from dlstorage.header import *
 from dlstorage.xform import *
+from dlstorage.error import *
 
 import os
 
 class FileSystemStorageManager(StorageManager):
 	"""The FileSystemStorageManger stores videos as files
 	"""
-	DEFAULT_ARGS = {'encoding': GSC, 'size': -1, 'limit': -1, 'sample': 1.0}
+	DEFAULT_ARGS = {'encoding': GSC, 'size': -1, 'limit': -1, 'sample': 1.0, 'offset': 0}
 
 	def __init__(self, content_tagger, basedir):
 		self.content_tagger = content_tagger
@@ -24,9 +25,13 @@ class FileSystemStorageManager(StorageManager):
 		self.videos = set()
 
 		if not os.path.exists(basedir):
-			os.makedirs(basedir)
+			try:
+				os.makedirs(basedir)
+			except:
+				raise ManagerIOError("Cannot create the directory: " + str(basedir))
 
-	def put(self, filename, target, args=DEFAULT_ARGS, offset=0):
+
+	def put(self, filename, target, args=DEFAULT_ARGS):
 		"""putFromFile adds a video to the storage manager from a file
 		"""
 		v = VideoStream(filename, args['limit'])
@@ -37,9 +42,15 @@ class FileSystemStorageManager(StorageManager):
 		delete_video_if_exists(physical_clip)
 
 		if args['size'] == -1:
-			write_video(v, physical_clip, args['encoding'], ObjectHeader(offset=offset))
+			write_video(v, \
+					    physical_clip, args['encoding'], \
+					    ObjectHeader(offset=args['offset']))
 		else:
-			write_video_clips(v, physical_clip, args['encoding'], ObjectHeader(offset=offset), args['size'])
+			write_video_clips(v, \
+							  physical_clip, \
+							  args['encoding'], \
+							  ObjectHeader(offset=args['offset']), \
+							  args['size'])
 
 		self.videos.add(target)
 
@@ -48,18 +59,26 @@ class FileSystemStorageManager(StorageManager):
 		"""retrievies a clip of a certain size satisfying the condition
 		"""
 		if name not in self.videos:
-			return None
+			raise VideoNotFound(name + " not found in " + str(self.videos))
+
 
 		physical_clip = os.path.join(self.basedir, name)
 
 		return read_if(physical_clip, condition, clip_size, threads=threads)
 
+
 	def delete(self, name):
 		physical_clip = os.path.join(self.basedir, name)
+
+		if name in self.videos:
+			self.videos.remove(name)
+
 		delete_video_if_exists(physical_clip)
+
 
 	def list(self):
 		return list(self.videos)
+
 
 	def size(self, name):
 		seq = 0

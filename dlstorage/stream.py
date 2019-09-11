@@ -6,6 +6,7 @@ This module describes a video iterator that returns an iterator over frames
 in a video
 """
 import cv2
+from dlstorage.error import *
 
 #sources video from the default camera
 DEFAULT_CAMERA = 0
@@ -38,6 +39,10 @@ class VideoStream():
 		"""
 
 		self.cap = cv2.VideoCapture(self.src)
+
+		if not self.cap.isOpened():
+			raise CorruptedOrMissingVideo(str(self.src) + " is corrupted or missing.")
+
 
 		#set sizes after the video is opened
 		self.width = int(self.cap.get(3))   # float

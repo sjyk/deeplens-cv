@@ -15,7 +15,7 @@ class PerformanceTest():
 
 	def putEncodingOneMin(self):
 		for enc in ENCODINGS:
-			args = {'encoding': enc, 'size': -1, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
+			args = {'encoding': enc, 'size': -1, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0, 'offset': 0}
 
 			#time put
 			now = time.time()
@@ -33,7 +33,7 @@ class PerformanceTest():
 
 	def putClipOneMin(self):
 		for size in range(5,60,5):
-			args = {'encoding': MP4V, 'size': size*DEFAULT_FRAME_RATE, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
+			args = {'encoding': MP4V, 'size': size*DEFAULT_FRAME_RATE, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0, 'offset': 0}
 
 			#time put
 			now = time.time()
@@ -51,7 +51,7 @@ class PerformanceTest():
 
 	def getClipSizeOneMin(self):
 		for size in range(5,60,5):
-			args = {'encoding': MP4V, 'size': -1, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
+			args = {'encoding': MP4V, 'size': -1, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0, 'offset': 0}
 
 			#time put
 			self.sm.put(self.test_video, 'test', args)
@@ -69,7 +69,7 @@ class PerformanceTest():
 
 	def getClipSizeTenSec(self):
 		for size in range(5,60,5):
-			args = {'encoding': MP4V, 'size': size, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
+			args = {'encoding': MP4V, 'size': size, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0, 'offset': 0}
 
 			#time put
 			self.sm.put(self.test_video, 'test', args)
@@ -87,7 +87,7 @@ class PerformanceTest():
 
 	def getEncTenTenSec(self):
 		for enc in ENCODINGS:
-			args = {'encoding': enc, 'size': 10*DEFAULT_FRAME_RATE, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
+			args = {'encoding': enc, 'size': 10*DEFAULT_FRAME_RATE, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0, 'offset': 0}
 
 			#time put
 			self.sm.put(self.test_video, 'test', args)
@@ -105,7 +105,7 @@ class PerformanceTest():
 
 	def getSelTenTenSec(self):
 		for size in range(0,70,10):
-			args = {'encoding': MP4V, 'size': 10*DEFAULT_FRAME_RATE, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
+			args = {'encoding': MP4V, 'size': 10*DEFAULT_FRAME_RATE, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0, 'offset': 0}
 
 			#time put
 			self.sm.put(self.test_video, 'test', args)
@@ -122,7 +122,7 @@ class PerformanceTest():
 
 	def getParaTenTenSec(self):
 		for para in range(1,5):
-			args = {'encoding': MP4V, 'size': 10*DEFAULT_FRAME_RATE, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
+			args = {'encoding': MP4V, 'size': 10*DEFAULT_FRAME_RATE, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0, 'offset': 0}
 
 			#time put
 			self.sm.put(self.test_video, 'test', args)

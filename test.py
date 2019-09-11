@@ -11,9 +11,14 @@ f = FileSystemStorageManager(TestTagger(), 'videos')
 p = PerformanceTest(f, '/Users/sanjaykrishnan/Downloads/BigBuckBunny.mp4')
 =======
 p = PerformanceTest(f, 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4')
+<<<<<<< HEAD
 >>>>>>> Updated to clean up and make clear installation directions.
 p.getParaTenTenSec()
 #p.runAll()
+=======
+#p.getParaTenTenSec()
+p.runAll()
+>>>>>>> Updated with some new error handling
 
 =======
 f.put('/Users/sanjaykrishnan/Downloads/BigBuckBunny.mp4', 'bunny')

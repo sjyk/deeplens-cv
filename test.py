@@ -1,4 +1,5 @@
 from dlstorage.utils.benchmark import *
+from dlstorage.utils.vdmsbench import *
 
 <<<<<<< HEAD
 

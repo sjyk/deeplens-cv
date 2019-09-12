@@ -10,6 +10,7 @@ from dlstorage.constants import *
 from dlstorage.stream import *
 from dlstorage.header import *
 from dlstorage.xform import *
+from dlstorage.utils.clip import *
 
 import vdms
 import json
@@ -59,7 +60,7 @@ def add_video(fname, \
     query["AddVideo"] = addVideo
     all_queries.append(query)
     response, res_arr = db.query(all_queries, [[blob]])
-    print(response)
+    #print(response)
     db.disconnect()
     return totalFrames,props
 
@@ -81,11 +82,18 @@ def add_video_clips(fname, \
         fps = video.get(cv2.CAP_PROP_FPS)
     
     numFrames = int(fps * size)
+    #print("numFrames in clip: " + str(numFrames))
     counter = 0
     clipCnt = 0
     props = {}
     vprops = {}
     totalFrames = 0
+    for i,frame in enumerate(vstream):
+        totalFrames += 1
+    
+    if totalFrames <= numFrames:
+        return add_video(fname, vname, vstream, encoding, header)
+
     for i,frame in enumerate(vstream):
         header.update(frame)
         tags.append(frame['tags'])
@@ -105,7 +113,8 @@ def add_video_clips(fname, \
             vprops[clipCnt] = ithprops
             counter = 0
             clipCnt += 1
-        totalFrames = i
+        counter += 1
+    #print("totalFrames in clip: " + str(totalFrames))
     
     db = vdms.vdms()
     db.connect('localhost')
@@ -125,12 +134,13 @@ def add_video_clips(fname, \
     addVideo["accessTime"] = 2
     
     addVideo["properties"] = vprops
+    #print("properties of clip: " + str(vprops))
     
     query = {}
     query["AddVideoBL"] = addVideo
     all_queries.append(query)
     response, res_arr = db.query(all_queries, [[blob]])
-    print(response)
+    #print(response)
     db.disconnect()
     return totalFrames,props
     
@@ -164,7 +174,7 @@ def find_clip(vname, \
     
     all_queries.append(query)
     response, vid_arr = db.query(all_queries)
-    print(response)
+    #print(response)
     db.disconnect()
     return vid_arr
 
@@ -186,10 +196,15 @@ def find_video(vname, \
         header_data = headers[i]
         isFull = header_data["isFull"]
         ithblob = find_clip(vname, condition, size, headers, i, isFull)
+        #temporary workaround
+        if len(ithblob) < 1:
+            return []
+        #print("ithblob: \n")
+        #print(ithblob)
         #write the blob to file
         ithname = vname + str(i) + "tmp.mp4"
         ithf = open(ithname, 'wb')
-        ithf.write(ithblob)
+        ithf.write(ithblob[0])
         ithf.close()
         if condition(header_data):
             pstart, pend = find_clip_boundaries((header_data['start'], \

@@ -86,7 +86,7 @@ class VDMSStorageManager(StorageManager):
         get() retrieves all the clips with the given name that satisfy the given condition.
         NOTE: clip_size is in FRAMES, not duration
         """
-        return find_video(name, condition, clip_size, self.clip_headers)
+        return find_video(name, condition, clip_size, self.clip_headers, self.totalFrames)
     
     def delete(self, name):
         """
@@ -126,7 +126,7 @@ class VDMSStorageManager(StorageManager):
         query["FindVideo"] = findVideo
         all_queries.append(query)
         response, vid_arr = db.query(all_queries)
-        print(response)
+        #print(response)
         db.disconnect()
         
         if len(vid_arr) < 1:

@@ -17,6 +17,8 @@ import json
 import cv2 #it looks like there's no choice but to use opencv because we need 
 #to convert frames to seconds, or vice versa, and so we need the fps of 
 #the original video
+import multiprocessing as mp
+import math
 
 def add_video(fname, \
               vname, \
@@ -178,6 +180,34 @@ def find_clip(vname, \
     db.disconnect()
     return vid_arr
 
+def find_frame(x,y,vname,isFull):
+    db = vdms.vdms()
+    db.connect("localhost")
+    
+    all_queries = []
+    findFrames = {}
+    xToy = range(x, y + 1)
+    xToylst = list(xToy)
+    findFrames["frames"] = xToylst
+    constrs = {}
+    constrs["name"] = ["==", vname]
+    if isFull:
+        constrs["isFull"] = ["==", isFull]
+    
+    findFrames["constraints"] = constrs
+    query = {}
+    query["FindFrames"] = findFrames
+    
+    all_queries.append(query)
+    response, res_arr = db.query(all_queries)
+    db.disconnect()
+    
+    for i,img in enumerate(res_arr):
+        fname = vname + "frame" + str(x+i) + ".png"
+        fd = open(fname, 'wb+')
+        fd.write(img)
+        fd.close()
+
 #return the sequence of frames representing the clip
 #Precondition: the video was stored in its entirety,
 #rather than as clips.
@@ -189,43 +219,27 @@ def find_clip2(vname, \
                isFull, \
                totalFrames):
     
-    db = vdms.vdms()
-    db.connect("localhost")
-    
-    all_queries = []
-    findFrames = {}
     start = clip_no * size
     end = (clip_no + 1)*size
-    if end > totalFrames - 1 and start <= totalFrames - 1:
+    if end >= totalFrames:
         end = totalFrames - 1
-    xToy = range(start, end+1)
-    xToylst = list(xToy)
-    findFrames["frames"] = xToylst
-    constrs = {}
-    constrs["name"] = ["==", vname]
-    if isFull:
-        constrs["isFull"] = ["==", isFull]
-    #else:
-        #constrs["clipNo"] = ["==", clip_no]
-        #uncomment this case and add error handling!
-    #add more filters based on the conditions
-    
-    findFrames["constraints"] = constrs
-    
-    query = {}
-    query["FindFrames"] = findFrames
-    
-    all_queries.append(query)
-    response, res_arr = db.query(all_queries)
-    #print(response)
-    db.disconnect()
-    for i,img in enumerate(res_arr):
-        fname = vname + "frame" + str(i) + ".png"
-        fd = open(fname, 'wb+')
-        fd.write(img)
-        fd.close()
+    tsize = end - start
+    numCores = mp.cpu_count - 1 
+    psize = int(math.ceil(tsize / numCores))
+    endpts = list()
+    for i in range(0, numCores):
+        xp = start + i * psize
+        yp = start + (i+1)*psize
+        if yp >= totalFrames:
+            yp = totalFrames - 1
+        endpts.append((xp,yp))
+    pool = mp.Pool(mp.cpu_count() - 1)
+    results = pool.starmap(find_frame, [(x,y,vname,isFull) for (x,y) in endpts])
+    pool.close()
     
     frames2Clip(vname, start, end, clip_no)
+    
+    
 
 def frames2Clip(vname, \
                start, \

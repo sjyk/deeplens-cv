@@ -178,6 +178,70 @@ def find_clip(vname, \
     db.disconnect()
     return vid_arr
 
+#return the sequence of frames representing the clip
+#Precondition: the video was stored in its entirety,
+#rather than as clips.
+def find_clip2(vname, \
+               condition, \
+               size, \
+               headers, \
+               clip_no, \
+               isFull):
+    
+    db = vdms.vdms()
+    db.connect("localhost")
+    
+    all_queries = []
+    findFrames = {}
+    start = clip_no * size
+    end = (clip_no + 1)*size
+    xToy = range(start, end+1)
+    xToylst = list(xToy)
+    findFrames["frames"] = xToylst
+    constrs = {}
+    constrs["name"] = ["==", vname]
+    if isFull:
+        constrs["isFull"] = ["==", isFull]
+    #else:
+        #constrs["clipNo"] = ["==", clip_no]
+        #uncomment this case and add error handling!
+    #add more filters based on the conditions
+    
+    findFrames["constraints"] = constrs
+    
+    query = {}
+    query["FindFrames"] = findFrames
+    
+    all_queries.append(query)
+    response, res_arr = db.query(all_queries)
+    #print(response)
+    db.disconnect()
+    for img in res_arr:
+        fname = vname + "frame" + str(i) + ".png"
+        fd = open(fname, 'wb+')
+        fd.write(img)
+        fd.close()
+    
+    frames2Clip(vname, start, end, clip_no)
+
+def frames2Clip(vname, \
+               start, \
+               end, \
+               clipNo):
+    img_array = []
+    for i in range(start, end+1):
+        fname = vname + "frame" + str(i) + ".png"
+        img = cv2.imread(fname)
+        height, width, layers = img.shape
+        size = (width,height)
+        img_array.append(img)
+    
+    out = cv2.VideoWriter(vname + str(clipNo) + 'tmp.mp4', cv2.VideoWriter_fourcc(*'XVID'), 30, size)
+    
+    for j in range(len(img_array)):
+        out.write(img_array[i])
+    out.release()
+
 def find_video(vname, \
                condition, \
                size, \
@@ -195,17 +259,8 @@ def find_video(vname, \
     for i in range(len(headers)):
         header_data = headers[i]
         isFull = header_data["isFull"]
-        ithblob = find_clip(vname, condition, size, headers, i, isFull)
-        #temporary workaround
-        if len(ithblob) < 1:
-            return []
-        #print("ithblob: \n")
-        #print(ithblob)
-        #write the blob to file
+        find_clip2(vname, condition, size, headers, i, isFull)
         ithname = vname + str(i) + "tmp.mp4"
-        ithf = open(ithname, 'wb')
-        ithf.write(ithblob[0])
-        ithf.close()
         if condition(header_data):
             pstart, pend = find_clip_boundaries((header_data['start'], \
                                                  header_data['end']), \

@@ -186,7 +186,8 @@ def find_clip2(vname, \
                size, \
                headers, \
                clip_no, \
-               isFull):
+               isFull, \
+               totalFrames):
     
     db = vdms.vdms()
     db.connect("localhost")
@@ -195,6 +196,8 @@ def find_clip2(vname, \
     findFrames = {}
     start = clip_no * size
     end = (clip_no + 1)*size
+    if end > totalFrames - 1 and start <= totalFrames - 1:
+        end = totalFrames - 1
     xToy = range(start, end+1)
     xToylst = list(xToy)
     findFrames["frames"] = xToylst
@@ -259,7 +262,7 @@ def find_video(vname, \
     for i in range(len(headers)):
         header_data = headers[i]
         isFull = header_data["isFull"]
-        find_clip2(vname, condition, size, headers, i, isFull)
+        find_clip2(vname, condition, size, headers, i, isFull, totalFrames)
         ithname = vname + str(i) + "tmp.mp4"
         if condition(header_data):
             pstart, pend = find_clip_boundaries((header_data['start'], \

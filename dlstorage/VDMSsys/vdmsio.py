@@ -216,7 +216,7 @@ def find_clip2(vname, \
     response, res_arr = db.query(all_queries)
     #print(response)
     db.disconnect()
-    for img in res_arr:
+    for i,img in enumerate(res_arr):
         fname = vname + "frame" + str(i) + ".png"
         fd = open(fname, 'wb+')
         fd.write(img)

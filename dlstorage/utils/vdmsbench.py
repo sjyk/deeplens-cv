@@ -57,7 +57,7 @@ class VDMSPerfTest(PerformanceTest):
             
     def getClipSizeOneMin(self):
         for size in range(5,60,5):
-            args = {'encoding': XVID, 'size': size, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
+            args = {'encoding': XVID, 'size': -1, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
 
             #time put
             tname = 'test' + str(self.cnt)
@@ -77,7 +77,7 @@ class VDMSPerfTest(PerformanceTest):
 
     def getClipSizeTenSec(self):
         for size in range(5,60,5):
-            args = {'encoding': XVID, 'size': size, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
+            args = {'encoding': XVID, 'size': -1, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
 
             #time put
             tname = 'test' + str(self.cnt)
@@ -97,7 +97,7 @@ class VDMSPerfTest(PerformanceTest):
 
     def getEncTenTenSec(self):
         for enc in ENCODINGS:
-            args = {'encoding': enc, 'size': 10, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
+            args = {'encoding': enc, 'size': -1, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
 
             #time put
             tname = 'test' + str(self.cnt)
@@ -118,7 +118,7 @@ class VDMSPerfTest(PerformanceTest):
 
     def getSelTenTenSec(self):
         for size in range(0,70,10):
-            args = {'encoding': XVID, 'size': 10, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
+            args = {'encoding': XVID, 'size': -1, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
 
             #time put
             tname = 'test' + str(self.cnt)
@@ -138,7 +138,7 @@ class VDMSPerfTest(PerformanceTest):
 
     def getParaTenTenSec(self):
         for para in range(1,5):
-            args = {'encoding': XVID, 'size': 10, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
+            args = {'encoding': XVID, 'size': -1, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
 
             #time put
             tname = 'test' + str(self.cnt)

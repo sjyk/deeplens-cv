@@ -224,7 +224,7 @@ def find_clip2(vname, \
     if end >= totalFrames:
         end = totalFrames - 1
     tsize = end - start
-    numCores = mp.cpu_count - 1 
+    numCores = mp.cpu_count() - 1 
     psize = int(math.ceil(tsize / numCores))
     endpts = list()
     for i in range(0, numCores):

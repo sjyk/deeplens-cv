@@ -217,7 +217,8 @@ def find_clip2(vname, \
                headers, \
                clip_no, \
                isFull, \
-               totalFrames):
+               totalFrames, \
+               threads):
     
     start = clip_no * size
     end = (clip_no + 1)*size
@@ -225,7 +226,8 @@ def find_clip2(vname, \
         end = totalFrames - 1
     tsize = end - start
     #numCores = mp.cpu_count() - 1 
-    numCores = 3 #3 seems to be the limit
+    #numCores = 3 #3 seems to be the limit
+    numCores = threads
     psize = int(math.ceil(tsize / numCores))
     print("Number of frames per part: " + str(psize))
     endpts = list()
@@ -265,7 +267,8 @@ def find_video(vname, \
                condition, \
                size, \
                headers, \
-               totalFrames):
+               totalFrames, \
+               threads):
     
     clips = clip_boundaries(0, totalFrames-1, size)
     boundaries = []
@@ -278,7 +281,7 @@ def find_video(vname, \
     for i in range(len(headers)):
         header_data = headers[i]
         isFull = header_data["isFull"]
-        find_clip2(vname, condition, size, headers, i, isFull, totalFrames)
+        find_clip2(vname, condition, size, headers, i, isFull, totalFrames, threads)
         ithname = vname + str(i) + "tmp.mp4"
         if condition(header_data):
             pstart, pend = find_clip_boundaries((header_data['start'], \

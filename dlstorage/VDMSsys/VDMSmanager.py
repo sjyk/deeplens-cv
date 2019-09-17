@@ -81,12 +81,12 @@ class VDMSStorageManager(StorageManager):
             self.clip_headers = headers
             self.totalFrames = tf
     
-    def get(self, name, condition, clip_size):
+    def get(self, name, condition, clip_size, threads=1):
         """
         get() retrieves all the clips with the given name that satisfy the given condition.
         NOTE: clip_size is in FRAMES, not duration
         """
-        return find_video(name, condition, clip_size, self.clip_headers, self.totalFrames)
+        return find_video(name, condition, clip_size, self.clip_headers, self.totalFrames, threads)
     
     def delete(self, name):
         """

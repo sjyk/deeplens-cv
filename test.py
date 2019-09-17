@@ -31,6 +31,7 @@ print(f.get('bunny', TRUE, 60*30))
 >>>>>>> commented out merge notes
 #f.put('BigBuckBunny.mp4', 'bunny')
 #print(f.get('bunny', TRUE, 60*30))
+<<<<<<< HEAD
 >>>>>>> changed constants, directories, for Ubuntu
 """
 >>>>>>> removed filesys test
@@ -49,10 +50,12 @@ print(vd.get('desired name', TRUE, 438))
 #p.runAll()
 <<<<<<< HEAD
 =======
+=======
+>>>>>>> changed number of cores
 #=======
-p = PerformanceTest(f, 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4')
+#p = PerformanceTest(f, 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4')
 #p.getParaTenTenSec()
-p.runAll()
+#p.runAll()
 #>>>>>>> master
 >>>>>>> commented out merge notes
 

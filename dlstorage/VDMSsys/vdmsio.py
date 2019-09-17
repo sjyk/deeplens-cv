@@ -224,8 +224,10 @@ def find_clip2(vname, \
     if end >= totalFrames:
         end = totalFrames - 1
     tsize = end - start
-    numCores = mp.cpu_count() - 1 
+    #numCores = mp.cpu_count() - 1 
+    numCores = 3 #3 seems to be the limit
     psize = int(math.ceil(tsize / numCores))
+    print("Number of frames per part: " + str(psize))
     endpts = list()
     for i in range(0, numCores):
         xp = start + i * psize

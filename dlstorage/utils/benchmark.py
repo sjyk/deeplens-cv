@@ -118,7 +118,7 @@ class PerformanceTest():
 
 
 	def getParaTenTenSec(self):
-		for para in range(1,5):
+		for para in range(1,8):
 			args = {'encoding': MP4V, 'size': 10*DEFAULT_FRAME_RATE, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0, 'offset': 0}
 			self.sm.setThreadPool(para)
 			#time put
@@ -151,7 +151,7 @@ class PerformanceTest():
 		print('[dlstorage] get() for different selectivities 10 sec clips of different 10 sec sizes')
 		self.getSelTenTenSec()
 		print('[dlstorage] get() for different number of threads 10 sec clips of different 10 sec sizes')
-		self.getSelTenTenSec()
+		self.getParaTenTenSec()
 
 
 #tests large inserts

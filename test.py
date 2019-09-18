@@ -2,6 +2,7 @@ from dlstorage.utils.benchmark import *
 from dlstorage.utils.vdmsbench import *
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 
 
@@ -59,9 +60,9 @@ print(vd.get('desired name', TRUE, 438))
 #>>>>>>> master
 >>>>>>> commented out merge notes
 
+=======
+>>>>>>> removed unnecessary tests
 vd = VDMSStorageManager(TestTagger())
-#p2 = VDMSPerfTest(vd, 'TrafficTimeLapse.mp4')
-p2 = VDMSPerfTest(vd, 'f60sec.mp4')
-#p2.getParaTenTenSec()
+p2 = VDMSPerfTest(vd, 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4')
 p2.runAll()
 >>>>>>> changed constants, directories, for Ubuntu

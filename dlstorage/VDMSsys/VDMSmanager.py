@@ -20,6 +20,8 @@ import datetime
 import time
 import vdms
 import sys
+import requests
+import cv2
 
 class VDMSStorageManager(StorageManager):
     #NOTE: Here, size refers to the duration of the clip, 
@@ -51,10 +53,37 @@ class VDMSStorageManager(StorageManager):
         v = v[self.content_tagger]
         #find the size of the inputted file: if it's greater than 32MB, VDMS is going to have issues,
         #so we'll have to split the file into clips anyway
-        fsize = os.path.getsize(filename) / 1000000.0
+        if 'http://' in filename or 'https://' in filename:
+            response = requests.head(filename)
+            fsize = float(response.headers['Content-Length']) / 1000000.0
+        else:
+            fsize = os.path.getsize(filename) / 1000000.0
+        
+        #if the file comes from a url, we need to write the video to disk first
+        if 'http://' in filename or 'https://' in filename:
+            fourcc = cv2.VideoWriter_fourcc(*encoding)
+            urllst = filename.split('/')
+            file_name = urllst[-1]
+            video = cv2.VideoCapture(filename)
+            #Find OpenCV version
+            (major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.')
+            if int(major_ver) < 3:
+                frame_rate = video.get(cv2.cv.CV_CAP_PROP_FPS)
+            else:
+                frame_rate = video.get(cv2.CAP_PROP_FPS)
+            
+            out = cv2.VideoWriter(file_name,
+                                  fourcc, 
+                                  frame_rate, 
+                                  (v.width, v.height),
+                                  True)
+            
+            for frame in v:
+                out.write(frame['data'])
+            out.release()
   
         if args['size'] == -1 and fsize <= 32.0:
-            tf, headers = add_video(filename, target, v, args['encoding'], ObjectHeader())
+            tf, headers = add_video(file_name, target, v, args['encoding'], ObjectHeader())
             self.clip_headers = headers
             self.totalFrames = tf
         elif fsize > 32.0:
@@ -73,11 +102,11 @@ class VDMSStorageManager(StorageManager):
             idur = int(fdur)
             clip_size = int(idur / numClips)
             #load the clips into VDMS
-            tf, headers = add_video_clips(filename, target, v, args['encoding'], ObjectHeader(), clip_size)
+            tf, headers = add_video_clips(file_name, target, v, args['encoding'], ObjectHeader(), clip_size)
             self.clip_headers = headers
             self.totalFrames = tf
         else:
-            tf, headers = add_video_clips(filename, target, v, args['encoding'], ObjectHeader(), args['size'])
+            tf, headers = add_video_clips(file_name, target, v, args['encoding'], ObjectHeader(), args['size'])
             self.clip_headers = headers
             self.totalFrames = tf
     

@@ -33,12 +33,16 @@ def url2Disk(vstream, \
     urllst = fname.split('/')
     file_name = urllst[-1]
     frame_rate = 30
-    out = cv2.VideoWriter(file_name,
-                          fourcc, 
-                          frame_rate, 
-                          (vstream.width, vstream.height),
-                          True)
+
+    start = True
     for frame in vstream:
+        if start:
+            out = cv2.VideoWriter(file_name,
+                                  fourcc, 
+                                  frame_rate, 
+                                  (vstream.width, vstream.height),
+                                  True)
+            start = False
         out.write(frame['data'])
     out.release()
 

@@ -64,13 +64,14 @@ class VDMSStorageManager(StorageManager):
             fourcc = cv2.VideoWriter_fourcc(*'XVID')
             urllst = filename.split('/')
             file_name = urllst[-1]
-            video = cv2.VideoCapture(filename)
-            #Find OpenCV version
-            (major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.')
-            if int(major_ver) < 3:
-                frame_rate = video.get(cv2.cv.CV_CAP_PROP_FPS)
-            else:
-                frame_rate = video.get(cv2.CAP_PROP_FPS)
+#            video = cv2.VideoCapture(filename)
+#            #Find OpenCV version
+#            (major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.')
+#            if int(major_ver) < 3:
+#                frame_rate = video.get(cv2.cv.CV_CAP_PROP_FPS)
+#            else:
+#                frame_rate = video.get(cv2.CAP_PROP_FPS)
+            frame_rate = 30
             
             out = cv2.VideoWriter(file_name,
                                   fourcc, 

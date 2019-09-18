@@ -61,28 +61,8 @@ class VDMSStorageManager(StorageManager):
         
         #if the file comes from a url, we need to write the video to disk first
         if 'http://' in filename or 'https://' in filename:
-            fourcc = cv2.VideoWriter_fourcc(*'XVID')
-            urllst = filename.split('/')
-            file_name = urllst[-1]
-#            video = cv2.VideoCapture(filename)
-#            #Find OpenCV version
-#            (major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.')
-#            if int(major_ver) < 3:
-#                frame_rate = video.get(cv2.cv.CV_CAP_PROP_FPS)
-#            else:
-#                frame_rate = video.get(cv2.CAP_PROP_FPS)
-            frame_rate = 30
+            url2Disk(v, filename)
             
-            out = cv2.VideoWriter(file_name,
-                                  fourcc, 
-                                  frame_rate, 
-                                  (v.width, v.height),
-                                  True)
-            
-            for frame in v:
-                out.write(frame['data'])
-            out.release()
-  
         if args['size'] == -1 and fsize <= 32.0:
             tf, headers = add_video(file_name, target, v, args['encoding'], ObjectHeader())
             self.clip_headers = headers

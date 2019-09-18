@@ -20,6 +20,28 @@ import cv2 #it looks like there's no choice but to use opencv because we need
 import multiprocessing as mp
 import math
 
+def url2Disk(vstream, \
+             fname):
+#            video = cv2.VideoCapture(filename)
+#            #Find OpenCV version
+#            (major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.')
+#            if int(major_ver) < 3:
+#                frame_rate = video.get(cv2.cv.CV_CAP_PROP_FPS)
+#            else:
+#                frame_rate = video.get(cv2.CAP_PROP_FPS)
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    urllst = fname.split('/')
+    file_name = urllst[-1]
+    frame_rate = 30
+    out = cv2.VideoWriter(file_name,
+                          fourcc, 
+                          frame_rate, 
+                          (vstream.width, vstream.height),
+                          True)
+    for frame in vstream:
+        out.write(frame['data'])
+    out.release()
+
 def add_video(fname, \
               vname, \
               vstream, \

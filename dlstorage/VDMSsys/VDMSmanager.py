@@ -61,7 +61,11 @@ class VDMSStorageManager(StorageManager):
         
         #if the file comes from a url, we need to write the video to disk first
         if 'http://' in filename or 'https://' in filename:
+            urllst = fname.split('/')
+            file_name = urllst[-1]
             url2Disk(v, filename)
+        else:
+            file_name = filename
             
         if args['size'] == -1 and fsize <= 32.0:
             tf, headers = add_video(file_name, target, v, args['encoding'], ObjectHeader())

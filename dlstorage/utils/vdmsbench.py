@@ -158,12 +158,10 @@ class VDMSPerfTest(PerformanceTest):
 
 
     def runAll(self):
-        """
         print('[dlstorage] put() for different encodings and a video of 1 min')
         self.putEncodingOneMin()
         print('[dlstorage] put() for MP4V and varying clip size for a video of 1 min')
         self.putClipOneMin()
-        """
         print('[dlstorage] get() for MP4V full video of different clip sizes')
         self.getClipSizeOneMin()
         print('[dlstorage] get() for MP4V 10 sec clips of different get clip sizes')

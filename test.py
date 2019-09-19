@@ -63,6 +63,7 @@ print(vd.get('desired name', TRUE, 438))
 =======
 >>>>>>> removed unnecessary tests
 vd = VDMSStorageManager(TestTagger())
-p2 = VDMSPerfTest(vd, 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4')
+#p2 = VDMSPerfTest(vd, 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4')
+p2 = VDMSPerfTest(vd, 'f65sec.mp4')
 p2.runAll()
 >>>>>>> changed constants, directories, for Ubuntu

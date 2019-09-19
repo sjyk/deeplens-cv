@@ -118,7 +118,7 @@ class PerformanceTest():
 
 
 	def getParaTenTenSec(self):
-		for para in range(1,8):
+		for para in range(1,9):
 			args = {'encoding': MP4V, 'size': 10*DEFAULT_FRAME_RATE, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0, 'offset': 0}
 			self.sm.setThreadPool(para)
 			#time put

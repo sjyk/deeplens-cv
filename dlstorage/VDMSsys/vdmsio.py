@@ -225,6 +225,8 @@ def find_frame(x,y,vname,isFull):
     query["FindFrames"] = findFrames
     
     all_queries.append(query)
+    #print("Issuing Query to find frames Between: " + str(x) + "," + str(y))
+    #print(all_queries)
     response, res_arr = db.query(all_queries)
     db.disconnect()
     
@@ -255,7 +257,7 @@ def find_clip2(vname, \
     #numCores = 3 #3 seems to be the limit
     numCores = threads
     psize = int(math.ceil(tsize / numCores))
-    print("Number of frames per part: " + str(psize))
+    #print("Number of frames per part: " + str(psize))
     endpts = list()
     for i in range(0, numCores):
         xp = start + i * psize

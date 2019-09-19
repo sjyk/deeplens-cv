@@ -137,7 +137,7 @@ class VDMSPerfTest(PerformanceTest):
 
 
     def getParaTenTenSec(self):
-        for para in range(1,3):
+        for para in range(3,4):
             args = {'encoding': XVID, 'size': -1, 'limit': 60*DEFAULT_FRAME_RATE, 'sample': 1.0}
 
             #time put
@@ -162,6 +162,7 @@ class VDMSPerfTest(PerformanceTest):
         self.putEncodingOneMin()
         print('[dlstorage] put() for MP4V and varying clip size for a video of 1 min')
         self.putClipOneMin()
+        """
         print('[dlstorage] get() for MP4V full video of different clip sizes')
         self.getClipSizeOneMin()
         print('[dlstorage] get() for MP4V 10 sec clips of different get clip sizes')
@@ -172,6 +173,7 @@ class VDMSPerfTest(PerformanceTest):
         self.getSelTenTenSec()
         print('[dlstorage] get() for different number of threads 10 sec clips of different 10 sec sizes')
         self.getParaTenTenSec()
+        """
 
     
 

@@ -230,11 +230,7 @@ def find_frame(x,y,vname,isFull):
     response, res_arr = db.query(all_queries)
     db.disconnect()
     
-    for i,img in enumerate(res_arr):
-        fname = vname + "frame" + str(x+i) + ".png"
-        fd = open(fname, 'wb+')
-        fd.write(img)
-        fd.close()
+    return res_arr
 
 #return the sequence of frames representing the clip
 #Precondition: the video was stored in its entirety,
@@ -269,26 +265,25 @@ def find_clip2(vname, \
     results = pool.starmap(find_frame, [(x,y,vname,isFull) for (x,y) in endpts])
     pool.close()
     
-    frames2Clip(vname, start, end, clip_no)
+    frames2Clip(vname, start, end, clip_no, results)
     
     
 
 def frames2Clip(vname, \
                start, \
                end, \
-               clipNo):
-    img_array = []
-    for i in range(start, end+1):
-        fname = vname + "frame" + str(i) + ".png"
-        img = cv2.imread(fname)
+               clipNo, \
+               imgs):
+    start = True
+    imstream = IteratorVideoStream(imgs)
+    for img in imstream:
         height, width, layers = img.shape
         size = (width,height)
-        img_array.append(img)
-    
-    out = cv2.VideoWriter(vname + str(clipNo) + 'tmp.mp4', cv2.VideoWriter_fourcc(*'XVID'), 30, size)
-    
-    for j in range(len(img_array)):
-        out.write(img_array[i])
+        if start == True:
+            out = cv2.VideoWriter(vname + str(clipNo) + 'tmp.mp4', cv2.VideoWriter_fourcc(*'XVID'), 30, size)
+            start = False
+        out.write(img)
+        
     out.release()
 
 def find_video(vname, \

@@ -19,6 +19,7 @@ import cv2 #it looks like there's no choice but to use opencv because we need
 #the original video
 import multiprocessing as mp
 import math
+import itertools
 
 def url2Disk(vstream, \
              fname):
@@ -265,7 +266,10 @@ def find_clip2(vname, \
     results = pool.starmap(find_frame, [(x,y,vname,isFull) for (x,y) in endpts])
     pool.close()
     
-    frames2Clip(vname, start, end, clip_no, results)
+    #properly unpack results
+    imgs = list(itertools.chain.from_iterable(results))
+    
+    frames2Clip(vname, start, end, clip_no, imgs)
     
     
 

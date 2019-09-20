@@ -20,6 +20,7 @@ import cv2 #it looks like there's no choice but to use opencv because we need
 import multiprocessing as mp
 import math
 import itertools
+import numpy as np
 
 def url2Disk(vstream, \
              fname):
@@ -269,7 +270,17 @@ def find_clip2(vname, \
     #properly unpack results
     imgs = list(itertools.chain.from_iterable(results))
     
-    frames2Clip(vname, start, end, clip_no, imgs)
+    #convert from byte string to opencv image array
+    img_arrs = []
+    for img in imgs:
+        nparr = np.fromstring(img, np.uint8)
+        img_np = cv2.imdecode(nparr, cv2.CV_LOAD_IMAGE_COLOR) # cv2.IMREAD_COLOR in OpenCV 3.1
+        
+        #img_ipl = cv2.cv.CreateImageHeader((img_np.shape[1], img_np.shape[0]), cv.IPL_DEPTH_8U, 3)
+        #cv2.cv.SetData(img_ipl, img_np.tostring(), img_np.dtype.itemsize * 3 * img_np.shape[1])
+        img_arrs.append(img_np)
+    
+    frames2Clip(vname, start, end, clip_no, img_arrs)
     
     
 

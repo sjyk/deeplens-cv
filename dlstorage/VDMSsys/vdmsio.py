@@ -277,7 +277,8 @@ def frames2Clip(vname, \
     start = True
     imstream = IteratorVideoStream(imgs)
     for img in imstream:
-        height, width, layers = img.shape
+        height = img.height
+        width = img.width
         size = (width,height)
         if start == True:
             out = cv2.VideoWriter(vname + str(clipNo) + 'tmp.mp4', cv2.VideoWriter_fourcc(*'XVID'), 30, size)

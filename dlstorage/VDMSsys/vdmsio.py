@@ -21,6 +21,8 @@ import multiprocessing as mp
 import math
 import itertools
 import numpy as np
+from PIL import Image
+import io
 
 def url2Disk(vstream, \
              fname):
@@ -56,8 +58,15 @@ def add_video(fname, \
     
     tags = []
     totalFrames = 0
+    height = -1
+    width = -1
+    start = True
     for i,frame in enumerate(vstream):
         header.update(frame)
+        if start == True:
+            height = vstream.height
+            width = vstream.width
+            start = False
         tags.append(frame['tags'])
         totalFrames = i
     
@@ -81,6 +90,8 @@ def add_video(fname, \
     props[0] = header_dat
     props[0]["isFull"] = True
     props[0]["name"] = vname
+    props[0]["width"] = width
+    props[0]["height"] = height
     #addVideo["properties"] = props
     vprops = {}
     vprops["name"] = vname
@@ -118,9 +129,14 @@ def add_video_clips(fname, \
     props = {}
     vprops = {}
     totalFrames = 0
+    height = -1
+    width = -1
+    start = True
     for i,frame in enumerate(vstream):
         totalFrames += 1
-    
+        if start == True:
+            height = vstream.height
+            width = vstream.width
     if totalFrames <= numFrames:
         return add_video(fname, vname, vstream, encoding, header)
 
@@ -131,6 +147,8 @@ def add_video_clips(fname, \
         if counter == numFrames:
             props[clipCnt] = header.getHeader()
             props[clipCnt]["clipNo"] = clipCnt #add a clip number for easy
+            props[clipCnt]["width"] = width
+            props[clipCnt]["height"] = height
             #retrieval
             props[clipCnt]["numFrames"] = numFrames
             props[clipCnt]["isFull"] = False
@@ -244,6 +262,8 @@ def find_clip2(vname, \
                clip_no, \
                isFull, \
                totalFrames, \
+               height, \
+               width, \
                threads):
     
     start = clip_no * size
@@ -273,11 +293,21 @@ def find_clip2(vname, \
     #convert from byte string to opencv image array
     img_arrs = []
     for img in imgs:
-        nparr = np.fromstring(img, np.uint8)
-        img_np = cv2.imdecode(nparr, cv2.IMREAD_COLOR) # cv2.IMREAD_COLOR in OpenCV 3.1
-        
+        #OpenCV solution: currently fails due to TypeError: Expected Ptr<cv::UMat> for argument '%s'
+        #nparr = np.fromstring(img, np.uint8)
+        #nparr = np.frombuffer(bytearray(img), dtype=np.uint8)
+        #img_np = cv2.imdecode(nparr, cv2.IMREAD_COLOR) # cv2.IMREAD_COLOR in OpenCV 3.1
+        #img_unp = cv2.UMat(img_np)
+
         #img_ipl = cv2.cv.CreateImageHeader((img_np.shape[1], img_np.shape[0]), cv.IPL_DEPTH_8U, 3)
         #cv2.cv.SetData(img_ipl, img_np.tostring(), img_np.dtype.itemsize * 3 * img_np.shape[1])
+
+        #PIL solution
+        img_bytes = io.BytesIO(bytes(img))
+        img_obj = Image.open(img_bytes)
+        #img_np = img_obj.getdata()
+        img_np = np.array(img_obj)
+        
         img_arrs.append(img_np)
     
     frames2Clip(vname, start, end, clip_no, img_arrs)
@@ -292,8 +322,8 @@ def frames2Clip(vname, \
     start = True
     imstream = IteratorVideoStream(imgs)
     for img in imstream:
-        height = img.height
-        width = img.width
+        height = imstream.height
+        width = imstream.width
         size = (width,height)
         if start == True:
             out = cv2.VideoWriter(vname + str(clipNo) + 'tmp.mp4', cv2.VideoWriter_fourcc(*'XVID'), 30, size)
@@ -320,7 +350,9 @@ def find_video(vname, \
     for i in range(len(headers)):
         header_data = headers[i]
         isFull = header_data["isFull"]
-        find_clip2(vname, condition, size, headers, i, isFull, totalFrames, threads)
+        height = header_data["height"]
+        width = header_data["width"]
+        find_clip2(vname, condition, size, headers, i, isFull, totalFrames, height, width, threads)
         ithname = vname + str(i) + "tmp.mp4"
         if condition(header_data):
             pstart, pend = find_clip_boundaries((header_data['start'], \

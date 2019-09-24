@@ -158,6 +158,7 @@ class VDMSPerfTest(PerformanceTest):
 
 
     def runAll(self):
+        """
         print('[dlstorage] put() for different encodings and a video of 1 min')
         self.putEncodingOneMin()
         print('[dlstorage] put() for MP4V and varying clip size for a video of 1 min')
@@ -173,7 +174,6 @@ class VDMSPerfTest(PerformanceTest):
         self.getSelTenTenSec()
         print('[dlstorage] get() for different number of threads 10 sec clips of different 10 sec sizes')
         self.getParaTenTenSec()
-        """
 
     
 

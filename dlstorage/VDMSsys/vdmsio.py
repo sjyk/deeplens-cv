@@ -328,7 +328,7 @@ def frames2Clip(vname, \
         if start == True:
             out = cv2.VideoWriter(vname + str(clipNo) + 'tmp.mp4', cv2.VideoWriter_fourcc(*'XVID'), 30, size)
             start = False
-        out.write(img)
+        out.write(img['data'])
         
     out.release()
 

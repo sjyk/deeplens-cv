@@ -310,7 +310,7 @@ def find_clip2(vname, \
         
         img_arrs.append(img_np)
     
-    frames2Clip(vname, start, end, clip_no, img_arrs)
+    return frames2Clip(vname, start, end, clip_no, img_arrs)
     
     
 
@@ -319,18 +319,19 @@ def frames2Clip(vname, \
                end, \
                clipNo, \
                imgs):
-    start = True
+#    start = True
     imstream = IteratorVideoStream(imgs)
-    for img in imstream:
-        height = imstream.height
-        width = imstream.width
-        size = (width,height)
-        if start == True:
-            out = cv2.VideoWriter(vname + str(clipNo) + 'tmp.mp4', cv2.VideoWriter_fourcc(*'XVID'), 30, size)
-            start = False
-        out.write(img['data'])
-        
-    out.release()
+#    for img in imstream:
+#        height = imstream.height
+#        width = imstream.width
+#        size = (width,height)
+#        if start == True:
+#            out = cv2.VideoWriter(vname + str(clipNo) + 'tmp.mp4', cv2.VideoWriter_fourcc(*'XVID'), 30, size)
+#            start = False
+#        out.write(img['data'])
+#        
+#    out.release()
+    return imstream
 
 def find_video(vname, \
                condition, \
@@ -352,8 +353,7 @@ def find_video(vname, \
         isFull = header_data["isFull"]
         height = header_data["height"]
         width = header_data["width"]
-        find_clip2(vname, condition, size, headers, i, isFull, totalFrames, height, width, threads)
-        ithname = vname + str(i) + "tmp.mp4"
+        itrvidstream = find_clip2(vname, condition, size, headers, i, isFull, totalFrames, height, width, threads)
         if condition(header_data):
             pstart, pend = find_clip_boundaries((header_data['start'], \
                                                  header_data['end']), \
@@ -362,7 +362,7 @@ def find_video(vname, \
             relevant_clips.update(range(pstart, pend+1))
             boundaries.append((header_data['start'],header_data['end']))
         
-        streams.append(VideoStream(ithname))
+        streams.append(itrvidstream)
     
     relevant_clips = sorted(list(relevant_clips))
     

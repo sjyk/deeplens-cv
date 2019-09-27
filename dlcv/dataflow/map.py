@@ -56,6 +56,18 @@ class Grayscale(Map):
 		ff = data.copy()
 		ff['data'] = cv2.cvtColor(ff['data'], cv2.COLOR_BGR2GRAY)
 		return ff
+
+
+class Resize(Map):
+
+	def __init__(self, scale):
+		self.scale = scale
+
+	def map(self, data):
+		ff = data.copy()
+		newX,newY = ff['data'].shape[1]*self.scale, ff['data'].shape[0]*self.scale
+		ff['data'] = cv2.resize(ff['data'],(int(newX),int(newY))) 
+		return ff
 		
 
 class Cut(Operator): 

@@ -24,6 +24,11 @@ def bb_crop(frame, box):
 	ff = np.copy(frame)
 	return ff[box.y0:box.y1,box.x0:box.x1]
 
+def bb_replace(frame1, box, frame2):
+	ff = np.copy(frame1)
+	ff[box.y0:box.y1,box.x0:box.x1] = frame2
+	return ff
+
 
 def image_match(im1, im2, hess_thresh=150, dist_threshold=1000, accept=0.75):
 	brisk = cv2.BRISK_create(thresh=hess_thresh)

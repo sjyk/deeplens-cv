@@ -20,6 +20,8 @@ class Map(Operator):
 	def __init__(self):
 		pass
 
+	def setCrop(self, crop):
+		self.crop = crop
 
 	def __iter__(self):
 		self.frame_iter = iter(self.video_stream)
@@ -30,11 +32,17 @@ class Map(Operator):
 	def map(self, data):
 		raise NotImplemented("Map must implement a map function")
 
-
 	def __next__(self):
 		frame = next(self.frame_iter)
-		return self.map(frame)
 
+		try:
+			frame_copy = frame.copy()
+			frame_copy['data'] = bb_crop(frame_copy['data'], self.crop)
+			frame_copy = self.map(frame_copy)
+			frame_copy['data'] = bb_replace(frame['data'], self.crop, frame_copy['data'])
+			return frame_copy
+		except:
+			return self.map(frame)
 
 class Crop(Map):
 
@@ -45,7 +53,7 @@ class Crop(Map):
 		self.y1 = y1
 
 	def map(self, data):
-		ff = data.copy()
+		ff = data
 		ff['data'] = ff['data'][self.y0:self.y1,self.x0:self.x1]
 		return ff
 
@@ -53,7 +61,7 @@ class Crop(Map):
 class Grayscale(Map):
 
 	def map(self, data):
-		ff = data.copy()
+		ff = data
 		ff['data'] = cv2.cvtColor(ff['data'], cv2.COLOR_BGR2GRAY)
 		return ff
 
@@ -64,7 +72,7 @@ class Resize(Map):
 		self.scale = scale
 
 	def map(self, data):
-		ff = data.copy()
+		ff = data
 		newX,newY = ff['data'].shape[1]*self.scale, ff['data'].shape[0]*self.scale
 		ff['data'] = cv2.resize(ff['data'],(int(newX),int(newY))) 
 		return ff

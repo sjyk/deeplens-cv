@@ -9,7 +9,7 @@ from dlcv.tracking.event import *
 import cv2
 import numpy as np
 
-v = VideoStream('/Users/sanjaykrishnan/Downloads/tcam.mp4', limit=-1)
+v = VideoStream('/Users/sanjaykrishnan/Downloads/tcam.mp4', limit=1000)
 
 """
 s = TensorFlowObjectDetect('/Users/sanjaykrishnan/Downloads/faster_rcnn_resnet50_coco_2018_01_28/', \
@@ -26,9 +26,17 @@ img_set = []
 #play(v[Grayscale()])
 
 
+"""
 region = Box(200,550,350,750)
 pipeline = v[KeyPoints()][Metric(countIn(region),'one')][Filter('one', 'one_dir', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)]
 print('Left', count(pipeline, 'one_dir', stats=True))
+"""
+
+counter = 0
+region = Box(200,550,350,750)
+k = KeyPoints()
+#k.setCrop(region)
+print('Left', count(v[k][Metric(countIn(region),'one')][Filter('one', 'one_dir', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)], 'one_dir', stats=True))
 
 """
 region = Box(500,550,650,750)

@@ -5,21 +5,46 @@ import numpy as np
 
 class Metric(Map):
 
-	def __init__(self, metric, name):
-		self.metric = metric
+	def __init__(self, name, region):
 		self.name = name
+		self.region = region
+
+
+	def __getitem__(self, xform):
+		"""Applies a transformation to the video stream
+		"""
+		res = xform.apply(self)
+
+		#print(self.logical_plan())
+
+		return res
+
+
+class ActivityMetric(Metric):
+
+	def __init__(self, name, region):
+		super(ActivityMetric, self).__init__(name, region)
+		
 
 	def map(self, data):
-		data[self.name] = self.metric(data)
+		cnt = 0
+
+		for label, pt in data['bounding_boxes']:
+			box = Box(*pt)
+
+			if self.region.contains(box):
+				cnt += 1
+
+		data[self.name] = cnt
 		return data
+
 
 class Filter(Operator):
 
-	def __init__(self, name, event_name, kernel, threshold, delay=0):
+	def __init__(self, name, kernel, threshold, delay=0):
 		self.kernel = kernel
 		self.threshold = threshold
 		self.name = name
-		self.event_name = event_name
 		self.delay = delay
 
 	def __iter__(self):
@@ -48,32 +73,14 @@ class Filter(Operator):
 
 		if self.frame_count > self.last_event + self.delay:
 			if self._dot():
-				out[self.event_name] = True
+				out[self.name] = True
 				self.last_event = self.frame_count
 			else:
-				out[self.event_name] = False
+				out[self.name] = False
 		else:
-			out[self.event_name] = False
+			out[self.name] = False
 
 		self.frame_count += 1
 
 		return out
-
-
-
-
-def countIn(region):
-
-	def inner(data):
-		cnt = 0
-
-		for label, pt in data['bounding_boxes']:
-			box = Box(*pt)
-
-			if region.contains(box):
-				cnt += 1
-
-		return cnt
-
-	return inner
 

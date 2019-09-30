@@ -114,6 +114,13 @@ class Operator():
 		return self
 
 
+	def logical_plan(self):
+		if isinstance(self.video_stream, VideoStream):
+			return [self.video_stream, self]
+		else:
+			return self.video_stream.logical_plan() + [self]
+
+
 
 class Box():
 
@@ -152,4 +159,16 @@ class Box():
 
 	def serialize(self):
 		return int(self.x0),int(self.x1),int(self.y0),int(self.y1)
+
+
+def build(plan):
+	if len(plan) == 0:
+		raise ValueError("Plan is empty")
+	elif len(plan) == 1:
+		return plan[0]
+	else:
+		v = plan[0]
+		for op in plan[1:]:
+			v = v[op]
+		return v
 

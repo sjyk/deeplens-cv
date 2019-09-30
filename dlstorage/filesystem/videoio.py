@@ -142,6 +142,7 @@ def write_video_clips(vstream, \
 		out.write(frame['data'])
 		header.update(frame)
 		global_time_header.update(frame)
+		counter += 1
 
 		if counter == clip_size:
 			output_files.append(build_fmt_file(header.getHeader(), \
@@ -157,12 +158,9 @@ def write_video_clips(vstream, \
 			
 			counter = 0
 			seq += 1
-			
-		else:
-			counter += 1
 
 
-	if counter != 1:
+	if counter != 0:
 		output_files.append(build_fmt_file(header.getHeader(), \
 												file_name, \
 												scratch, \

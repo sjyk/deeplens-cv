@@ -2,7 +2,8 @@
 is copyrighted by the University of Chicago. This project is developed by
 the database group (chidata).
 
-buffer_map.py defines the main adaptive dataflow component in DeepLens
+buffer_map.py defines the main adaptive dataflow component in DeepLens. It 
+leverages SIMD operations when possible. 
 """
 
 import cv2
@@ -21,6 +22,10 @@ class BufferMap(Operator):
 				 buffer_size=1, \
 				 sampling_rate=1, \
 				 resolution=1):
+		"""buffer_map takes in three parameters: 
+		the size of the buffer, a sampling rate, and a
+		resolution resizing.
+		"""
 
 		self.buffer_size = buffer_size
 		self.skip = int(1.0/sampling_rate)
@@ -37,6 +42,8 @@ class BufferMap(Operator):
 		self.super_iter()
 		return self
 
+	#this is the main routine which buffers up the frames and applies a map function
+	#to each buffer
 	def _map(self):
 		prediction_indices = range(0, min(self.buffer_size, len(self.buffer)), self.skip)
 		inp = [self.buffer[p] for p in prediction_indices]
@@ -64,13 +71,14 @@ class BufferMap(Operator):
 
 		#self.updateBatch()
 
+
+	"""map() must be implemented by each subclass.
+	"""
 	def map(self, data):
 		raise NotImplemented("BufferMap must implement a map function")
 
-
+	#iterator producer
 	def __next__(self):
-		#frame = next(self.frame_iter)
-
 		if self.done:
 
 			try:

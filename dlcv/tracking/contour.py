@@ -1,7 +1,18 @@
+"""This file is part of DeepLens which is released under MIT License and 
+is copyrighted by the University of Chicago. This project is developed by
+the database group (chidata).
+
+contour.py defines geometric vision primitives.
+"""
+
 from dlcv.dataflow.map import Map
 import cv2
 
 class KeyPoints(Map):
+	"""KeyPoints uses a canny edge detector for identifying any object
+	 (but not particular classes). You can tag these detections with a 
+	 generic label "unknown" or "object" or whatever you want.
+	"""
 
 	def __init__(self, \
 				 blur=5, \
@@ -9,6 +20,8 @@ class KeyPoints(Map):
 				 edge_high=250, \
 				 area_thresh=10,
 				 label="object"):
+		"""The constructor takes in some parameters for the detector.
+		"""
 
 		self.blur = blur
 		self.edge_low = edge_low
@@ -16,6 +29,8 @@ class KeyPoints(Map):
 		self.area_thresh = area_thresh
 		self.label = label
 
+	"""the map function creates bounding boxes of the form x,y,x,y to identify detection points
+	"""
 	def map(self, data):
 		ff = data
 		gray = cv2.cvtColor(ff['data'], cv2.COLOR_BGR2GRAY)

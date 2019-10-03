@@ -1,11 +1,25 @@
+"""This file is part of DeepLens which is released under MIT License and 
+is copyrighted by the University of Chicago. This project is developed by
+the database group (chidata).
+
+event.py defines some of the main detection primitives used in dlcv.
+"""
 
 from dlcv.struct import Operator, Box
 from dlcv.dataflow.map import Map
 import numpy as np
 
+"""in dlcv there are Metrics and Events. Metrics translate geometric
+vision primtives into numerical time-series, and Events detect patterns
+in these time-series.
+"""
+
 class Metric(Map):
 
 	def __init__(self, name, region):
+		"""A generic metric class takes in a name and a region of interest.
+		The output of this metric is stored in frame[name].
+		"""
 		self.name = name
 		self.region = region
 
@@ -19,6 +33,10 @@ class Metric(Map):
 
 
 class ActivityMetric(Metric):
+	"""The most basic metric is the activity metric
+	which identifies if a certain object has a bounding
+	box contained in a region.
+	"""
 
 	def __init__(self, name, region, filter="object"):
 		self.filter = filter
@@ -39,13 +57,23 @@ class ActivityMetric(Metric):
 		return data
 
 
+
 class Filter(Operator):
+	"""Filter() defines cross-correlation kernel and a threshold. It
+	slides this kernel across the metric and if this threshold is exceeded
+	it defines an event {True, False} variable.
+	"""
 
 	def __init__(self, name, kernel, threshold, delay=0):
+		"""Name is the metric, kernel is a list of numbers defining a 
+		cross-correlation kernel, threshold is a threshold on the value,
+		and the delay is the minimum time between events.
+		"""
 		self.kernel = kernel
 		self.threshold = threshold
 		self.name = name
 		self.delay = delay
+
 
 	def __iter__(self):
 		self.frame_iter = iter(self.video_stream)
@@ -64,8 +92,6 @@ class Filter(Operator):
 			return False
 
 	def __next__(self):
-		"""This implements the skipping logic for the Sampling transformation
-		"""
 		out = next(self.frame_iter)
 		
 		self.buffer.append(out[self.name])

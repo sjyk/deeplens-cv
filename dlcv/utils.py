@@ -1,16 +1,27 @@
+"""This file is part of DeepLens which is released under MIT License and 
+is copyrighted by the University of Chicago. This project is developed by
+the database group (chidata).
+
+utils.py defines some utilities that can be used for debugging and manipulating
+image streams.
+"""
+
 import cv2
 import numpy as np
 
+#plays video stream through the system player
 def play(vstream):
 	for frame in vstream:
 		cv2.imshow('Player',frame['data'])
 		if cv2.waitKey(3) & 0xFF == ord('q'):
 			break
 
+#shows a single frame
 def show(frame):
 	cv2.imshow('Debug',frame)
 	cv2.waitKey(0)
 
+#overlays a bounding box with labels over a frame
 def overlay(frame, bbs):
 	ff = np.copy(frame)
 
@@ -20,6 +31,7 @@ def overlay(frame, bbs):
 
 	return ff
 
+#crop and replace primitives
 def bb_crop(frame, box):
 	ff = np.copy(frame)
 	return ff[box.y0:box.y1,box.x0:box.x1]
@@ -29,7 +41,7 @@ def bb_replace(frame1, box, frame2):
 	ff[box.y0:box.y1,box.x0:box.x1] = frame2
 	return ff
 
-
+#matches frames against each other
 def image_match(im1, im2, hess_thresh=150, dist_threshold=1000, accept=0.75):
 	brisk = cv2.BRISK_create(thresh=hess_thresh)
 	(kps1, descs1) = brisk.detectAndCompute(im1, None)

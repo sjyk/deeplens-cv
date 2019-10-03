@@ -2,7 +2,7 @@
 is copyrighted by the University of Chicago. This project is developed by
 the database group (chidata).
 
-buffer_map.py defines the main adaptive dataflow component in DeepLens
+map.py defines the simplest dataflow component in DeepLens
 """
 
 import cv2
@@ -17,20 +17,25 @@ class Map(Operator):
 	frame by frame.
 	"""
 
+	#dummy constructor that is overridden by inherriting classes
 	def __init__(self):
 		pass
 
+	#subclasses must implement this
+	def map(self, data):
+		raise NotImplemented("Map must implement a map function")
+
+
+	#each operator can be told to crop itself, upto subclasses to figure out
+	#how to use this.
 	def setCrop(self, crop):
 		self.crop = crop
 
+	#sets up a generic iterator
 	def __iter__(self):
 		self.frame_iter = iter(self.video_stream)
-
 		self.super_iter()
 		return self
-
-	def map(self, data):
-		raise NotImplemented("Map must implement a map function")
 
 	def __next__(self):
 		frame = next(self.frame_iter)
@@ -45,7 +50,10 @@ class Map(Operator):
 			return self.map(frame)
 
 
+
 class Crop(Map):
+	"""The Crop() operator crops all future frames to the given bounding box
+	"""
 
 	def __init__(self,x0,y0,x1,y1):
 		self.x0 = x0
@@ -60,6 +68,8 @@ class Crop(Map):
 
 
 class Grayscale(Map):
+	"""The GrayScale() operator sets all future frames to be grayscale
+	"""
 
 	def map(self, data):
 		ff = data
@@ -68,6 +78,9 @@ class Grayscale(Map):
 
 
 class Resize(Map):
+	"""The Resize operator takes in a number that scales the frames up or
+	down by that factor.
+	"""
 
 	def __init__(self, scale):
 		self.scale = scale

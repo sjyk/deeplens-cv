@@ -15,14 +15,13 @@ class Metric(Map):
 		"""
 		res = xform.apply(self)
 
-		#print(self.logical_plan())
-
 		return res
 
 
 class ActivityMetric(Metric):
 
-	def __init__(self, name, region):
+	def __init__(self, name, region, filter="object"):
+		self.filter = filter
 		super(ActivityMetric, self).__init__(name, region)
 		
 
@@ -32,7 +31,8 @@ class ActivityMetric(Metric):
 		for label, pt in data['bounding_boxes']:
 			box = Box(*pt)
 
-			if self.region.contains(box):
+			if label == self.filter and \
+				self.region.contains(box):
 				cnt += 1
 
 		data[self.name] = cnt

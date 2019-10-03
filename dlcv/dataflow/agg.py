@@ -1,15 +1,17 @@
 import time
 
-def count(stream, key, stats=False):
-	counter = 0
+def count(stream, keys, stats=False):
+	counter = {}
 	frame_count = 0
 	now = time.time()
 	for frame in stream:
 		frame_count += 1
-		try:
-			counter += frame[key]
-		except:
-			pass
+
+		for key in keys:
+			try:
+				counter[key] = counter.get(key,0) + frame[key]
+			except:
+				pass
 
 	if not stats:
 		return counter

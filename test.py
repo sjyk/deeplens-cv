@@ -13,11 +13,11 @@ import numpy as np
 v = VideoStream('/Users/sanjaykrishnan/Downloads/tcam.mp4', limit=1000)
 
 region = Box(200,550,350,750)
-pipeline = v[KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)]
+pipeline = v[KeyPoints(label="bear")][ActivityMetric('one', region, filter="bear")][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)]
 
-#print('Left', count(pipeline, 'one', stats=True))
+print('Left', count(pipeline, ['one'], stats=True))
 
-print(countable(pipeline.logical_plan(), 'one'))
+#print(countable(pipeline.logical_plan(), 'one'))
 #print(build(pipeline.logical_plan()))
 
 
@@ -31,7 +31,7 @@ s = TensorFlowObjectDetect('/Users/sanjaykrishnan/Downloads/faster_rcnn_resnet50
 
 
 #prev = None
-img_set = []
+#img_set = []
 #image_match(k['data'], j['data'], hess_thresh=150)
 #play(v[Grayscale()])
 

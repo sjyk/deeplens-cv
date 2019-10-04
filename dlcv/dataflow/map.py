@@ -66,6 +66,12 @@ class Crop(Map):
 		ff['data'] = ff['data'][self.y0:self.y1,self.x0:self.x1]
 		return ff
 
+	def _serialize(self):
+		return {'x0': self.x0,
+				'y0': self.y0,
+				'x1': self.x1,
+				'y1': self.y1}
+
 
 class Grayscale(Map):
 	"""The GrayScale() operator sets all future frames to be grayscale
@@ -75,6 +81,10 @@ class Grayscale(Map):
 		ff = data
 		ff['data'] = cv2.cvtColor(ff['data'], cv2.COLOR_BGR2GRAY)
 		return ff
+
+
+	def _serialize(self):
+		return {}
 
 
 class Resize(Map):
@@ -90,6 +100,9 @@ class Resize(Map):
 		newX,newY = ff['data'].shape[1]*self.scale, ff['data'].shape[0]*self.scale
 		ff['data'] = cv2.resize(ff['data'],(int(newX),int(newY))) 
 		return ff
+
+	def _serialize(self):
+		return {'scale': self.scale}
 		
 
 class Cut(Operator): 
@@ -132,6 +145,10 @@ class Cut(Operator):
 			raise StopIteration()
 
 
+	def _serialize(self):
+		return {'start': self.start, 'end': self.end}
+
+
 
 class Sample(Operator): 
 	"""Sample is a transform that drops frames from a video stream at a given 
@@ -162,6 +179,10 @@ class Sample(Operator):
 			return out
 		else:
 			return self.__next__()
+
+
+	def _serialize(self):
+		return {'ratio': self.ratio}
 
 
 

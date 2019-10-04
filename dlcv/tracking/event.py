@@ -56,6 +56,15 @@ class ActivityMetric(Metric):
 		data[self.name] = cnt
 		return data
 
+	def _serialize(self):
+		return {'name': self.name,
+				'region': ('Box', {'x0': self.region.x0, \
+					               'x1': self.region.x1,
+					               'y0': self.region.y0,
+					               'y1': self.region.y1
+								  }),
+				'filter': self.filter}
+
 
 
 class Filter(Operator):
@@ -109,4 +118,10 @@ class Filter(Operator):
 		self.frame_count += 1
 
 		return out
+
+	def _serialize(self):
+		return {'kernel': self.kernel,
+				'threshold': self.threshold,
+		        'name':self.name,
+		         'delay': self.delay}
 

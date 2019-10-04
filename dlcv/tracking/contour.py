@@ -56,3 +56,11 @@ class KeyPoints(Map):
 
 		ff['bounding_boxes'] = rtn
 		return ff
+
+
+	def _serialize(self):
+		return {'blur': self.blur,
+				'edge_low': self.edge_low,
+				'edge_high': self.edge_high,
+				'area_thresh': self.area_thresh,
+				'label': self.label}

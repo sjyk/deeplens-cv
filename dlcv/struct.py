@@ -141,7 +141,6 @@ class Operator():
 		self.width = self.video_stream.width
 		self.height = self.video_stream.height
 
-
 	#subscripting binds a transformation to the current stream
 	def apply(self, vstream):
 		self.video_stream = vstream
@@ -151,8 +150,6 @@ class Operator():
 		"""Applies a transformation to the video stream
 		"""
 		return xform.apply(self)
-
-
 
 	def lineage(self):
 		"""lineage() returns the sequence of transformations
@@ -165,6 +162,16 @@ class Operator():
 			return [self.video_stream, self]
 		else:
 			return self.video_stream.lineage() + [self]
+
+	def _serialize(self):
+		return NotImplemented("This operator cannot be serialized")
+
+	def serialize(self):
+		try:
+			import json
+			return json.dumps(self._serialize())
+		except:
+			return ManagerIOError("Serialization Error")
 
 
 

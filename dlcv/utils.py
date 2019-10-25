@@ -98,5 +98,5 @@ def labels_to_intervals(labels_list):
         frame_list = sorted(value)
         for interval in [(t[0][1], t[-1][1]) for t in
                          (tuple(g[1]) for g in itertools.groupby(enumerate(frame_list), lambda x: x[0]-x[1]))]:
-            output.add((key, interval[0], interval[1]))
+            output.add((key, interval[0], interval[1]+1))
     return output

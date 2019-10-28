@@ -79,6 +79,7 @@ class BufferMap(Operator):
 
 	#iterator producer
 	def __next__(self):
+
 		if self.done:
 
 			try:
@@ -107,7 +108,6 @@ class BufferMap(Operator):
 			try:
 				frame = next(self.frame_iter)
 			except:
-				self._map()
 				self.done = True
 				return self.__next__()
 
@@ -115,6 +115,18 @@ class BufferMap(Operator):
 			
 			return self.__next__()
 
+
+
+
+#this is a test class to test to see 
+#if buffermap is working well
+class TestBufferMap(BufferMap):
+
+	"""map() must be implemented by each subclass.
+	"""
+	def map(self, data):
+		print('[Buffer Map] Processed: ',len(data), 'frames')
+		return [{}]*len(data)
 
 
 

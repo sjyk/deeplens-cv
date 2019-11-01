@@ -82,6 +82,9 @@ class BufferMap(Operator):
 
 		if self.done:
 
+			if buffer_state == 0:
+				self._map()
+
 			try:
 				self.buffer_state += 1
 
@@ -91,14 +94,15 @@ class BufferMap(Operator):
 
 		elif len(self.buffer) == self.buffer_size:
 
+			if buffer_state == 0:
+				self._map()
+
 			try:
 				self.buffer_state += 1
 
 				return self.output_dict[self.buffer_state - 1]
 
 			except:
-				self._map()
-
 				self.buffer = []
 				self.buffer_state = 0
 				return self.__next__()

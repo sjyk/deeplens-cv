@@ -82,7 +82,7 @@ class BufferMap(Operator):
 
 		if self.done:
 
-			if buffer_state == 0:
+			if self.buffer_state == 0:
 				self._map()
 
 			try:
@@ -94,7 +94,7 @@ class BufferMap(Operator):
 
 		elif len(self.buffer) == self.buffer_size:
 
-			if buffer_state == 0:
+			if self.buffer_state == 0:
 				self._map()
 
 			try:

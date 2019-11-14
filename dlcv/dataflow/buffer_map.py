@@ -37,7 +37,6 @@ class BufferMap(Operator):
 		self.output_dict = []
 		self.buffer_state = 0
 		self.rate = 0.0
-		self.done = False
 
 		self.super_iter()
 		return self
@@ -77,47 +76,47 @@ class BufferMap(Operator):
 	def map(self, data):
 		raise NotImplemented("BufferMap must implement a map function")
 
+
+
+	#fill up the buffer
+	def _fill_buffer(self):
+
+		for i in range(self.buffer_size):
+			frame = next(self.frame_iter, None)
+
+			if frame == None:
+				break
+
+			self.buffer.append(frame)
+
 	#iterator producer
 	def __next__(self):
 
-		if self.done:
+		if self.buffer_state == 0:
+		#buffer is filled so run map first time
+			self._fill_buffer()
 
-			if buffer_state == 0:
-				self._map()
-
-			try:
-				self.buffer_state += 1
-
-				return self.output_dict[self.buffer_state - 1]
-			except:
+			if len(self.buffer) == 0:
 				raise StopIteration()
 
-		elif len(self.buffer) == self.buffer_size:
+			self._map()
 
-			if buffer_state == 0:
-				self._map()
+		#cache the current buffer index
+		index = self.buffer_state
 
-			try:
-				self.buffer_state += 1
-
-				return self.output_dict[self.buffer_state - 1]
-
-			except:
-				self.buffer = []
-				self.buffer_state = 0
-				return self.__next__()
-
+		if self.buffer_state == (len(self.buffer) - 1):
+		#at the end
+			self.buffer = []
+			self.buffer_state = 0
 		else:
+		#at the middle
+			self.buffer_state += 1
 
-			try:
-				frame = next(self.frame_iter)
-			except:
-				self.done = True
-				return self.__next__()
+		return self.output_dict[index]
 
-			self.buffer.append(frame)
 			
-			return self.__next__()
+
+
 
 
 

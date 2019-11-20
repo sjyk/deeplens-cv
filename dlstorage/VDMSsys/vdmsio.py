@@ -341,12 +341,23 @@ def find_video(vname, \
                threads):
     
     clips = clip_boundaries(0, totalFrames-1, size)
+    print("find_video Clips: " + str(clips)) #should only be one clip: the full video
     boundaries = []
     streams = []
     relevant_clips = set()
     #vid_arr is an array of video blobs, which we can't use in this case.
     #Therefore, we have to write them to disk first and then materialize them
     #using pre-stored header info and 
+    
+    if headers[0]["isFull"]:
+        """
+        then, find_frame already returns the correct result stream, so no
+        extra work to do
+        """
+        height = headers[0]["height"]
+        width = headers[0]["width"]
+        itrvidstream = find_clip2(vname, condition, size, headers, 0, True, totalFrames, height, width, threads)
+        return itrvidstream
         
     for i in range(len(headers)):
         header_data = headers[i]
@@ -354,10 +365,18 @@ def find_video(vname, \
         height = header_data["height"]
         width = header_data["width"]
         itrvidstream = find_clip2(vname, condition, size, headers, i, isFull, totalFrames, height, width, threads)
+        nFrames = sum(1 for i in itrvidstream)
+        print("itrvidstream has " + str(nFrames))
         if condition(header_data):
+            print("Start Frame: " + str(header_data['start']))
+            print("End Frame: " + str(header_data['end']))
             pstart, pend = find_clip_boundaries((header_data['start'], \
                                                  header_data['end']), \
                                                  clips)
+            print("pstart: " + str(pstart))
+            print("pend: " + str(pend))
+        
+    
     
             relevant_clips.update(range(pstart, pend+1))
             boundaries.append((header_data['start'],header_data['end']))

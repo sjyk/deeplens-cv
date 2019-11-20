@@ -100,7 +100,13 @@ class VDMSStorageManager(StorageManager):
         get() retrieves all the clips with the given name that satisfy the given condition.
         NOTE: clip_size is in FRAMES, not duration
         """
-        return find_video(name, condition, clip_size, self.clip_headers, self.totalFrames, threads)
+        rvstream = find_video(name, condition, clip_size, self.clip_headers, self.totalFrames, threads)
+        if not any(True for _ in rvstream):
+            print("Final Result is Empty!")
+        else:
+            nFrames = sum(1 for i in rvstream)
+            print("Final Result has " + str(nFrames) )
+        return rvstream
     
     def delete(self, name):
         """

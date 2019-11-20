@@ -13,7 +13,7 @@ class VDMSPerfTest(PerformanceTest):
     def __init__(self, storage_manager, test_video):
         self.sm = storage_manager
         self.test_video = test_video
-        self.cnt = 0
+        self.cnt = 10
     
     def putEncodingOneMin(self):
         for enc in ENCODINGS:
@@ -163,17 +163,19 @@ class VDMSPerfTest(PerformanceTest):
         self.putEncodingOneMin()
         print('[dlstorage] put() for MP4V and varying clip size for a video of 1 min')
         self.putClipOneMin()
+        """
         print('[dlstorage] get() for MP4V full video of different clip sizes')
         self.getClipSizeOneMin()
+        """
         print('[dlstorage] get() for MP4V 10 sec clips of different get clip sizes')
         self.getClipSizeTenSec()
         print('[dlstorage] get() for different encodings 10 sec clips of different 10 sec sizes')
         self.getEncTenTenSec()
         print('[dlstorage] get() for different selectivities 10 sec clips of different 10 sec sizes')
         self.getSelTenTenSec()
-        """
         print('[dlstorage] get() for different number of threads 10 sec clips of different 10 sec sizes')
         self.getParaTenTenSec()
+        """
 
     
 

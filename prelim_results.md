@@ -29,6 +29,13 @@ n_frames = 9183
 time: 417.36s  
 Avg. CPU Usage: 60%  
 
+**Experiment 4**  
+buffer_size = auto  
+n_frames = 9183  
+time: 384.83s  
+Avg. CPU Usage: 62%  
+
+
 ## 6 python scripts simultaneously, 10 video chunks of 30s each  
 **Experiment 4**  
 Splitting the video costs ~600s (nearly at 1x speed)  
@@ -57,3 +64,4 @@ buffer_size = 100
 n_frames = 9000 in total, 900 each  
 time: ~330s  
 Avg. CPU Usage: 87% (last 4 chunks doesn't fully utilize 6-core CPU)  
+

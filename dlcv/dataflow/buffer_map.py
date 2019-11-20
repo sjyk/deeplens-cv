@@ -5,6 +5,7 @@ the database group (chidata).
 buffer_map.py defines the main adaptive dataflow component in DeepLens. It 
 leverages SIMD operations when possible. 
 """
+import logging
 
 import cv2
 from dlcv.utils import *
@@ -19,9 +20,11 @@ class BufferMap(Operator):
 	"""
 
 	def __init__(self,
-				 buffer_size=1, \
+				 buffer_size=10, \
 				 sampling_rate=1, \
-				 resolution=1):
+				 resolution=1,
+				 alpha=1,
+				 ssthresh=300):
 		"""buffer_map takes in three parameters: 
 		the size of the buffer, a sampling rate, and a
 		resolution resizing.
@@ -30,6 +33,9 @@ class BufferMap(Operator):
 		self.buffer_size = buffer_size
 		self.skip = int(1.0/sampling_rate)
 		self.resolution = resolution
+		self.alpha = alpha  # the alpha in exponentially-weighted moving average
+		self.ssthresh = ssthresh  # slow start threshold
+		self.max_buffer_size = -1  # when max rate is reached, ssthresh is fixed
 
 	def __iter__(self):
 		self.frame_iter = iter(self.video_stream)
@@ -47,7 +53,6 @@ class BufferMap(Operator):
 		prediction_indices = range(0, min(self.buffer_size, len(self.buffer)), self.skip)
 		inp = [self.buffer[p] for p in prediction_indices]
 
-		now = time.time()
 
 		if self.resolution == 1:
 			output = self.map([frame['data'] for frame in inp])
@@ -57,10 +62,8 @@ class BufferMap(Operator):
 										   int(frame['data'].shape[0]*self.resolution))) \
 									 for frame in inp])
 
-		delta = time.time() - now
 
 		self.output_dict = list(self.buffer)#copy
-		self.rate = self.buffer_size/delta
 
 		for i,_ in enumerate(self.output_dict):
 			self.output_dict[i].update(output[i])
@@ -77,6 +80,21 @@ class BufferMap(Operator):
 		raise NotImplemented("BufferMap must implement a map function")
 
 
+	def _tune_buffer_size(self, rate, add_factor=50, multiply_factor=0.7):
+		# slow start
+		if self.buffer_size < self.ssthresh:
+			self.buffer_size *= 2
+
+		# additive-increase/multiplicative-decrease (AIMD)
+		if self.max_buffer_size == -1 and rate < self.rate:
+			self.ssthresh = int(self.buffer_size / 2)
+			self.buffer_size = int(self.buffer_size * multiply_factor) + 1
+			self.max_buffer_size = self.buffer_size
+		elif self.max_buffer_size != -1 and self.buffer_size > self.max_buffer_size and rate < self.rate:
+			self.buffer_size = int(self.buffer_size * multiply_factor) + 1
+		else:
+			self.buffer_size = int(self.buffer_size + add_factor)
+
 
 
 	#fill up the buffer
@@ -90,17 +108,36 @@ class BufferMap(Operator):
 
 			self.buffer.append(frame)
 
+		if len(self.buffer) > 0:
+			logging.debug("Frame No. %s", self.buffer[0]['frame'])
+
 	#iterator producer
 	def __next__(self):
-
 		if self.buffer_state == 0:
 		#buffer is filled so run map first time
+			logging.debug("buffer_state: 0. buffer_size: %s", self.buffer_size)
+			now = time.time()
 			self._fill_buffer()
 
 			if len(self.buffer) == 0:
 				raise StopIteration()
 
 			self._map()
+			delta = time.time() - now
+			logging.debug("Time taken for _fill_buffer and _map: %s", delta)
+			logging.debug("Average rate before: %s", self.rate)
+
+			rate = self.buffer_size / delta
+			self._tune_buffer_size(rate)
+
+			logging.debug("Rate this time: %s", rate)
+
+			# exponentially-weighted moving average
+			if self.rate == 0:
+				self.rate = rate
+			else:
+				self.rate = self.alpha * rate + (1 - self.alpha) * self.rate
+			logging.debug("Average rate after: %s", self.rate)
 
 		#cache the current buffer index
 		index = self.buffer_state

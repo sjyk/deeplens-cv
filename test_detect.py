@@ -1,3 +1,4 @@
+import logging
 import sys
 from multiprocessing.pool import Pool
 
@@ -12,7 +13,7 @@ from timeit import default_timer as timer
 
 
 def boxes_to_labels(frame):
-    print('Frame #' + str(frame['frame']) + ': ' + str(frame['bounding_boxes']))
+    # print('Frame #' + str(frame['frame']) + ': ' + str(frame['bounding_boxes']))
     sys.stdout.flush()
     labels = set()
     for item in frame['bounding_boxes']:
@@ -21,6 +22,7 @@ def boxes_to_labels(frame):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
     start = timer()
     sys.setrecursionlimit(100000)
 

@@ -1,5 +1,6 @@
 from dlstorage.simple.manager import *
 from dlstorage.constants import *
+from dlstorage.core import *
 from dlstorage.utils.debug import *
 import json
 
@@ -53,7 +54,7 @@ class PerformanceTest():
 			self.sm.put(self.test_video, 'test', args)
 
 			now = time.time()
-			time_result = timeof(self.sm.get('test', TRUE, int(size*DEFAULT_FRAME_RATE)))
+			time_result = timeof(self.sm.get('test', Condition(filter=TRUE), int(size*DEFAULT_FRAME_RATE)))
 			full_time_result = (time.time() - now)
 			log = {'time': time_result,'first_frame': full_time_result - time_result, 'retr_clip_size': size}
 			log.update(args)
@@ -71,7 +72,7 @@ class PerformanceTest():
 			self.sm.put(self.test_video, 'test', args)
 
 			now = time.time()
-			time_result = timeof(self.sm.get('test', TRUE, int(10*DEFAULT_FRAME_RATE)))
+			time_result = timeof(self.sm.get('test', Condition(filter=TRUE), int(10*DEFAULT_FRAME_RATE)))
 			full_time_result = (time.time() - now)
 			log = {'time': time_result,'first_frame': full_time_result - time_result, 'retr_clip_size': 10}
 			log.update(args)
@@ -89,7 +90,7 @@ class PerformanceTest():
 			self.sm.put(self.test_video, 'test', args)
 
 			now = time.time()
-			time_result = timeof(self.sm.get('test', TRUE, int(10*DEFAULT_FRAME_RATE)))
+			time_result = timeof(self.sm.get('test', Condition(filter=TRUE), int(10*DEFAULT_FRAME_RATE)))
 			full_time_result = (time.time() - now)
 			log = {'time': time_result,'first_frame': full_time_result - time_result, 'retr_clip_size': 10}
 			log.update(args)
@@ -106,7 +107,7 @@ class PerformanceTest():
 			#time put
 			self.sm.put(self.test_video, 'test', args)
 			now = time.time()
-			time_result = timeof(self.sm.get('test', startsBefore(size*DEFAULT_FRAME_RATE), int(10*DEFAULT_FRAME_RATE)))
+			time_result = timeof(self.sm.get('test', Condition(filter=startsBefore(size*DEFAULT_FRAME_RATE)), int(10*DEFAULT_FRAME_RATE)))
 			full_time_result = (time.time() - now)
 			log = {'time': time_result,'first_frame': full_time_result - time_result, 'retr_clip_size': size, 'sel': size/60}
 			log.update(args)

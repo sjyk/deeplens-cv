@@ -9,7 +9,7 @@ videos into the storage system.
 from dlstorage.core import *
 from dlstorage.constants import *
 from dlstorage.stream import *
-from dlstorage.filesystem.videoio import *
+from dlstorage.simple.videoio import *
 from dlstorage.header import *
 from dlstorage.xform import *
 from dlstorage.error import *

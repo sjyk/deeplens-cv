@@ -6,7 +6,7 @@ videoio.py uses opencv (cv2) to read and write files to disk. It contains
 primitives to encode and decode archived and regular video formats.
 """
 
-from dlstorage.filesystem.file import *
+from dlstorage.simple.file import *
 from dlstorage.constants import *
 from dlstorage.stream import *
 from dlstorage.header import ObjectHeader
@@ -258,7 +258,7 @@ def read_if(output, condition, clip_size=5, scratch = DEFAULT_TEMP):
 	for header_data, video in pre_parsed:
 
 
-		if condition(header_data):
+		if condition.filter(header_data):
 			pstart, pend = find_clip_boundaries((header_data['start'], \
 											     header_data['end']), \
 												 clips)
@@ -267,7 +267,7 @@ def read_if(output, condition, clip_size=5, scratch = DEFAULT_TEMP):
 					
 				cH = cut_header(header_data, clips[rel_clip][0], clips[rel_clip][1])
 
-				if condition(cH):
+				if condition.filter(cH):
 					relevant_clips.add(rel_clip)
 
 			boundaries.append((header_data['start'],header_data['end']))

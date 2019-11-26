@@ -6,7 +6,7 @@ debug.py defines some primitives that are useful for debuging and evaluating
 performance.
 """
 from dlstorage.xform import VideoTransform
-from dlstorage.filesystem.file import add_ext
+from dlstorage.simple.file import add_ext
 
 import random
 import string

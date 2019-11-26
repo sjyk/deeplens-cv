@@ -231,7 +231,7 @@ def _all_files(output):
 
 
 #counter using the start and end
-def read_if(output, condition, clip_size=5, scratch = DEFAULT_TEMP, threads=None):
+def read_if(output, condition, clip_size=5, scratch = DEFAULT_TEMP):
 	"""read_if takes a written archive file and reads only
 	those video clips that satisfy a certain header condition.
 
@@ -253,12 +253,10 @@ def read_if(output, condition, clip_size=5, scratch = DEFAULT_TEMP, threads=None
 	streams = []
 	relevant_clips = set()
 
-	if threads == None:
-		pre_parsed = [_file_get(file) for file in _all_files(output)]
-	else:
-		pre_parsed = threads.map(_file_get, _all_files(output))
+	pre_parsed = [_file_get(file) for file in _all_files(output)]
 
 	for header_data, video in pre_parsed:
+
 
 		if condition(header_data):
 			pstart, pend = find_clip_boundaries((header_data['start'], \

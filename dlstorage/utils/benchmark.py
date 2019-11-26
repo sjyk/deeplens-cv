@@ -1,4 +1,4 @@
-from dlstorage.filesystem.manager import *
+from dlstorage.simple.manager import *
 from dlstorage.constants import *
 from dlstorage.utils.debug import *
 import json

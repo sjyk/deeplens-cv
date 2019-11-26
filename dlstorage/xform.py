@@ -68,6 +68,7 @@ class Sample(VideoTransform):
 			ratio (float) - the frequency of frames to skip
 		"""
 		self.skip = int(1.0/ratio)
+		self.counter = 0
 		super(Sample, self).__init__()
 
 
@@ -75,11 +76,12 @@ class Sample(VideoTransform):
 		"""This implements the skipping logic for the Sampling transformation
 		"""
 		out = next(self.input_iter)
-		if (self.vstream.frame_count-1) % self.skip == 0:
-			return out
-		else:
-			return self.__next__()
+		self.counter += 1
 
+		while (self.counter-1) % self.skip != 0:
+			out = next(self.input_iter)
+
+		return out
 
 class Cut(VideoTransform): 
 	"""Cut is a video transformation that returns the clip that lies within a range 

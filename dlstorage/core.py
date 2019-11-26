@@ -43,8 +43,8 @@ class Condition():
 	def __init__(self, \
 				 filter=TRUE, \
 				 crop=None, \
-				 resolution=1, \
-				 sampling=1):
+				 resolution=1.0, \
+				 sampling=1.0):
 
 		self.filter = filter
 		self.crop = crop

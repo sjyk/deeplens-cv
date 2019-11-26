@@ -263,6 +263,10 @@ def read_if(output, condition, clip_size=5, scratch = DEFAULT_TEMP):
 											     header_data['end']), \
 												 clips)
 
+			#handles edge cases
+			if pstart == None or pend == None:
+				continue
+
 			for rel_clip in range(pstart, pend+1):
 					
 				cH = cut_header(header_data, clips[rel_clip][0], clips[rel_clip][1])
@@ -277,4 +281,4 @@ def read_if(output, condition, clip_size=5, scratch = DEFAULT_TEMP):
 	#sort the list
 	relevant_clips = sorted(list(relevant_clips))
 
-	return [materialize_clip(clips[i], boundaries, streams) for i in relevant_clips]
+	return [materialize_clip(clips[i], boundaries, streams, condition.sampling) for i in relevant_clips]

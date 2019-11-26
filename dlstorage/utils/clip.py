@@ -7,7 +7,7 @@ This file contains a bunch of primitives for manipulating clip boundaries.
 
 import itertools
 
-from dlstorage.xform import VideoTransform, Cut
+from dlstorage.xform import VideoTransform, Cut, Sample
 
 #gets the boundaries of the clips
 def clip_boundaries(start,end,size):
@@ -51,13 +51,15 @@ def get_clip_split_merge(clip, boundaries):
 	return rtn
 
 #takes in start end clips
-def materialize_clip(clip, boundaries, streams):
+def materialize_clip(clip, boundaries, streams, sampling=1.0):
 	execution_plan = get_clip_split_merge(clip, boundaries)
 	subiterators = []
 
 	for crop in execution_plan:
 		index, bounds = crop
-		subiterators.append(streams[index][Cut(*bounds)])
+		subiterators.append(streams[index]\
+								   [Cut(*bounds)]\
+								   [Sample(sampling)])
 
 	#v = VideoTransform()
 	return itertools.chain(*subiterators)

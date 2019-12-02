@@ -4,6 +4,7 @@ the database group (chidata).
 
 map.py defines the simplest dataflow component in DeepLens
 """
+import random
 
 import cv2
 from dlcv.utils import *
@@ -186,5 +187,57 @@ class Sample(Operator):
 
 
 
+class SampleClip(Operator):
+	"""SampleClip is a transform that drops clips from a video stream at given
+	clip_size and (1-prob_keep) probability.
+	"""
+
+	def __init__(self, clip_size, prob_keep):
+		"""
+		SampleClip is constructed with a clip size and a probability of keeping
+		the clip.
+
+		Args:
+		    clip_size (int) - the size of each clip
+		    prob_keep (float) - the probability of keeping a clip
+		"""
+		assert prob_keep > 0 and prob_keep <= 1
+		self.clip_size = clip_size
+		self.prob_keep = prob_keep
+		self.counter = 0
+		self.hit = False
+
+	def __iter__(self):
+		self.frame_iter = iter(self.video_stream)
+		self.super_iter()
+		return self
+
+	def __next__(self):
+		"""This implements the skipping logic for the SampleClip transformation
+		"""
+		out = next(self.frame_iter)
+		if self.counter >= self.clip_size:
+			self.hit = False
+			self.counter = 0
+
+		if self.hit == False:
+			if random.random() <= self.prob_keep:
+				# keep this clip
+				self.hit = True
+				self.counter = 0
+			else:
+				# skip this clip
+				for _ in range(self.clip_size - 1):
+					_ = next(self.frame_iter)
+
+		if self.hit:
+			self.counter += 1
+			return out
+
+		return self.__next__()
+
+	def _serialize(self):
+		return {'clip_size': self.clip_size,
+		        'prob_keep': self.prob_keep}
 
 

@@ -140,6 +140,7 @@ class Operator():
 	def super_iter(self):
 		self.width = self.video_stream.width
 		self.height = self.video_stream.height
+		self.frame_count = self.video_stream.frame_count
 
 	#subscripting binds a transformation to the current stream
 	def apply(self, vstream):

@@ -113,6 +113,8 @@ class BufferMap(Operator):
 
 	#iterator producer
 	def __next__(self):
+		self.super_next()
+
 		if self.buffer_state == 0:
 		#buffer is filled so run map first time
 			logging.debug("buffer_state: 0. buffer_size: %s", self.buffer_size)

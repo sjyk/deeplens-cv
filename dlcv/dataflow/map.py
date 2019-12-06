@@ -40,6 +40,7 @@ class Map(Operator):
 
 	def __next__(self):
 		frame = next(self.frame_iter)
+		self.super_next()
 
 		try:
 			frame_copy = frame.copy()
@@ -139,6 +140,7 @@ class Cut(Operator):
 		"""This implements the skipping logic for the cutting transformation
 		"""
 		out = next(self.input_iter)
+		self.super_next()
 
 		if out['frame'] <= self.cut_end:
 			return out
@@ -176,6 +178,8 @@ class Sample(Operator):
 		"""This implements the skipping logic for the Sampling transformation
 		"""
 		out = next(self.frame_iter)
+		self.super_next()
+
 		if (self.video_stream.frame_count-1) % self.skip == 0:
 			return out
 		else:
@@ -216,6 +220,7 @@ class SampleClip(Operator):
 		"""This implements the skipping logic for the SampleClip transformation
 		"""
 		out = next(self.frame_iter)
+		self.super_next()
 		if self.counter >= self.clip_size:
 			self.hit = False
 			self.counter = 0

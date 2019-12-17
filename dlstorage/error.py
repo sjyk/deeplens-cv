@@ -10,3 +10,7 @@ class VideoNotFound(Exception):
 class ManagerIOError(Exception):
    """Unspecified error with the manager"""
    pass
+
+class HeaderError(Exception):
+   """Unspecified error with headers"""
+   pass

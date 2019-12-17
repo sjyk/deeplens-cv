@@ -50,17 +50,64 @@ class TimeHeader(Header):
 
 
 
-class ObjectHeader(TimeHeader):
-
-	"""ObjectHeader keeps track of what objects show up in
-	a clip. It also keeps track of time inheriting from TimeHeader
+class StorageHeader(Header):
+	"""TimeHeader records information strorage access pattern data
 	"""
 
-	def __init__(self, store_bounding_boxes=True, offset=0):
+	def __init__(self, keep_history = True):
+		self.last_accessed = 0
+		self.frequency = 0 
+		self.frequency_start = datetime.now()
+		self.keep_history = keep_history
+		if keep_history:
+			self.access_list = [] # history of access pattern
+			self.access_start = datetime.now()
+
+	#keeps track of the start and the end time of the clips
+	def update(self):
+		time = datetime.now()
+		self.last_accessed = time
+		self.frequency += 1
+		if self.keep_history:
+			self.access_list.append(time)
+
+	def reset_freq(self):
+		self.frequency = 0
+		self.frequency_start = datetime.now()
+
+	def has_hist(self):
+		return self.keep_history
+
+	def reset_hist(self):
+		if self.keep_history:
+			self.access_list = []
+			self.access_start = datetime.now()
+		else:
+			raise HeaderError('history not stored in this header')
+
+	def reset(self):
+		self.last_accessed = 0
+		self.frequency = 0
+		self.frequency_start = datetime.now()
+		if self.keep_history:
+			self.access_list = []
+			self.access_start = datetime.now() 
+
+
+class ObjectHeader(TimeHeader, StorageHeader):
+
+	"""ObjectHeader keeps track of what objects show up in
+	a clip, and the
+	It also keeps track of time inheriting from TimeHeader,
+	and storage access inheriting from StorageHeader.
+	"""
+
+	def __init__(self, store_bounding_boxes=True, offset=0, history = True):
 		self.label_set = set()
 		self.bounding_boxes = []
 		self.store_bounding_boxes = store_bounding_boxes
-		super(ObjectHeader, self).__init__(offset)
+		TimeHeader.__init__(self, offset)
+		StorageHeader.__init__(self, history)
 
 	#handle the update
 	def update(self, frame):
@@ -73,7 +120,7 @@ class ObjectHeader(TimeHeader):
 		if self.store_bounding_boxes:
 			self.bounding_boxes.append(frame['tags'])
 
-		super(ObjectHeader, self).update(frame)
+		TimeHeader.update(self, frame)
 
 	def getHeader(self):
 		llist = sorted(list(self.label_set))
@@ -81,10 +128,16 @@ class ObjectHeader(TimeHeader):
 		return {'start': self.start + self.offset, 
 				'end': self.end + self.offset, 
 				'label_set': llist, 
-				'bounding_boxes': self.bounding_boxes}
+				'bounding_boxes': self.bounding_boxes,
+				'last_accessed': self.last_accessed,
+				'access_frequency': self.frequency,
+				'frequency_start':self.frequency_start,
+				'access_history': self.access_list,
+				'access_history_start': self.access_start}
 
 	def reset(self):
 		self.label_set = set()
 		self.bounding_boxes = []
-		super(ObjectHeader, self).reset()
+		TimeHeader.reset(self)
+		StorageHeader.reset(self)
 

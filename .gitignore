@@ -102,3 +102,12 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# macOS .DS_Store
+.DS_Store
+
+# JetBrains config file
+.idea
+
+# video files
+*.mp4

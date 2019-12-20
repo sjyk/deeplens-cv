@@ -5,8 +5,8 @@ the database group (chidata).
 event.py defines some of the main detection primitives used in dlcv.
 """
 
-from dlcv.struct import Operator, Box
-from dlcv.dataflow.map import Map
+from deeplens.struct import Operator, Box
+from deeplens.dataflow.map import Map
 import numpy as np
 
 """in dlcv there are Metrics and Events. Metrics translate geometric

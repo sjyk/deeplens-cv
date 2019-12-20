@@ -5,7 +5,7 @@ the database group (chidata).
 agg.py defines aggregation functions
 """
 
-from dlcv.dataflow.validation import check_metrics_and_filters, countable
+from deeplens.dataflow.validation import check_metrics_and_filters, countable
 
 import time
 

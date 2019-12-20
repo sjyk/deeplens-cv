@@ -5,7 +5,7 @@ the database group (chidata).
 validation.py (under development!)
 """
 
-from dlcv.tracking.event import *
+from deeplens.tracking.event import *
 
 class UsedBeforeDefined(Exception):
    """Raised when opencv cannot open a video"""

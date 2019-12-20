@@ -7,8 +7,8 @@ map.py defines the simplest dataflow component in DeepLens
 import random
 
 import cv2
-from dlcv.utils import *
-from dlcv.struct import Operator
+from deeplens.utils import *
+from deeplens.struct import Operator
 
 import time
 import numpy as np

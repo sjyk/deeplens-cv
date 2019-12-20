@@ -10,8 +10,8 @@ import tensorflow as tf
 
 import cv2
 
-from dlcv.object_detection.tensorflow_detect.utils import label_map_util
-from dlcv.dataflow.buffer_map import *
+from deeplens.object_detection.tensorflow_detect.utils import label_map_util
+from deeplens.dataflow.buffer_map import *
 
 class TensorFlowObjectDetect(BufferMap):
 

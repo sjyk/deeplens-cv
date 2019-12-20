@@ -5,7 +5,7 @@ the database group (chidata).
 contour.py defines geometric vision primitives.
 """
 
-from dlcv.dataflow.map import Map
+from deeplens.dataflow.map import Map
 import cv2
 
 class KeyPoints(Map):

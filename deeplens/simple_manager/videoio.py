@@ -29,7 +29,7 @@ def write_video(vstream, \
 	information as a part of the video file.
 
 	Args:
-		vstream - a videostream or videotransform
+		vstream - a VideoStream or Operator
 		output - output file
 		header - a header object that constructs the right
 		header information
@@ -50,7 +50,7 @@ def write_video(vstream, \
 	file_name = add_ext(seg_name, AVI)
 
 	global_time_header = ObjectHeader(store_bounding_boxes=False)
-	
+
 	for frame in vstream:
 
 		if start:

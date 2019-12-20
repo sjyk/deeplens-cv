@@ -1,4 +1,3 @@
-from deeplens.simple.manager import *
 from deeplens.constants import *
 from deeplens.core import *
 from deeplens.utils.testing_utils import *

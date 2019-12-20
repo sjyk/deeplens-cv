@@ -6,6 +6,8 @@ header.py defines the formats for the headers that denote which clips have
 what objects.
 """
 
+from datetime import datetime
+
 #abstract header class
 class Header(object):
 	'''

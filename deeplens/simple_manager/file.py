@@ -19,7 +19,7 @@ import random
 import cv2
 
 #import all of the constants
-from dlstorage.constants import *
+from deeplens.constants import *
 
 
 def get_rnd_strng(size=10):

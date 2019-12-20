@@ -5,8 +5,8 @@ the database group (chidata).
 testing_utils.py defines some primitives that are useful for debugging and evaluating
 performance.
 """
-from dlstorage.xform import VideoTransform
-from dlstorage.simple_manager.file import add_ext
+from deeplens.xform import VideoTransform
+from deeplens.simple_manager.file import add_ext
 
 import random
 import string

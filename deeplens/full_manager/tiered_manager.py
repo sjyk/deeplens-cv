@@ -10,15 +10,15 @@ movement and access.
 
 
 #TODO: Note, we ignored multi-threading for now
-from dlstorage.tieredsystem.tiered import *
-from dlstorage.tieredsystem.tiered_videoio import *
+from deeplens.tieredsystem.tiered import *
+from deeplens.tieredsystem.tiered_videoio import *
 
-from dlstorage.constants import *
-from dlstorage.stream import *
-from dlstorage.filesystem.ffmpeg import *
-from dlstorage.header import *
-from dlstorage.xform import *
-from dlstorage.error import *
+from deeplens.constants import *
+from deeplens.stream import *
+from deeplens.filesystem.ffmpeg import *
+from deeplens.header import *
+from deeplens.xform import *
+from deeplens.error import *
 
 import os
 

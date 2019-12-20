@@ -6,13 +6,13 @@ The SimpleStorageManager class acts as a default baseline for the deeplens
 system. It provides a basic file io and network io interface to put and get
 videos into the storage system. 
 """
-from dlstorage.core import *
-from dlstorage.constants import *
-from dlstorage.stream import *
-from dlstorage.simple.videoio import *
-from dlstorage.header import *
-from dlstorage.xform import *
-from dlstorage.error import *
+from deeplens.core import *
+from deeplens.constants import *
+from deeplens.stream import *
+from deeplens.simple.videoio import *
+from deeplens.header import *
+from deeplens.xform import *
+from deeplens.error import *
 
 import os
 

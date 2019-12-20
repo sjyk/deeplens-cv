@@ -1,5 +1,5 @@
-from dlstorage.utils.benchmark import *
-from dlstorage.simple_manager.manager import *
+from deeplens.utils.benchmark import *
+from deeplens.simple_manager.manager import *
 
 f = SimpleStorageManager(TestTagger(), 'videos')
 p = PerformanceTest(f, 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4')

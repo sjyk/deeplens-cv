@@ -1,6 +1,6 @@
 import os
 import subprocess
-from dlstorage.utils.clip import *
+from deeplens.utils.clip import *
 
 from multiprocessing import Pool
 

@@ -13,10 +13,10 @@ import os
 import tarfile
 import random
 import cv2
-from dlstorage.filesystem.file import *
+from deeplens.filesystem.file import *
 
 #import all of the constants
-from dlstorage.constants import *
+from deeplens.constants import *
 
 def is_ref_name(name):
     """Check if a given name is a reference directory

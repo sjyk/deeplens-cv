@@ -4,7 +4,7 @@ the database group (chidata).
 
 core.py defines the basic storage api in deeplens.
 """
-from dlstorage.constants import *
+from deeplens.constants import *
 
 class StorageManager():
 	"""The StorageManager is the basic abstract class that represents a

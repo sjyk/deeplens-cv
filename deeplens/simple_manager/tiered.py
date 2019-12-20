@@ -8,7 +8,7 @@ movement and access.
 
 """
 
-from dlstorage.core import *
+from deeplens.core import *
 
 class TieredFileStorageManager(StorageManager):
 	""" TieredStorageManager is the abstract class that represents a 3 tiered

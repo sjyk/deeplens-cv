@@ -6,10 +6,10 @@ tests.py countains simple unit tests on tiered_manager.py
 """
 import itertools
 
-from dlstorage.tieredsystem.tiered_manager import * 
-from dlstorage.utils.debug import *
-from dlstorage.utils.ui import *
-from dlstorage.storage_partition import storage_partition
+from deeplens.tieredsystem.tiered_manager import *
+from deeplens.utils.debug import *
+from deeplens.utils.ui import *
+from deeplens.storage_partition import storage_partition
 VID_DIRECTORY = '../test_vid/roller_coaster.mp4'# directory of single testing video
 
 STORAGE_DIRECTORY = '../test_store' # directory of storage system

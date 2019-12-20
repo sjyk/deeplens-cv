@@ -1,5 +1,5 @@
 import cv2
-from dlstorage.constants import *
+from deeplens.constants import *
 
 def play(vstream):
 	for frame in vstream:

@@ -6,7 +6,7 @@ This module describes a video iterator that returns an iterator over frames
 in a video
 """
 import cv2
-from dlstorage.error import *
+from deeplens.error import *
 
 #sources video from the default camera
 DEFAULT_CAMERA = 0

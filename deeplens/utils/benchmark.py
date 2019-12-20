@@ -1,7 +1,7 @@
-from dlstorage.simple.manager import *
-from dlstorage.constants import *
-from dlstorage.core import *
-from dlstorage.utils.testing_utils import *
+from deeplens.simple.manager import *
+from deeplens.constants import *
+from deeplens.core import *
+from deeplens.utils.testing_utils import *
 import json
 
 class PerformanceTest():

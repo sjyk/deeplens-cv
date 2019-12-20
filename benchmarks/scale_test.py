@@ -3,7 +3,7 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0,parentdir)
 
-from dlstorage.utils.benchmark import *
+from deeplens.utils.benchmark import *
 
 filename = sys.argv[1]
 threads = int(sys.argv[2])

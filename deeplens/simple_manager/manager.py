@@ -8,10 +8,11 @@ videos into the storage system.
 """
 from deeplens.core import *
 from deeplens.constants import *
-from deeplens.stream import *
-from deeplens.simple.videoio import *
+from deeplens.struct import *
+from deeplens.simple_manager.videoio import *
+from deeplens.simple_manager.file import *
 from deeplens.header import *
-from deeplens.xform import *
+from deeplens.dataflow.map import *
 from deeplens.error import *
 
 import os

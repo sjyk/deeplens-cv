@@ -6,9 +6,9 @@ videoio.py uses opencv (cv2) to read and write files to disk. It contains
 primitives to encode and decode archived and regular video formats.
 """
 
-from deeplens._manager.file import *
+from deeplens.simple_manager.file import *
 from deeplens.constants import *
-from deeplens.stream import *
+from deeplens.struct import *
 from deeplens.header import ObjectHeader
 from deeplens.utils.clip import *
 

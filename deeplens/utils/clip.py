@@ -8,7 +8,7 @@ This file contains a bunch of primitives for manipulating clip boundaries.
 import itertools
 import copy
 
-from deeplens.xform import VideoTransform, Cut
+from deeplens.dataflow.map import Cut
 
 #gets the boundaries of the clips
 def clip_boundaries(start,end,size):

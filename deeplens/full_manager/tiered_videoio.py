@@ -7,12 +7,12 @@ primitives to encode and decode archived and regular video formats for a tiered
 storage system.
 """
 
-from deeplens.filesystem.file import *
+from deeplens.full_manager.tiered_file import *
 from deeplens.constants import *
-from deeplens.stream import *
+from deeplens.struct import *
 from deeplens.header import ObjectHeader
 from deeplens.utils.clip import *
-from deeplens.tieredsystem.tiered_file import *
+from deeplens.simple_manager.file import *
 from deeplens.utils.frame_xform import *
 
 import cv2
@@ -63,7 +63,7 @@ def write_video(vstream, \
         output_extern = output_extern +  '0'
         if not os.path.exists(output_extern):
             os.mkdir(output_extern)
-        seg_name = os.path.join(output_extern, r_nam,e)
+        seg_name = os.path.join(output_extern, r_name)
     
     file_name = add_ext(seg_name, AVI)
     global_time_header = ObjectHeader(store_bounding_boxes=False)

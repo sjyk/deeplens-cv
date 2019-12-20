@@ -14,3 +14,7 @@ class ManagerIOError(Exception):
 class HeaderError(Exception):
    """Unspecified error with headers"""
    pass
+
+class InvalidRegionError(Exception):
+   """The box region specified is invalid"""
+   pass

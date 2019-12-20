@@ -2,10 +2,11 @@
 is copyrighted by the University of Chicago. This project is developed by
 the database group (chidata).
 
-struct.py defines the main data structures used in dlcv. It defines a video
-input stream as well as operators that can transform this stream.
+struct.py defines the main data structures used in deeplens. It defines a
+video input stream as well as operators that can transform this stream.
 """
 import cv2
+from deeplens.error import *
 import numpy as np
 
 #sources video from the default camera
@@ -79,6 +80,58 @@ class VideoStream():
 			raise StopIteration("Iterator is closed")
 
 
+class IteratorVideoStream():
+	"""The video stream class opens a stream of video
+	   from an iterator over frames (e.g., a sequence
+	   of png files). Compatible with opencv streams.
+	"""
+
+	def __init__(self, src, limit=-1):
+		"""Constructs a videostream object
+
+		   Input: src- iterator over frames
+		          limit- Number of frames to pull
+		"""
+		self.src = src
+		self.limit = limit
+
+	def __getitem__(self, xform):
+		"""Applies a transformation to the video stream
+		"""
+		return xform.apply(self)
+
+	def __iter__(self):
+		"""Constructs the iterator object and initializes
+		   the iteration state
+		"""
+
+		try:
+			self.frame_iter = iter(self.src)
+		except:
+			raise CorruptedOrMissingVideo(str(self.src) + " is corrupted or missing.")
+
+		self.next_frame = next(self.frame_iter)
+
+		# set sizes after the video is opened
+		self.width = int(self.next_frame.shape[0])  # float
+		self.height = int(self.next_frame.shape[1])  # float
+
+		self.frame_count = 1
+
+		return self
+
+	def __next__(self):
+		if (self.limit < 0 or self.frame_count <= self.limit):
+
+			ret = self.next_frame
+			self.next_frame = next(self.frame_iter)
+			self.frame_count += 1
+
+			return {'data': ret, 'frame': (self.frame_count - 1)}
+		else:
+			raise StopIteration("Iterator is closed")
+
+
 #helper methods
 def getFrameData(frame):
 	return frame['data']
@@ -104,26 +157,6 @@ def build(lineage):
 		for op in plan[1:]:
 			v = v[op]
 		return v
-
-
-
-class CorruptedOrMissingVideo(Exception):
-   """Raised when opencv cannot open a video"""
-   pass
-
-class VideoNotFound(Exception):
-   """Video with the specified name not found in the manager"""
-   pass
-
-class ManagerIOError(Exception):
-   """Unspecified error with the manager"""
-   pass
-
-class InvalidRegionError(Exception):
-   """The box region specified is invalid"""
-   pass
-
-
 
 
 class Operator():
@@ -202,7 +235,7 @@ class Box():
 	def area(self):
 		"""Calculates the area contained in the box
 		"""
-		return np.abs((x1-x0)*(y1-y0))
+		return np.abs((self.x1 - self.x0) * (self.y1 - self.y0))
 
 	#helpher methods to test intersection and containement
 	def _zero_x_cond(self, other):

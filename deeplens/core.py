@@ -50,4 +50,3 @@ class Condition():
 		self.crop = crop
 		self.resolution = resolution
 		self.sampling = sampling
-

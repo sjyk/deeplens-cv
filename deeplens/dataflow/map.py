@@ -177,13 +177,15 @@ class Sample(Operator):
 	def __next__(self):
 		"""This implements the skipping logic for the Sampling transformation
 		"""
+
 		out = next(self.frame_iter)
 		self.super_next()
 
-		if (self.video_stream.frame_count-1) % self.skip == 0:
-			return out
-		else:
-			return self.__next__()
+		while (self.video_stream.frame_count - 1) % self.skip != 0:
+			out = next(self.frame_iter)
+			self.super_next()
+
+		return out
 
 
 	def _serialize(self):

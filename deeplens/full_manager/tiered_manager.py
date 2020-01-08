@@ -10,7 +10,7 @@ movement and access.
 
 
 #TODO: Note, we ignored multi-threading for now
-from deeplens.simple_manager.tiered import *
+from deeplens.full_manager.tiered import *
 from deeplens.simple_manager.videoio import *
 from deeplens.full_manager.tiered_videoio import *
 from deeplens.full_manager.tiered_file import *

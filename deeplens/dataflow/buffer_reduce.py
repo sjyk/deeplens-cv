@@ -133,6 +133,7 @@ class BufferReduce(Operator):
 
         return self.output
 
+
 class TestBufferReduce(BufferReduce):
 
     def reduce(self, data):

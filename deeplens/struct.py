@@ -268,6 +268,6 @@ class Box():
 	"""The storage manager needs a tuple representation of the box, this serializes it.
 	"""
 	def serialize(self):
-		return int(self.x0),int(self.x1),int(self.y0),int(self.y1)
+		return int(self.x0),int(self.y0),int(self.x1),int(self.y1)
 
 

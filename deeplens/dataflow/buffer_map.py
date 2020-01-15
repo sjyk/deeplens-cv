@@ -23,6 +23,7 @@ class BufferMap(Operator):
 				 buffer_size=10, \
 				 sampling_rate=1, \
 				 resolution=1,
+				 auto_tune=True,
 				 alpha=1,
 				 ssthresh=300):
 		"""buffer_map takes in three parameters: 
@@ -33,6 +34,7 @@ class BufferMap(Operator):
 		self.buffer_size = buffer_size
 		self.skip = int(1.0/sampling_rate)
 		self.resolution = resolution
+		self.auto_tune = auto_tune
 		self.alpha = alpha  # the alpha in exponentially-weighted moving average
 		self.ssthresh = ssthresh  # slow start threshold
 		self.max_buffer_size = -1  # when max rate is reached, ssthresh is fixed
@@ -125,21 +127,23 @@ class BufferMap(Operator):
 				raise StopIteration()
 
 			self._map()
-			delta = time.time() - now
-			logging.debug("Time taken for _fill_buffer and _map: %s", delta)
-			logging.debug("Average rate before: %s", self.rate)
 
-			rate = self.buffer_size / delta
-			self._tune_buffer_size(rate)
+			if self.auto_tune == True:
+				delta = time.time() - now
+				logging.debug("Time taken for _fill_buffer and _map: %s", delta)
+				logging.debug("Average rate before: %s", self.rate)
 
-			logging.debug("Rate this time: %s", rate)
+				rate = self.buffer_size / delta
+				self._tune_buffer_size(rate)
 
-			# exponentially-weighted moving average
-			if self.rate == 0:
-				self.rate = rate
-			else:
-				self.rate = self.alpha * rate + (1 - self.alpha) * self.rate
-			logging.debug("Average rate after: %s", self.rate)
+				logging.debug("Rate this time: %s", rate)
+
+				# exponentially-weighted moving average
+				if self.rate == 0:
+					self.rate = rate
+				else:
+					self.rate = self.alpha * rate + (1 - self.alpha) * self.rate
+				logging.debug("Average rate after: %s", self.rate)
 
 		#cache the current buffer index
 		index = self.buffer_state
@@ -153,12 +157,6 @@ class BufferMap(Operator):
 			self.buffer_state += 1
 
 		return self.output_dict[index]
-
-			
-
-
-
-
 
 
 #this is a test class to test to see 

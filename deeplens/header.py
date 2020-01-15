@@ -9,108 +9,108 @@ what objects.
 from datetime import datetime
 from deeplens.error import HeaderError
 
+def _check_keys(header, keys):
+    '''
+    Check that keys are in header
+    '''
+    return all(key in header for key in keys)
+
 #abstract header class
-class Header(object):
+class HeaderFunct(object):
 	'''
 	Just a placeholder for error checking
 	'''
+    def __init__(self, header):
+        self.header = header
+        self.keys = []
 
 	def update(self, frame):
 		raise NotImplemented("All headers must implement an update call")
 
-	def getHeader(self):
-		raise NotImplemented("All headers must implement a getHeader call")
+    def reset(self):
+        raise NotImplemented("All headers must implement a reset call")
 
-	def reset(self):
-		raise NotImplemented("All headers must implement a reset call")
-
-
-
-
-class TimeHeader(Header):
+class TimeHeader(HeaderFunct):
 	"""TimeHeader represents the most basic header type
 	that accounts for temporally segmented clips.
 	"""
 
-	def __init__(self, offset=0):
-		self.start = float("inf")
-		self.offset = offset
-		self.end = -1
+	def __init__(self, header, forced_new = False, offset=0):
+        super().__init__(header, reselt)
+        self.keys.extend(['start', 'offset', 'end'])
+        if forced_new or not _check_keys(self.header, self.keys):
+            self.header['start'] = float("inf")
+            self.header['offset'] = offset
+            self.header['end'] = -1
 
 	#keeps track of the start and the end time of the clips
 	def update(self, frame):
-		self.start = int(min(self.start, frame['frame']))
-		self.end = int(max(self.end, frame['frame']))
-
-	def getHeader(self):
-		return {'start': self.start + self.offset, 
-				'end': self.end + self.offset}
+		self.header['start'] = int(min(self.header['start'], frame['frame']))
+		self.header['end'] = int(max(self.header['end'], frame['frame']))
 
 	def reset(self):
-		self.start = float("inf")
-		self.end = -1
+		self.header['start'] = float("inf")
+		self.header['end'] = -1
 
-
-
-
-class StorageHeader(Header):
-	"""TimeHeader records information strorage access pattern data
+class StorageHeader(HeaderFunct):
+	"""StorageHeader records information strorage access pattern data
 	"""
 
-	def __init__(self, keep_history = True):
-		self.last_accessed = 0
-		self.frequency = 0 
-		self.frequency_start = datetime.now()
-		self.keep_history = keep_history
-		if keep_history:
-			self.access_list = [] # history of access pattern
-			self.access_start = datetime.now()
+	def __init__(self, header, forced_new = False, keep_history = True):
+        super().__init__(header, new)
+        self.keys.extend(['last_accessed', 'frequency', 'frequency_start', 'keep_history',\
+                         'access_list', 'access_start'])
+        if new or not _check_keys(self.header, self.keys):
+            self.header['last_accessed'] = 0
+            self.header['frequency'] = 0 
+            self.header['frequency_start'] = datetime.now()
+            self.header['keep_history'] = keep_history
+            self.header['access_list'] = [] # history of access pattern
+            self.header['access_start'] = datetime.now()
 
 	#keeps track of the start and the end time of the clips
 	def update(self):
-		time = datetime.now()
-		self.last_accessed = time
-		self.frequency += 1
-		if self.keep_history:
-			self.access_list.append(time)
+		self.header['time'] = datetime.now()
+		self.header['last_accessed'] = time
+		self.header['frequency'] += 1
+		if self.header['keep_history']:
+			self.header['access_list'].append(time)
 
 	def reset_freq(self):
-		self.frequency = 0
-		self.frequency_start = datetime.now()
+		self.header['frequency'] = 0
+		self.header['frequency_start'] = datetime.now()
 
 	def has_hist(self):
-		return self.keep_history
+		return self.header['keep_history']
 
 	def reset_hist(self):
-		if self.keep_history:
-			self.access_list = []
-			self.access_start = datetime.now()
+		if self.['keep_history']:
+			self.['access_list'] = []
+			self.['access_start'] = datetime.now()
 		else:
 			raise HeaderError('history not stored in this header')
 
 	def reset(self):
-		self.last_accessed = 0
-		self.frequency = 0
-		self.frequency_start = datetime.now()
+		self.header.last_accessed = 0
+		self.reset_freq()
 		if self.keep_history:
-			self.access_list = []
-			self.access_start = datetime.now() 
+			self.reset_hist()
 
 
-class ObjectHeader(TimeHeader, StorageHeader):
+class ObjectHeader(TimeHeader):
 
 	"""ObjectHeader keeps track of what objects show up in
 	a clip, and the
 	It also keeps track of time inheriting from TimeHeader,
-	and storage access inheriting from StorageHeader.
 	"""
 
-	def __init__(self, store_bounding_boxes=True, offset=0, history = True):
-		self.label_set = set()
-		self.bounding_boxes = []
-		self.store_bounding_boxes = store_bounding_boxes
-		TimeHeader.__init__(self, offset)
-		StorageHeader.__init__(self, history)
+	def __init__(self, header, forced_new = True, store_bounding_boxes=True, offset=0):
+        super().__init__(header, new, offset)
+        self.keys.extend(['label_set', 'bound_boxes', 'store_bound_boxes'])
+        if new or not _check_keys(self.header):
+		    self.header['label_set'] = set()
+		    self.header['bounding_boxes'] = []
+		    self.header['store_bounding_boxes'] = store_bounding_boxes
 
 	#handle the update
 	def update(self, frame):
@@ -118,29 +118,14 @@ class ObjectHeader(TimeHeader, StorageHeader):
 			raise ValueError('Not compatible with this type of video')
 
 		for label, bb in frame['tags']:
-			self.label_set.add(label)
+			self.header['label_set'].add(label)
 		
 		if self.store_bounding_boxes:
-			self.bounding_boxes.append(frame['tags'])
+			self.header['bounding_boxes'].append(frame['tags'])
 
 		TimeHeader.update(self, frame)
 
-	def getHeader(self):
-		llist = sorted(list(self.label_set))
-
-		return {'start': self.start + self.offset, 
-				'end': self.end + self.offset, 
-				'label_set': llist, 
-				'bounding_boxes': self.bounding_boxes,
-				'last_accessed': self.last_accessed,
-				'access_frequency': self.frequency,
-				'frequency_start':self.frequency_start,
-				'access_history': self.access_list,
-				'access_history_start': self.access_start}
-
 	def reset(self):
-		self.label_set = set()
-		self.bounding_boxes = []
-		TimeHeader.reset(self)
-		StorageHeader.reset(self)
-
+		self.header['label_set'] = set()
+		self.header['bounding_boxes'] = []
+		super().reset()

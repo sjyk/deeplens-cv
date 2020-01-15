@@ -10,7 +10,7 @@ storage system.
 from deeplens.full_manager.tiered_file import *
 from deeplens.constants import *
 from deeplens.struct import *
-from deeplens.header import ObjectHeader
+from deeplens.header import *
 from deeplens.utils.clip import *
 from deeplens.simple_manager.file import *
 from deeplens.utils.frame_xform import *
@@ -23,97 +23,11 @@ import shutil
 from pathlib import Path
 from datetime import datetime
 
-
-# TODO: Refactor this file because it is getting too long/complicated
-
-def write_video(vstream, \
-                output, \
-                encoding, \
-                header,
-                output_extern = None, \
-                scratch= DEFAULT_TEMP, \
-                frame_rate=DEFAULT_FRAME_RATE, \
-                header_cmp=RAW):
-    """write_video takes a stream of video and writes
-    it to disk. It includes the specified header 
-    information as a part of the video file.
-
-    Args:
-        vstream - a videostream or videotransform
-        output - output file
-        header - a header object that constructs the right
-        header information
-        scratch - temporary space to use
-        frame_rate - the frame_rate of the video
-        header_cmp - compression if any on the header
-        output_extern - if the file goes to external 
-        storage, specify directory
-    """
-
-    # Define the codec and create VideoWriter object
-    fourcc = cv2.VideoWriter_fourcc(*encoding)
-    start = True
-
-    #tmp file for the video
-
-    r_name = get_rnd_strng()
-    if output_extern == None:
-        seg_name = os.path.join(scratch, r_name)
-    else:
-        output_extern = output_extern +  '0'
-        if not os.path.exists(output_extern):
-            os.mkdir(output_extern)
-        seg_name = os.path.join(output_extern, r_name)
-    
-    file_name = add_ext(seg_name, AVI)
-    global_time_header = ObjectHeader(store_bounding_boxes=False)
-    
-    for frame in vstream:
-
-        if start:
-
-            out = cv2.VideoWriter(file_name,
-                                  fourcc, 
-                                  frame_rate, 
-                                  (vstream.width, vstream.height),
-                                  True)
-            start = False
-
-        header.update(frame)
-
-        out.write(frame['data'])
-        global_time_header.update(frame)
-
-    if output_extern:
-        ref_name = os.path.join(scratch, r_name)
-        ref_file = add_ext(ref_name, '.txt')
-        write_ref_file(ref_file, output_extern)
-        file_name = ref_file #ref_file becomes the video
-
-        ext = '.ref'
-    else:
-        ext = '.seq'
-    seg_start_file = write_block(global_time_header.getHeader(), \
-                                    None ,\
-                                    add_ext(output, '.start'))
-    
-    header = header.getHeader()
-    header['seq'] = 0
-    return [seg_start_file, \
-            build_fmt_file(header, \
-                           file_name, \
-                           scratch, \
-                           add_ext(output, ext, 0), 
-                           header_cmp, \
-                           RAW,\
-                           r_name)]
-
-
-
+# TODO: fix headers and figure out what we're storing as crop group
 def write_video_auto(vstream, \
                         output, \
                         encoding, \
-                        header,
+                        header_info,
                         output_extern = None, \
                         scratch = DEFAULT_TEMP, \
                         frame_rate=DEFAULT_FRAME_RATE, \
@@ -127,8 +41,7 @@ def write_video_auto(vstream, \
     Args:
         vstream - a videostream or videotransform
         output - output file
-        header - a header object that constructs the right
-        header information
+        header_info - header information
         clip_size - how many frames in each clip
         scratch - temporary space to use
         frame_rate - the frame_rate of the video
@@ -143,8 +56,11 @@ def write_video_auto(vstream, \
 
     output_files = []
 
-    global_time_header = ObjectHeader(store_bounding_boxes=False)
-    #clip_size = min(global_time_header.end, clip_size)
+    global_time_header = {}
+    header = {}
+    update_global_header = ObjectHeader(global_time_header,\ 
+                                        store_bounding_boxes=False, offset=header_info['offset'])
+    
     out_vids = []
     r_names = []
     file_names = []
@@ -279,139 +195,12 @@ def write_video_auto(vstream, \
 
     return output_files
 
-
-
-def write_video_clips(vstream, \
-                        output, \
-                        encoding, \
-                        header,
-                        clip_size,
-                        output_extern = None, \
-                        scratch = DEFAULT_TEMP, \
-                        frame_rate=DEFAULT_FRAME_RATE, \
-                        header_cmp=RAW):
-    """write_video_clips takes a stream of video and writes
-    it to disk. It includes the specified header 
-    information as a part of the video file. The difference is that 
-    it writes a video to disk/external storage from a stream in clips of a specified 
-    size
-
-    Args:
-        vstream - a videostream or videotransform
-        output - output file
-        header - a header object that constructs the right
-        header information
-        clip_size - how many frames in each clip
-        scratch - temporary space to use
-        frame_rate - the frame_rate of the video
-        header_cmp - compression if any on the header
-        output_extern - if the file goes to external 
-        storage, specify directory
-    """
-
-    # Define the codec and create VideoWriter object
-    counter = 0
-    seq = 0
-
-    output_files = []
-
-    global_time_header = ObjectHeader(store_bounding_boxes=False)
-    #clip_size = min(global_time_header.end, clip_size)
-
-    for frame in vstream:
-
-        if counter == 0:
-            #tmp file for the video
-            r_name = get_rnd_strng()
-            if output_extern:
-                output_extern_seq = output_extern +  str(seq)
-                if not os.path.exists(output_extern_seq):
-                    os.mkdir(output_extern_seq)
-                seg_name = os.path.join(output_extern_seq, r_name)
-            else:
-                seg_name = os.path.join(scratch, r_name)
-            file_name = add_ext(seg_name, AVI, seq)
-            fourcc = cv2.VideoWriter_fourcc(*encoding)
-
-            out_vid = cv2.VideoWriter(file_name,
-                                  fourcc, 
-                                  frame_rate, 
-                                  (vstream.width, vstream.height),
-                                  True)
-
-        out_vid.write(frame['data'])
-        header.update(frame)
-        global_time_header.update(frame)
-        counter += 1
-
-        if counter == clip_size:
-            if output_extern:
-                ref_name = output_extern +  str(seq)
-                ref_file = add_ext(ref_name, '.txt')
-                write_ref_file(ref_file, output_extern_seq)
-                file_name = ref_file #ref_file becomes the video
-                ext = '.ref'
-            else:
-                ext = '.seq'
-            header_dict = header.getHeader()
-            header_dict['seq'] = seq
-            output_files.append(build_fmt_file(header_dict, \
-                                                file_name, \
-                                                scratch, \
-                                                add_ext(output, ext, seq), \
-                                                header_cmp, \
-                                                RAW, 
-                                                r_name))
-
-            header.reset()
-            out_vid.release()
-            
-            counter = 0
-            seq += 1
-
-
-    if counter != 0:
-        if output_extern:
-            ref_name = output_extern +  str(seq)
-            if not os.path.exists(output_extern_seq):
-                os.mkdir(output_extern_seq)
-            #ref_name = os.path.join(scratch, r_name)
-            
-            ref_file = add_ext(ref_name, '.txt')
-            write_ref_file(ref_file, output_extern_seq)
-            file_name = ref_file #ref_file becomes the video
-            ext = '.ref'
-        else:
-            ext = '.seq'
-        header_dict = header.getHeader()
-        header_dict['seq'] = seq
-        output_files.append(build_fmt_file(header_dict, \
-                                                file_name, \
-                                                scratch, \
-                                                add_ext(output, ext, seq), \
-                                                header_cmp, \
-                                                RAW, 
-                                                r_name))
-
-        header.reset()
-        out_vid.release()
-    
-
-    output_files.append(write_block(global_time_header.getHeader(), \
-                                    None ,\
-                                    add_ext(output, '.start')))
-
-    return output_files
-
-
-def _update_storage_header(file_path, header_data):
-    header_data['last_accessed'] = datetime.now()
-    header_data['access_frequency'] += 1
-    if 'access_history' in header_data:
-        header_data['access_history'].append(datetime.now())
-    write_block(header_data, None, file_path)
+def _update_storage_header(file_path, header):
+    StorageHeader(header).update()
+    write_block(header, None, file_path)
 
 #gets a file of a particular index and if there are external files
+#consider parallelizing this better
 def file_get(file):
     parsed = ncpy_unstack_block(file)
     
@@ -421,7 +210,6 @@ def file_get(file):
         head, video = 1, 0
 
     header = unstack_block(parsed[head], DEFAULT_TEMP, compression_hint=RAW)
-    print(header)
     header_data = read_block(header[0])
     return header_data, parsed[video], is_ref_name(file), parsed[head]
 
@@ -494,13 +282,14 @@ def move_to_extern_if(output, condition, output_extern, threads=None):
         output_extern (string) - external url
     """
     if threads == None:
+        # this isn't optimal because we could easily skip over groups
         pre_parsed = {file: file_get(file) for file in _all_files(output)}
     else:
         pre_parsed = threads.map(file_get, _all_files(output))
 
     rtn = None
-    for _, (header_data, clip, is_extern, _) in pre_parsed.items():
-        if condition(header_data):
+    for (header, clip, is_extern, _) in pre_parsed.items():
+        if condition(header):
             if not is_extern:
                 clip_file = os.path.basename(clip)
                 seq = header_data['seq']
@@ -532,13 +321,13 @@ def move_from_extern_if(output, condition, threads=None):
         output_extern (string) - external directory
     """
     if threads == None:
-        pre_parsed = {file: file_get(file) for file in _all_files(output)}
+        pre_parsed = {file_get(file) for file in _all_files(output)}
     else:
         pre_parsed = threads.map(file_get, _all_files(output))
 
     rtn = []
-    for _, (header_data, ref_file, is_extern, _) in pre_parsed.items():
-        if condition(header_data):
+    for (header, ref_file, is_extern, _) in pre_parsed.items():
+        if condition(header):
             if is_extern:
                 extern_dir = read_ref_file(ref_file)
                 
@@ -572,13 +361,13 @@ def check_extern_if(output, condition, threads=None):
     """
     seq = 0
     if threads == None:
-        pre_parsed = {file: file_get(file) for file in _all_files(output)}
+        pre_parsed = {file_get(file) for file in _all_files(output)}
     else:
         pre_parsed = threads.map(file_get, _all_files(output))
 
     rtn = []
-    for f, (header_data, clip, is_extern, _) in pre_parsed.items():
-        if condition(header_data):
+    for (header, clip, is_extern, _) in pre_parsed.items():
+        if condition(header):
             if is_extern:
                 return True
     return False
@@ -595,8 +384,6 @@ def read_if(output, condition, clip_size=5, scratch = DEFAULT_TEMP, threads=None
     """    
 
     #read the meta data
-    #seg start data -> start data over entire video
-    # 
     seg_start_data = read_block(add_ext(output, '.start'))
     clips = clip_boundaries(seg_start_data['start'],\
                             seg_start_data['end'],\
@@ -611,30 +398,30 @@ def read_if(output, condition, clip_size=5, scratch = DEFAULT_TEMP, threads=None
     else:
         pre_parsed = threads.map(file_get, _all_files(output))
 
-    for header_data, clip, is_extern, header_file in pre_parsed:
-        if condition(header_data):
-            _update_storage_header(header_file, header_data)
-            pstart, pend = find_clip_boundaries((header_data['start'], \
-                                                 header_data['end']), \
+    for header, clip, is_extern, header_file in pre_parsed:
+        if condition(header):
+            _update_storage_header(header_file, header)
+            pstart, pend = find_clip_boundaries((header['start'], \
+                                                 header['end']), \
                                                clips)
           
             for rel_clip in range(pstart, pend+1):
                     
-                cH = cut_header(header_data, clips[rel_clip][0], clips[rel_clip][1])
+                cH = cut_header(header, clips[rel_clip][0], clips[rel_clip][1])
 
                 if condition(cH):
                     relevant_clips.add(rel_clip)
 
-            boundaries.append((header_data['start'],header_data['end']))
+            boundaries.append((header['start'],header['end']))
         if is_extern:
             vid_dir = read_ref_file(clip)
             vid_clip = None
             for f in os.listdir(vid_dir):
                 if f.endswith('.avi'):
                     vid_clip = os.path.join(vid_dir, f)
-            streams.append([VideoStream(vid_clip), header_data['start']])
+            streams.append([VideoStream(vid_clip), header['start']])
         else:
-            streams.append([VideoStream(clip), header_data['start']])
+            streams.append([VideoStream(clip), header['start']])
 
     #sort the list
     relevant_clips = sorted(list(relevant_clips))

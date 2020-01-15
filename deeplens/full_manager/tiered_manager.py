@@ -23,7 +23,7 @@ from deeplens.error import *
 
 import os
 
-DEFAULT_ARGS = {'encoding': MP4V, 'size': -1, 'limit': -1, 'sample': 1.0, 'offset': 0, 'auto_split': True}
+DEFAULT_ARGS = {'encoding': MP4V, 'size': -1, 'limit': -1, 'sample': 1.0, 'offset': 0}
 
 # NOTE: bounding boxes are at a clip level
 
@@ -69,25 +69,12 @@ class TieredStorageManager(StorageManager):
         else:
             physical_video = None
         
-        if args['size'] == -1:
-            if args['auto_split']:
-                v = v[self.content_splitter]
-                write_video_auto(v, \
-                        physical_clip, args['encoding'], \
-                        ObjectHeader(offset=args['offset']),
-                        output_extern = physical_video )
-            else:
-                write_video(v, \
-                            physical_clip, args['encoding'], \
-                            ObjectHeader(offset=args['offset']),
-                            output_extern = physical_video )
-        else:
-            write_video_clips(v, \
-                              physical_clip, \
-                              args['encoding'], \
-                              ObjectHeader(offset=args['offset']), \
-                              args['size'],
-                              output_extern = physical_video )
+
+        v = v[self.content_splitter]
+        write_video_auto(v, \
+                physical_clip, args['encoding'], \
+                {'offset': args['offset']},
+                output_extern = physical_video)
         
         self.videos.add(target)
 

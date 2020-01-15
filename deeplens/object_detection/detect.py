@@ -265,22 +265,21 @@ class TensorFlowObjectDetectReduce(BufferReduce):
     def union(self, bboxes):
         """union() gives the union of all bounding boxes over the buffer
         """
-        union_result = None
+        union_result = dict()
         for bboxes_per_frame in bboxes:
             for annotation, bbox in bboxes_per_frame['bounding_boxes']:
-                if union_result == None:
-                    union_result = list(bbox)
+                if annotation not in union_result:
+                    union_result[annotation] = bbox
                 else:
+                    union_result[annotation] = list(union_result[annotation])
                     x0, x1, y0, y1 = bbox
-                    if x0 < union_result[0]:
-                        union_result[0] = x0
-                    if x1 > union_result[1]:
-                        union_result[1] = x1
-                    if y0 < union_result[2]:
-                        union_result[2] = y0
-                    if y1 > union_result[3]:
-                        union_result[3] = y1
-        if union_result == None:
-            return {}
-        else:
-            return {'bounding_boxes': tuple(union_result)}
+                    if x0 < union_result[annotation][0]:
+                        union_result[annotation][0] = x0
+                    if x1 > union_result[annotation][1]:
+                        union_result[annotation][1] = x1
+                    if y0 < union_result[annotation][2]:
+                        union_result[annotation][2] = y0
+                    if y1 > union_result[annotation][3]:
+                        union_result[annotation][3] = y1
+                    union_result[annotation] = tuple(union_result[annotation])
+        return union_result

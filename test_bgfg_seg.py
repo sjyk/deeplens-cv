@@ -14,6 +14,8 @@ import numpy as np
 #count the number of cars in the left lane
 v = VideoStream('tcam.mp4', limit=1000)
 f = FixedCameraBGFGSegmenter()
+#play(v)
 fg = f.segment(v)
+#print(fg)
 
 play(v[Crop(*fg)])

@@ -53,7 +53,6 @@ class KeyPoints(Map):
 				except:
 					rtn.append((self.label,(cx,cy,cx,cy)))
 
-
 		ff['bounding_boxes'] = rtn
 		return ff
 

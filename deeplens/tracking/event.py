@@ -49,6 +49,8 @@ class ActivityMetric(Metric):
 		for label, pt in data['bounding_boxes']:
 			box = Box(*pt)
 
+			#print(self.region.x0, self.region.x1, box.x0, box.x1)
+
 			if label == self.filter and \
 				self.region.contains(box):
 				cnt += 1

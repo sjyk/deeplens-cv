@@ -52,7 +52,7 @@ class ActivityMetric(Metric):
 			#print(self.region.x0, self.region.x1, box.x0, box.x1)
 
 			if label == self.filter and \
-				self.region.contains(box):
+				self.region.shift(data['origin']).contains(box):
 				cnt += 1
 
 		data[self.name] = cnt

@@ -26,14 +26,16 @@ class VideoStream():
 	(label, box).
 	"""
 
-	def __init__(self, src, limit=-1):
+	def __init__(self, src, limit=-1, origin=np.array((0,0))):
 		"""Constructs a videostream object
 
 		   Input: src- Source camera or file or url
 		          limit- Number of frames to pull
+		          origin- Set coordinate origin
 		"""
 		self.src = src
 		self.limit = limit
+		self.origin = origin
 
 
 	def __getitem__(self, xform):
@@ -70,7 +72,9 @@ class VideoStream():
 
 		   	if ret:
 		   		self.frame_count += 1
-		   		return {'data': frame, 'frame': (self.frame_count - 1)}
+		   		return {'data': frame, \
+		   				'frame': (self.frame_count - 1),\
+		   				'origin': self.origin}
 
 		   	else:
 		   		raise StopIteration("Iterator is closed")
@@ -231,6 +235,12 @@ class Box():
 		if x0 > x1 or y0 > y1:
 			raise InvalidRegionError("The specified box is invalid: " + str([x0,y0,x1,y1]))
 
+	#shifts the box to a new origin
+	def shift(self, origin):
+		return Box(self.x0-origin[0], \
+				   self.y0-origin[1], \
+				   self.x1-origin[0], \
+				   self.y1-origin[1])
 
 	def area(self):
 		"""Calculates the area contained in the box

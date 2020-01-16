@@ -26,12 +26,6 @@ class Map(Operator):
 	def map(self, data):
 		raise NotImplemented("Map must implement a map function")
 
-
-	#each operator can be told to crop itself, upto subclasses to figure out
-	#how to use this.
-	def setCrop(self, crop):
-		self.crop = crop
-
 	#sets up a generic iterator
 	def __iter__(self):
 		self.frame_iter = iter(self.video_stream)
@@ -41,15 +35,7 @@ class Map(Operator):
 	def __next__(self):
 		frame = next(self.frame_iter)
 		self.super_next()
-
-		try:
-			frame_copy = frame.copy()
-			frame_copy['data'] = bb_crop(frame_copy['data'], self.crop)
-			frame_copy = self.map(frame_copy)
-			frame_copy['data'] = bb_replace(frame['data'], self.crop, frame_copy['data'])
-			return frame_copy
-		except:
-			return self.map(frame)
+		return self.map(frame)
 
 
 
@@ -66,6 +52,7 @@ class Crop(Map):
 	def map(self, data):
 		ff = data
 		ff['data'] = ff['data'][self.y0:self.y1,self.x0:self.x1]
+		ff['origin'] = np.array((self.x0, self.y0))
 		return ff
 
 	def _serialize(self):

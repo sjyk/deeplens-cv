@@ -45,13 +45,7 @@ class KeyPoints(Map):
 				cx = int(M['m10']/M['m00'])
 				cy = int(M['m01']/M['m00'])
 
-				try:
-					rtn.append((self.label,(cx+self.crop.x0,\
-											cy+self.crop.y0,\
-											cx+self.crop.x0,\
-											cy+self.crop.y0)))
-				except:
-					rtn.append((self.label,(cx,cy,cx,cy)))
+				rtn.append((self.label,(cx,cy,cx,cy)))
 
 		ff['bounding_boxes'] = rtn
 		return ff

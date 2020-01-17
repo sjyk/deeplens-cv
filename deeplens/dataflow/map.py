@@ -62,13 +62,37 @@ class Crop(Map):
 				'y1': self.y1}
 
 
-class Grayscale(Map):
-	"""The GrayScale() operator sets all future frames to be grayscale
+class Mask(Map):
+	"""The Mask() operator blacks out every pixel not in the frame
+	"""
+
+	def __init__(self,x0,y0,x1,y1):
+		self.x0 = x0
+		self.y0 = y0
+		self.x1 = x1
+		self.y1 = y1
+
+	def map(self, data):
+		ff = data
+		ff['data'][0:self.y0,0:self.x0,:] = 0
+		ff['data'][self.y1:,self.x1:,:] = 0
+		ff['origin'] = np.array((0, 0))
+		return ff
+
+	def _serialize(self):
+		return {'x0': self.x0,
+				'y0': self.y0,
+				'x1': self.x1,
+				'y1': self.y1}
+
+
+class GC(Map):
+	"""The GC operator removes the uncessary storage of pixels after they are used
 	"""
 
 	def map(self, data):
 		ff = data
-		ff['data'] = cv2.cvtColor(ff['data'], cv2.COLOR_BGR2GRAY)
+		del ff['data']
 		return ff
 
 

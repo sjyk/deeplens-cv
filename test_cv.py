@@ -35,7 +35,11 @@ region = Box(200,550,350,750)
 
 k = KeyPoints()
 #k.setCrop(Box(100,450,450,950)) #notice it is slightly bigger than the actual region
-pipeline = v[Crop(100,450,450,950)][k][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)]
+pipeline = v[k][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)]
+
+from deeplens.optimizer.blazeit import BlazeItOptimizer
+d = BlazeItOptimizer()
+pipeline = d.optimize(pipeline)
 print('Left', count(pipeline, ['one'], stats=True))
 
 """

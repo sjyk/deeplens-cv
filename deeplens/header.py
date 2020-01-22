@@ -39,8 +39,7 @@ class TimeHeader(HeaderFunct):
         super().__init__(header, reselt)
         self.keys.extend(['start', 'offset', 'end'])
         if forced_new or not _check_keys(self.header, self.keys):
-            self.header['start'] = float("inf")
-            self.header['offset'] = offset
+            self.header['start'] = offset
             self.header['end'] = -1
 
 	#keeps track of the start and the end time of the clips
@@ -97,23 +96,21 @@ class StorageHeader(HeaderFunct):
 			self.reset_hist()
 
 
-class ObjectHeader(TimeHeader):
-
-	"""ObjectHeader keeps track of what objects show up in
-	a clip, and the
-	It also keeps track of time inheriting from TimeHeader,
+class LabelHeader(Header):
+	"""ObjectHeader keeps track of the labels over a video
+	segment and clip ids if they are in another clip are needed
 	"""
 
-	def __init__(self, header, forced_new = True, store_bounding_boxes=True, offset=0):
-        super().__init__(header, new, offset)
-        self.keys.extend(['label_set', 'bound_boxes', 'store_bound_boxes'])
+	def __init__(self, header, forced_new = False, store_bounding_boxes=True):
+        super().__init__(header, new)
+        self.keys.extend(['bound_boxes', 'store_bound_boxes'])
         if new or not _check_keys(self.header):
 		    self.header['label_set'] = set()
 		    self.header['bounding_boxes'] = []
 		    self.header['store_bounding_boxes'] = store_bounding_boxes
 
 	#handle the update
-	def update(self, frame):
+	def update(self, frame, bb):
 		if 'tags' not in frame:
 			raise ValueError('Not compatible with this type of video')
 
@@ -129,3 +126,7 @@ class ObjectHeader(TimeHeader):
 		self.header['label_set'] = set()
 		self.header['bounding_boxes'] = []
 		super().reset()
+
+class BoxHeader(Header):
+	"""ObjectHeader keeps track of bounding boxes over frames
+	"""

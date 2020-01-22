@@ -41,12 +41,12 @@ class StorageManager():
 class Condition():
 
 	def __init__(self, \
-				 filter=TRUE, \
+				 label, \
 				 crop=None, \
 				 resolution=1.0, \
 				 sampling=1.0):
 
-		self.filter = filter
+		self.label = filter
 		self.crop = crop
 		self.resolution = resolution
 		self.sampling = sampling

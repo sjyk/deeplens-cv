@@ -7,6 +7,7 @@ what objects.
 """
 
 from datetime import datetime
+from deeplens.error import HeaderError
 
 #abstract header class
 class Header(object):

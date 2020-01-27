@@ -281,6 +281,18 @@ class Box():
 			   self._one_x_cond(other) or \
 			   self._one_y_cond(other)
 
+	def intersect_area(self, other):
+		if self.intersect(other):
+			x = min(self.x1, other.x1) - max(self.x0, other.x0)
+			y = min(self.y1, other.y1) - max(self.y0, other.y0)
+			return x*y
+		else:
+			return 0
+
+	def union_area(self, other):
+		ia = self.intersect_area(other)
+		return (self.area + other.area - ia)
+		
 	"""The storage manager needs a tuple representation of the box, this serializes it.
 	"""
 	def serialize(self):

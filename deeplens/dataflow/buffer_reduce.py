@@ -43,7 +43,7 @@ class BufferReduce(Operator):
         inp = [self.buffer[p] for p in prediction_indices]
 
         if self.resolution == 1:
-            output = self.reduce([frame['data'] for frame in inp])
+            output = self.reduce(inp)
         else:
             output = self.reduce([cv2.resize(frame['data'],
                                           (int(frame['data'].shape[1] * self.resolution), \

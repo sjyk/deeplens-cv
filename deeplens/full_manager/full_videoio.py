@@ -23,7 +23,9 @@ import shutil
 from pathlib import Path
 from datetime import datetime
 
-# TODO: fix headers and figure out what we're storing as crop group
+# TODO: WE NEED TO COMPLETELY REWRITE THIS FILE
+
+
 def write_video_auto(vstream, \
                         output, \
                         encoding, \

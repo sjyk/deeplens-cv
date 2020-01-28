@@ -19,7 +19,6 @@ class MapJoin():
     data: bounding boxes across different frames
 """
 class CropSplitter(MapJoin):
-
     def map(data):
         """
         Union bounding boxes to form crops for a batch of frames

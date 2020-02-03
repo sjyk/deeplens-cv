@@ -22,6 +22,8 @@ from deeplens.header import *
 from deeplens.error import *
 
 import os
+import sqlite3
+import logging
 
 DEFAULT_ARGS = {'encoding': MP4V, 'size': -1, 'limit': -1, 'sample': 1.0, 'offset': 0}
 
@@ -33,7 +35,7 @@ class FullStorageManager(StorageManager):
     is in the same location as disk, and external storage is another
     directory
     """
-    def __init__(self, content_tagger, content_splitter, basedir, externdir):
+    def __init__(self, content_tagger, content_splitter, basedir, externdir, db_name='header.db'):
         self.content_tagger = content_tagger
         self.content_splitter = content_splitter
         self.basedir = basedir
@@ -53,6 +55,34 @@ class FullStorageManager(StorageManager):
                 os.makedirs(externdir)
             except:
                 raise ManagerIOError("Cannot create the directory: " + str(externdir))
+
+        try:
+            self.conn = sqlite3.connect(os.path.join(basedir, db_name))
+            self.cursor = self.conn.cursor()
+            sql_create_background_table = """CREATE TABLE IF NOT EXISTS background (
+                                                 background_id integer NOT NULL,
+                                                 clip_id integer NOT NULL,
+                                                 video_name text NOT NULL
+                                                 PRIMARY KEY (background_id, clip_id)
+                                             );
+            """
+            sql_create_clip_table = """CREATE TABLE IF NOT EXISTS clip (
+                                           clip_id integer PRIMARY KEY,
+                                           start_time integer NOT NULL,
+                                           end_time integer NOT NULL,
+                                           origin_x integer NOT NULL,
+                                           origin_y integer NOT NULL,
+                                           height integer NOT NULL,
+                                           width integer NOT NULL,
+                                           has_label boolean NOT NULL,
+                                           labels text,
+                                           video_ref text
+                                       );
+           """
+            self.cursor.execute(sql_create_background_table)
+            self.cursor.execute(sql_create_clip_table)
+        except sqlite3.Error as e:
+            print(e)
 
     def put(self, filename, target, args=DEFAULT_ARGS, in_extern_storage = False):
         """put adds a video to the storage manager from a file. It should either add
@@ -102,34 +132,24 @@ class FullStorageManager(StorageManager):
     
     #TODO implement after we support threading
     def setThreadPool(self):
-        raise ValueError("This storage manager does not support threading")
+        raise NotImplementedError("This storage manager does not support threading")
 
     def size(self, name):
         """ Return the total amount of space a deeplens video takes up
         """
-        seq = 0
-        size = 0
-        physical_clip = os.path.join(self.basedir, name)
 
-        file = add_ext(physical_clip, '.start') 
-        size += os.path.getsize(file)
-        while True:
+        self.cursor.execute("SELECT background_id, clip_id FROM background WHERE video_name = '%s'" % name)
+        clips = self.cursor.fetchall()
+        clips = set().union(*map(set, clips))
+        size = 0
+        for clip in clips:
+            self.cursor.execute("SELECT video_ref FROM clip WHERE clip_id = '%d'" % clip)
+            video_ref = self.cursor.fetchone()[0]
             try:
-                file = add_ext(physical_clip, '.seq', seq) 
-                size += sum(os.path.getsize(os.path.join(file,f)) for f in os.listdir(file))
-                seq += 1
-                continue
+                size += os.path.getsize(video_ref)
             except FileNotFoundError:
-                pass
-            try:
-                file = add_ext(physical_clip, '.ref', seq) 
-                extern_dir = read_ref_file(file) # Count external space
-                size += sum(os.path.getsize(os.path.join(extern_dir,f)) for f in os.listdir(extern_dir))
-                seq += 1
-                continue
-            except FileNotFoundError:
-                pass
-            break
+                logging.warning("File %s not found" % video_ref)
+
         return size
     
     def moveToExtern(self, name, condition): 

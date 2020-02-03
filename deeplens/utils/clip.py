@@ -58,9 +58,9 @@ def materialize_clip(clip, boundaries, streams):
 
 	for crop in execution_plan:
 		index, bounds = crop
-		start = streams[index][1]
+		start = 0# streams[index][1]
 		bounds2 = (bounds[0] - start, bounds[1] - start)
-		subiterators.append(streams[index][0][Cut(*bounds2)])
+		subiterators.append(streams[index][Cut(*bounds2)])
 
 	#v = VideoTransform()
 	return itertools.chain(*subiterators)

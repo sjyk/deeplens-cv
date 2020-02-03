@@ -11,7 +11,7 @@ from deeplens.constants import *
 from deeplens.struct import *
 from deeplens.simple_manager.videoio import *
 from deeplens.simple_manager.file import *
-from deeplens.header import *
+from deeplens.deprecated_header import *
 from deeplens.dataflow.map import *
 from deeplens.error import *
 

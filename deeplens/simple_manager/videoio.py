@@ -9,7 +9,7 @@ primitives to encode and decode archived and regular video formats.
 from deeplens.simple_manager.file import *
 from deeplens.constants import *
 from deeplens.struct import *
-from deeplens.header import ObjectHeader
+from deeplens.deprecated_header import ObjectHeader
 from deeplens.utils.clip import *
 
 import cv2
@@ -281,4 +281,4 @@ def read_if(output, condition, clip_size=5, scratch = DEFAULT_TEMP):
 	#sort the list
 	relevant_clips = sorted(list(relevant_clips))
 
-	return [materialize_clip(clips[i], boundaries, streams, condition.sampling) for i in relevant_clips]
+	return [materialize_clip(clips[i], boundaries, streams) for i in relevant_clips]

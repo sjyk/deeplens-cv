@@ -26,7 +26,11 @@ from datetime import datetime
 # TODO: WE NEED TO COMPLETELY REWRITE THIS FILE
 
 
+def _write_video_batch(vstream_object, splitter):
+    
+
 def write_video_auto(vstream, \
+                        vstream_object, \
                         output, \
                         encoding, \
                         header_info,

@@ -6,13 +6,22 @@ full_video_processing.py defines a video processing splitter that the
 storage manager require as input.
 """
 IOU_THRESHOLD = 0.7
-""" Defines a basic map join operation
+""" Defines a map join operation
 """
 class MapJoin():
     def map():
+        """
+        Maps a batch of data to an intermediate data structure (temp)
+        """
         raise NotImplemented("MapJoin must implement a map function")
     def join():
+        """
+        Returns the final output given the temp of current batch, and the temp
+        of pervious batch 
+        """
         raise NotImplemented("MapJoin must implement a join function")
+    def initialize():
+        raise NotImplemented("MapJoin must implement an initialize function")
 
 
 """ Creates a crop across different frames
@@ -77,6 +86,8 @@ class CropSplitter(MapJoin):
         crop2, labels2 = map2
         # If the two batches have different number of crops or labels
         # we don't join the crops
+        if len(crop1) == 0 and len(crop2) == 0:
+            return ([], {})
         if len(crop1) != len(crop2):
             return None
         if len(labels1) != len(labels2):

@@ -106,7 +106,6 @@ class FullStorageManager(StorageManager):
 
     def size(self, name):
         """ Return the total amount of space a deeplens video takes up
-        (including headers)
         """
         seq = 0
         size = 0

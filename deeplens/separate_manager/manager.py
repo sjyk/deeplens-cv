@@ -45,8 +45,9 @@ class SeparateStorageManager(StorageManager):
             self.conn = sqlite3.connect(os.path.join(basedir, db_name))
             self.cursor = self.conn.cursor()
             sql_create_background_table = """CREATE TABLE IF NOT EXISTS background (
-											     background_id integer,
-											     clip_id integer,
+											     background_id integer NOT NULL,
+											     clip_id integer NOT NULL,
+											     video_name text NOT NULL
 											     PRIMARY KEY (background_id, clip_id)
                                              );
 			"""
@@ -59,6 +60,7 @@ class SeparateStorageManager(StorageManager):
 			                               height integer NOT NULL,
 			                               width integer NOT NULL,
 			                               has_label boolean NOT NULL,
+			                               labels text,
 			                               video_ref text
 			                           );
 		   """

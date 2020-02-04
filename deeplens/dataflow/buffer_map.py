@@ -158,7 +158,6 @@ class BufferMap(Operator):
 
 		return self.output_dict[index]
 
-
 #this is a test class to test to see 
 #if buffermap is working well
 class TestBufferMap(BufferMap):

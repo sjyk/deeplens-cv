@@ -24,21 +24,24 @@ from pathlib import Path
 from datetime import datetime
 import logging
 
-# TODO: WE NEED TO COMPLETELY REWRITE THIS FILE
 
-
-def _write_video_batch(vstream_object, splitter):
+def _write_video_batch(vstream_object, splitter, map, process_vid = False):
     
 
-def write_video_auto(vstream, \
-                        vstream_object, \
+# TODO: It should be simple to support streaming here
+def write_video_single(vstream, \
+                        output, \
+                        splitter, \
+                        map, \
+                        scratch = DEFAULT_TEMP):
+    pass 
+
+def write_video_parallel(vstream, \
                         output, \
                         encoding, \
                         header_info,
                         output_extern = None, \
-                        scratch = DEFAULT_TEMP, \
-                        frame_rate=DEFAULT_FRAME_RATE, \
-                        header_cmp=RAW):
+                        scratch = DEFAULT_TEMP):
     """write_video_clips takes a stream of video and writes
     it to disk. It includes the specified header 
     information as a part of the video file. The difference is that 

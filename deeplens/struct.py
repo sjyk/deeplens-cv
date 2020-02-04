@@ -36,7 +36,8 @@ class VideoStream():
 		self.src = src
 		self.limit = limit
 		self.origin = origin
-
+		self.propId = None
+		self.cap = None
 
 	def __getitem__(self, xform):
 		"""Applies a transformation to the video stream
@@ -50,6 +51,9 @@ class VideoStream():
 		"""
 
 		self.cap = cv2.VideoCapture(self.src)
+		if self.propIds:
+			for propId in self.propIds:
+				self.cap.set(propId, self.propIds[propId])
 
 		if not self.cap.isOpened():
 			raise CorruptedOrMissingVideo(str(self.src) + " is corrupted or missing.")
@@ -81,7 +85,27 @@ class VideoStream():
 
 			
 		else:
+			self.cap.release()
+			self.cap = None
 			raise StopIteration("Iterator is closed")
+
+	def __call__(propIds = None):
+		""" Sets the propId argument so that we can
+		take advantage of video manipulation already
+		supported by VideoCapture (cv2)
+		Arguments:
+			propIds: {'ID': property}
+		"""
+		self.propIds = propIds
+	
+	def get_cap_info(propId):
+		""" If we currently have a VideoCapture op
+		"""
+		if self.cap:
+			return self.cap.get(propId)
+		else:
+			return None
+
 
 
 class IteratorVideoStream():

@@ -78,7 +78,7 @@ class VideoStream():
 		   		self.frame_count += 1
 		   		return {'data': frame, \
 		   				'frame': (self.frame_count - 1),\
-		   				'origin': self.origin}
+		   				'origin': self. f}
 
 		   	else:
 		   		raise StopIteration("Iterator is closed")
@@ -105,7 +105,6 @@ class VideoStream():
 			return self.cap.get(propId)
 		else:
 			return None
-
 
 
 class IteratorVideoStream():
@@ -266,6 +265,17 @@ class Box():
 				   self.x1-origin[0], \
 				   self.y1-origin[1])
 
+	def x_translate(self, x):
+		return Box(self.x0 + x, \
+				   self.y0, \
+				   self.x1 + x, \
+				   self.y1)
+				   
+	def y_translate(self, y):
+		return Box(self.x0, \
+				   self.y0 + y, \
+				   self.x1, \
+				   self.y1 + y)
 	def area(self):
 		"""Calculates the area contained in the box
 		"""

@@ -13,6 +13,7 @@ import cv2
 from deeplens.object_detection.tensorflow_detect.utils import label_map_util
 from deeplens.dataflow.buffer_map import *
 from deeplens.dataflow.buffer_reduce import *
+from deeplens.struct import Box
 
 class TensorFlowObjectDetect(BufferMap):
 
@@ -118,7 +119,7 @@ class TensorFlowObjectDetect(BufferMap):
         x0 = int(detection_dict['detection_boxes'][j][1]*self.video_stream.width)
         x1 = int(detection_dict['detection_boxes'][j][3]*self.video_stream.width)
 
-        box = (x0,x1,y0,y1)
+        box = Box(x0,y0,x1,y1)
 
         label = detection_dict['detection_classes'][j]
 
@@ -127,9 +128,9 @@ class TensorFlowObjectDetect(BufferMap):
           continue
 
         if detection_dict['detection_scores'][j] >= self.confidence:
-          tags.append((label, box))
+          tags.append('label': label, 'bb': box})
 
-      return {'bounding_boxes': tags}
+      return {'objects': tags}
 
 
     def map(self, buffer):

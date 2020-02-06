@@ -1,8 +1,25 @@
 import os
 import subprocess
 from deeplens.utils.clip import *
+from deeplens.simple_manager.file import *
 
 from multiprocessing import Pool
+
+def concatenate(files, output, scratch_file = None, scratch = DEFAULT_TEMP):
+	if scratch_file:
+		path = scratch_file
+	else:
+		file_name = get_rnd_strng()
+		file_name = add_ext(file_name, '.txt')
+		path = os.path.join(scratch,file_name)
+	f = open(path, "w+")
+	for file in files:
+		str = 'file ' + file + '\n'
+		f.write(str)
+	ARGS = 'ffmpeg -f concat -safe 0 -i {path} -c copy {output}'.split()
+	result = subprocess.run(ARGS, stdout=subprocess.PIPE)
+	return int(float(result.stdout))
+
 
 def get_duration(file):
 	ARGS = 'ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1'.split()

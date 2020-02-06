@@ -43,6 +43,7 @@ class FullStorageManager(StorageManager):
         self.videos = set()
         self.threads = None
         self.STORAGE_BLOCK_SIZE = 60 
+        self.db_name =  db_name
 
         if not os.path.exists(basedir):
             try:
@@ -63,22 +64,33 @@ class FullStorageManager(StorageManager):
                                                  background_id integer NOT NULL,
                                                  clip_id integer NOT NULL,
                                                  video_name text NOT NULL
-                                                 PRIMARY KEY (background_id, clip_id)
+                                                 PRIMARY KEY (background_id, clip_id, video_name)
                                              );
             """
             sql_create_clip_table = """CREATE TABLE IF NOT EXISTS clip (
-                                           clip_id integer PRIMARY KEY,
+                                           clip_id integer NOT NULL,
+                                           video_name text NOT NULL,
                                            start_time integer NOT NULL,
                                            end_time integer NOT NULL,
                                            origin_x integer NOT NULL,
                                            origin_y integer NOT NULL,
                                            height integer NOT NULL,
                                            width integer NOT NULL,
-                                           has_label boolean NOT NULL,
-                                           labels text,
-                                           video_ref text
+                                           video_ref text NOT NULL, 
+                                           is_background NOT NULL,
+                                           translation text,
+                                           other text,
+                                           PRIMARY KEY (clip_id, video_name)
                                        );
            """
+           sql_create_label_table = """CREATE TABLE IF NOT EXISTS label (
+                                           label text NOT NULL,
+                                           clip_id integer NOT NULL,
+                                           video_name text NOT NULL,
+                                           PRIMARY KEY (label. clip_id, video_name)
+                                       );
+           """
+            self.cursor.execute(sql_create_label_table)
             self.cursor.execute(sql_create_background_table)
             self.cursor.execute(sql_create_clip_table)
         except sqlite3.Error as e:
@@ -88,10 +100,10 @@ class FullStorageManager(StorageManager):
         """put adds a video to the storage manager from a file. It should either add
             the video to disk, or a reference in disk to deep storage.
         """
-        v = VideoStream(filename, args['limit'])
-        v = v[Sample(args['sample'])]
-        v = v[self.content_tagger]
-        
+        except sqlite3.Error as e:
+            print(e)
+
+
         physical_clip = os.path.join(self.basedir, target)
         delete_video_if_exists(physical_clip)
         if in_extern_storage: 

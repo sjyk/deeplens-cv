@@ -16,9 +16,8 @@ def crop_box(frame, box):
     """ Crops a frame of the video to a box 
     given by the input arguments
     """
-    (x0, y0, x1, y1) = box
     frame = copy.deepcopy(frame)
-    frame = frame[y0:y1, x0:x1]
+    frame = frame[box.y0:box.y1, box.x0:box.x1]
     return frame
 
 
@@ -28,6 +27,5 @@ def reverse_crop(frame, crops):
     """
     frame = copy.deepcopy(frame)
     for crop in crops:
-        (x0, y0, x1, y1) = crop
-        frame[y0:y1, x0:x1] = 0
+        frame[box.y0:box.y1, box.x0:box.x1] = 0
     return frame

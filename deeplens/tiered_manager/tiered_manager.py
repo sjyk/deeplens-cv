@@ -59,7 +59,6 @@ class TieredStorageManager(StorageManager):
             the video to disk, or a reference in disk to deep storage.
         """
         v = VideoStream(filename, args['limit'])
-        v = v[Sample(args['sample'])]
         v = v[self.content_tagger]
         
         physical_clip = os.path.join(self.basedir, target)

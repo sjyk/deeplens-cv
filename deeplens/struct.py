@@ -36,7 +36,7 @@ class VideoStream():
 		self.src = src
 		self.limit = limit
 		self.origin = origin
-		self.propId = None
+		self.propIds = None
 		self.cap = None
 
 	def __getitem__(self, xform):
@@ -78,7 +78,7 @@ class VideoStream():
 		   		self.frame_count += 1
 		   		return {'data': frame, \
 		   				'frame': (self.frame_count - 1),\
-		   				'origin': self. f}
+		   				'origin': self.origin}
 
 		   	else:
 		   		raise StopIteration("Iterator is closed")

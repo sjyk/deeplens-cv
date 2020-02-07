@@ -92,7 +92,7 @@ def _update_headers_batch(conn, crops, background_id, name, video_refs,
 
 def _write_video_batch(vstream, \
                         crops, \
-                        scratch = DEFAULT_TEMP, \
+                        dir = DEFAULT_TEMP, \
                         batch_size,
                         offset = 0, \
                         write_header = True, \
@@ -115,7 +115,7 @@ def _write_video_batch(vstream, \
         r_name = get_rnd_strng()
         for i in range(len(crops) + 1):
             crop = crops[i - 1] 
-            seg_name = os.path.join(scratch, r_name)
+            seg_name = os.path.join(dir, r_name)
             file_name = add_ext(seg_name, AVI, seq + i)
             file_names.append(file_name)
 
@@ -205,10 +205,10 @@ def _split_video_batch(vstream, \
 # TODO: headers and parallelize
 def write_video_single(conn, \
                         video_file, \
-                        output, \
+                        target,
+                        dir, \
                         splitter, \
                         map, \
-                        scratch = DEFAULT_TEMP,\
                         limit = -1,\
                         batch_size = 100, \
                         stream = False):
@@ -234,9 +234,9 @@ def write_video_single(conn, \
         if i >= limit:
             break
     crops, batch_prev = splitter.initialize(objects)
-    (writers, file_names, time_block) = _write_video_batch(v_behind, crops, scratch, batch_size, release = False)
+    (writers, file_names, time_block) = _write_video_batch(v_behind, crops, dir, batch_size, dir, release = False)
     
-    _update_headers_batch(conn, crops, curr_back, video_file, file_names,
+    _update_headers_batch(conn, crops, curr_back, target, file_names,
                             full_width, full_hieght, start_time, start_time + time_block, update = False)
     start_time += start_time + time_block
     curr_back = curr_back + len(crops) + 1
@@ -250,17 +250,17 @@ def write_video_single(conn, \
         batch_crops = _split_video_batch(v, splitter, batch_size, v_cache = v_cache)
         crops, batch_prev, do_join = splitter.join(batch_prev, batch_crops)
         if do_join:
-            writers, _ , time_block = _write_video_batch(v_behind, crops, scratch, batch_size, release = False, writers = writers)
+            writers, _ , time_block = _write_video_batch(v_behind, crops, dir, batch_size, dir, release = False, writers = writers)
             
-            _update_headers_batch(conn, crops, curr_back, video_file, file_names,
+            _update_headers_batch(conn, crops, curr_back, target, file_names,
                             full_width, full_hieght, start_time, start_time + time_block, update = True)
             start_time = start_time + time_block
         else:
             for writer in writers:
                 writer.release()
-            writers, file_names = _write_video_batch(v_behind, crops, scratch, batch_size, release = False)
+            writers, file_names = _write_video_batch(v_behind, crops, dir, batch_size, dir, release = False)
 
-            _update_headers_batch(conn, crops, curr_back, video_file, file_names,
+            _update_headers_batch(conn, crops, curr_back, target, file_names,
                             full_width, full_hieght, start_time, start_time + time_block, update = True)
             start_time = start_time + time_block
             curr_back = curr_back + len(crops) + 1
@@ -338,6 +338,20 @@ def delete_clip(conn, clip_id, video_name):
     c.execute("DELETE FROM clip WHERE clip_id = '%d' and video_name = '%s' " % (clip_id, video_name))
     c.execute("DELETE FROM label WHERE clip_id = '%d' and video_name = '%s' " % (clip_id, video_name))
     c.execute("DELETE FROM background WHERE clip_id = '%d' and video_name = '%s' " % (clip_id, video_name))
+    c.execute("DELETE FROM background WHERE background_id = '%d' and video_name = '%s' " % (clip_id, video_name))
+    conn.commit()
+
+def delete_video(conn, video_name):
+    c = conn.cursor()
+    c.execute("SELECT video_ref FROM clip WHERE video_name = '%s" % (video_name))
+    video_ref = c.fetchone()[0]
+    try:
+        os.remove(video_ref)
+    except FileNotFoundError:
+        logging.warning("File %s not found" % video_ref)
+    c.execute("DELETE FROM clip WHERE video_name = '%s' " % (clip_id, video_name))
+    c.execute("DELETE FROM label WHERE video_name = '%s' " % (clip_id, video_name))
+    c.execute("DELETE FROM background WHERE video_name = '%s' " % (clip_id, video_name))
     conn.commit()
 
 def delete_backgound(conn, background_id, video_name):

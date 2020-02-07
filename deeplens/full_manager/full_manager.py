@@ -103,40 +103,28 @@ class FullStorageManager(StorageManager):
         except sqlite3.Error as e:
             print(e)
 
-
-        physical_clip = os.path.join(self.basedir, target)
-        delete_video_if_exists(physical_clip)
+        #delete_video_if_exists(physical_clip) TODO: Update function
         if in_extern_storage: 
-            physical_video = os.path.join(self.externdir, target)
+            physical_dir = self.externdir
         else:
-            physical_video = None
+            physical_dir = self.basedir
         
 
-        v = v[self.content_splitter]
-        write_video_auto(v, \
-                physical_clip, args['encoding'], \
-                {'offset': args['offset']},
-                output_extern = physical_video)
+        write_video_single(self.conn, filename, target, physical_dir, self.content_splitter, self.content_tagger)
         
         self.videos.add(target)
 
-    def get(self, name, condition, clip_size):
-        """retrievies a clip of a certain size satisfying the condition.
-        If the clip was in external storage, get moves it to disk.
+    def get(self, name, label, condition = None):
+        """retrievies a clip of satisfying the condition.
+        If the clip was in external storage, get moves it to disk. TODO: Figure out if I should implement this feature or not
         """
         if name not in self.videos:
             raise VideoNotFound(name + " not found in " + str(self.videos))
 
-        physical_clip = os.path.join(self.basedir, name)
-        return read_if(physical_clip, condition, clip_size) #TODO: update header here
+        return query(self.conn, name, label, clip_condition = condition)
     
     def delete(self, name):
-        disk_files = os.path.join(self.basedir, name)
-        
-        if name in self.videos:
-            self.videos.remove(name)
-        
-        delete_video_if_exists(disk_files)
+        delete_video(self.conn, name)
 
 
     def list(self):
@@ -164,6 +152,7 @@ class FullStorageManager(StorageManager):
 
         return size
     
+    #TODO: We should make the storage distributed instead
     def moveToExtern(self, name, condition): 
         """ Move clips that fulfil the condition to disk
         """

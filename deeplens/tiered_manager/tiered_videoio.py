@@ -7,7 +7,7 @@ primitives to encode and decode archived and regular video formats for a tiered
 storage system.
 """
 
-from deeplens.full_manager.tiered_file import *
+from deeplens.tiered_manager.tiered_file import *
 from deeplens.constants import *
 from deeplens.struct import *
 from deeplens.header import *
@@ -58,7 +58,7 @@ def write_video_auto(vstream, \
 
     global_time_header = {}
     header = {}
-    update_global_header = ObjectHeader(global_time_header,\ 
+    update_global_header = ObjectHeader(global_time_header,\
                                         store_bounding_boxes=False, offset=header_info['offset'])
     
     out_vids = []

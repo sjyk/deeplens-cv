@@ -388,3 +388,30 @@ def query_background(conn, video_name, background_id=None, clip_id=None):
         c.execute("SELECT * FROM background WHERE clip_id = '%d' and video_name = '%s" % (clip_id, video_name))
     result = c.fetchall()
     return result
+
+def query_label(conn, label, video_name):
+    c = conn.cursor()
+    c.execute("SELECT * FROM label WHERE label = '%s' AND video_name = '%s" % (label, video_name))
+    result = c.fetchall()
+    return result
+
+def query(conn, video_name, label, clip_condition = None):
+    """
+    TODO: Currently clip_condition is a user function, which queries for clip ids from the
+    clip tabel. However, we should create an object
+    for it later. Additionally, we should think about how to present the information in terms of 
+    overlaps. Because of this, it only returns a simple query right now.
+    """
+    clips = query_label(conn, label, video_name)
+    clip_ids = [label[1] for label in clip_ids]
+    c = clip_condition(conn, video_name)
+    video_refs = []
+    for id in clip_ids:
+        if id in c:
+            clip = query_clip(conn, id, video_name)
+            clip_ref = clip[0][8]
+            video_refs.append(clip_ref)
+
+    return video_refs
+            
+

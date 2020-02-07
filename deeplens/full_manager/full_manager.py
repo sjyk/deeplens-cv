@@ -82,14 +82,14 @@ class FullStorageManager(StorageManager):
                                            other text,
                                            PRIMARY KEY (clip_id, video_name)
                                        );
-           """
-           sql_create_label_table = """CREATE TABLE IF NOT EXISTS label (
+            """
+            sql_create_label_table = """CREATE TABLE IF NOT EXISTS label (
                                            label text NOT NULL,
                                            clip_id integer NOT NULL,
                                            video_name text NOT NULL,
                                            PRIMARY KEY (label. clip_id, video_name)
                                        );
-           """
+            """
             self.cursor.execute(sql_create_label_table)
             self.cursor.execute(sql_create_background_table)
             self.cursor.execute(sql_create_clip_table)
@@ -100,9 +100,6 @@ class FullStorageManager(StorageManager):
         """put adds a video to the storage manager from a file. It should either add
             the video to disk, or a reference in disk to deep storage.
         """
-        except sqlite3.Error as e:
-            print(e)
-
         #delete_video_if_exists(physical_clip) TODO: Update function
         if in_extern_storage: 
             physical_dir = self.externdir

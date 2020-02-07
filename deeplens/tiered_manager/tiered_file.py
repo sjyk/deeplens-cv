@@ -13,7 +13,6 @@ import os
 import tarfile
 import random
 import cv2
-from deeplens.filesystem.file import *
 
 #import all of the constants
 from deeplens.constants import *

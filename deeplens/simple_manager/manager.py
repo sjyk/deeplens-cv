@@ -120,15 +120,18 @@ class SimpleStorageManager(StorageManager):
 
 
 	def doGet(self, name, condition, clip_size):
-		"""retrievies a clip of a certain size satisfying the condition
+		"""retrieves a clip of a certain size satisfying the condition
 		"""
-		if name not in self.videos:
-			raise VideoNotFound(name + " not found in " + str(self.videos))
-
-
 		physical_clip = os.path.join(self.basedir, name)
 
-		return read_if(physical_clip, condition, clip_size)
-	
+		try:
+			return read_if(physical_clip, condition, clip_size)
+		# If a file is not found, it indicates that the clip is not in the storage
+		# manager. We should move along and raise a VideoNotFound error so that the user
+		# gets a more descriptive error
+		except FileNotFoundError:
+			pass
+		except:
+			raise
 
-
+		raise VideoNotFound(name + " not found in storage manager")

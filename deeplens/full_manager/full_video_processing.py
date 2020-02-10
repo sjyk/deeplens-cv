@@ -12,18 +12,18 @@ from deeplens.struct import *
 """ Defines a map join operation
 """
 class MapJoin():
-    def map():
+    def map(self, data):
         """
         Maps a batch of data to an intermediate data structure (temp)
         """
         raise NotImplemented("MapJoin must implement a map function")
-    def join():
+    def join(self, map1, map2):
         """
         Returns the final output given the temp of current batch, and the temp
         of pervious batch 
         """
         raise NotImplemented("MapJoin must implement a join function")
-    def initialize():
+    def initialize(self, data):
         raise NotImplemented("MapJoin must implement an initialize function")
 
 """ Defines a video splitter operation
@@ -32,18 +32,18 @@ class Splitter():
     def __init__(self):
         self.map_to_video = False
         super().__init__()
-    def map():
+    def map(self):
         """
         Maps a batch of data to an intermediate data structure (temp)
         """
         raise NotImplemented("MapJoin must implement a map function")
-    def join():
+    def join(self):
         """
         Returns the final output given the temp of current batch, and the temp
         of pervious batch 
         """
         raise NotImplemented("MapJoin must implement a join function")
-    def initialize():
+    def initialize(self):
         raise NotImplemented("MapJoin must implement an initialize function")
 
 """ Creates a crop across different frames
@@ -54,14 +54,14 @@ class CropSplitter(MapJoin):
         super().__init__()
         self.map_to_video = True
 
-    def initialize(data):
+    def initialize(self, data):
         """
         returns (crops, temp_data)
         """
         crops, labels = self.map(data)
         return crops, (crops, labels)
 
-    def map(data):
+    def map(self, data):
         """
         Union bounding boxes to form crops for a batch of frames
         data: bounding boxes per frame
@@ -77,15 +77,15 @@ class CropSplitter(MapJoin):
                 match = None
                 if object['label'] in labels:
                     for i in labels[object['label']]:
-                        intersect = float(object['bb'].intersect_area(crop[i]['bb']))
-                        union = float(object['bb'].union_area(crop[i]['bb']))
+                        intersect = float(object['bb'].intersect_area(crops[i]['bb']))
+                        union = float(object['bb'].union_area(crops[i]['bb']))
                         iou = intersect/union
                         if iou > IOU_THRESHOLD:
                             match = i
                             break
                     if match:
-                        crop[match]['bb'] = crop[match]['bb'].union_box(object['bb'])
-                        crop[i]['all'][frame] = object
+                        crops[match]['bb'] = crops[match]['bb'].union_box(object['bb'])
+                        crops[i]['all'][frame] = object
                         
                 if not match:
                     if object['label'] in labels:
@@ -94,12 +94,12 @@ class CropSplitter(MapJoin):
                         labels[object['label']] = [index]
                     all = {}
                     all[frame] = object
-                    crops.append({'bb': object['bb'], 'label': object['label'], 'all': all)
-                    index +=1
+                    crops.append({'bb': object['bb'], 'label': object['label'], 'all': all})
+                    index += 1
             frame += 1
         return (crops, labels)
 
-    def join(map1, map2):
+    def join(self, map1, map2):
         """
         Join the second map to the first if it has the objects, and almost
         the same crop sizes.
@@ -121,7 +121,7 @@ class CropSplitter(MapJoin):
         for label in labels2:
             # if the batches have different labels or different number of crops
             # per label, we don't join the crops
-            if label not in label1:
+            if label not in labels1:
                 return (crop2, map2, False)
             if len(labels1[label]) != len(labels2[label]):
                 return (crop2, map2, False)
@@ -148,7 +148,7 @@ class CropSplitter(MapJoin):
                             other = self.other_func(crop1[i]['other'], crop2[j]['other'])
                         else:
                             other = crop1[i]['other'].update(crop2[j]['other'])
-                        crops.append({'bb':object['bb'], 'label': object['label'], 'other': other)
+                        crops.append({'bb':object['bb'], 'label': object['label'], 'other': other})
                         remove = j
                         break
                 if remove == -1:

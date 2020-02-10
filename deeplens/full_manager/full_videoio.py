@@ -111,6 +111,7 @@ def _write_video_batch(vstream, \
     file_names = []
     headers = []
     header_writers = []
+    out_vids = []
     if writers == None:
         r_name = get_rnd_strng()
         for i in range(len(crops) + 1):

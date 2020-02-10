@@ -28,7 +28,7 @@ import json
 
 
 def _update_headers_batch(conn, crops, background_id, name, video_refs,
-                            full_width, full_hieght, start_time, end_time, update = False):
+                            full_width, full_height, start_time, end_time, update = False):
     """
     Update or create new headers all headers for one batch. In terms of updates, we assume certain
     constraints on the system, and only update possible changes.
@@ -36,14 +36,14 @@ def _update_headers_batch(conn, crops, background_id, name, video_refs,
     if update:
         # Updates 
         for i in range(0, len(crops) + 1):
-            clip_info = query_clip(conn, i + background_id, video_name)[0]
+            clip_info = query_clip(conn, i + background_id, name)[0]
             updates = {}
             updates['start_time'] = min(start_time, clip_info[2])
             updates['end_time'] = max(end_time, clip_info[3])
 
             if i != 0:
-                origin_x = crop[i - 1].x0
-                origin_y = crop[i - 1].y0
+                origin_x = crops[i - 1].x0
+                origin_y = crops[i - 1].y0
                 try:
                     translation = json.loads(clip_info[7])
                     if type(translation) is list:
@@ -71,15 +71,15 @@ def _update_headers_batch(conn, crops, background_id, name, video_refs,
         for i in range(0, len(crops) + 1):
             if i == 0:
                 insert_clip_header(conn, i + background_id, name, 0, 0, origin_x,
-                                origin_y, full_width, full_hieght, video_ref[i], is_background = True)
+                                origin_y, full_width, full_height, video_refs[i], is_background = True)
                 
             else:
-                origin_x = crop[i - 1].x0
-                origin_y = crop[i - 1].y0
-                width = crop[i - 1].x1 - crop[i - 1].x0
-                hieght = crop[i - 1].y1 - crop[i - 1].y0
+                origin_x = crops[i - 1].x0
+                origin_y = crops[i - 1].y0
+                width = crops[i - 1].x1 - crops[i - 1].x0
+                hieght = crops[i - 1].y1 - crops[i - 1].y0
                 insert_clip_header(conn, i + background_id, name, start_time, end_time, origin_x,
-                                origin_y, width, hieght, video_ref[i], other = json.dump(crop[i - 1]['all']))
+                                origin_y, width, hieght, video_refs[i], other = json.dump(crops[i - 1]['all']))
                 
                 
         for i in range(0, len(crops)):
@@ -164,12 +164,12 @@ def _write_video_batch(vstream, \
             return (None, file_names, index)
     return (None, None, index)
 
-def _split_video_batch(vstream, \
-                        splitter, \
-                        batch_size, \
-                        process_vid = False, \
-                        scratch = None,\
-                        vstream_behind = None
+def _split_video_batch(vstream,
+                        splitter,
+                        batch_size,
+                        process_vid = False,
+                        scratch = None,
+                        vstream_behind = None,
                         v_cache = None):
     '''
     Private function which labels and crops a batch of video frames.
@@ -213,16 +213,16 @@ def write_video_single(conn, \
                         batch_size = 100, \
                         stream = False):
     
-    v = VideoStream(filename, limit)
+    v = VideoStream(video_file, limit)
     v = iter(v[map])
     full_width = v.width
-    full_hieght = v.height
+    full_height = v.height
     curr_back = 0 # current clip background id
     start_time = 0 #current batch start time (NOTE: Not current clip start time)
     if stream:
         v_behind = [] # if it's a stream, we cache the buffered video instead of having a slow pointer
     else:
-        v_behind = VideoStream(filename, limit)
+        v_behind = VideoStream(video_file, limit)
         v_behind = iter(v)
     objects = []
     vid_files = []
@@ -237,7 +237,7 @@ def write_video_single(conn, \
     (writers, file_names, time_block) = _write_video_batch(v_behind, crops, dir, batch_size, dir, release = False)
     
     _update_headers_batch(conn, crops, curr_back, target, file_names,
-                            full_width, full_hieght, start_time, start_time + time_block, update = False)
+                            full_width, full_height, start_time, start_time + time_block, update = False)
     start_time += start_time + time_block
     curr_back = curr_back + len(crops) + 1
     vid_files.extend(file_names)
@@ -253,7 +253,7 @@ def write_video_single(conn, \
             writers, _ , time_block = _write_video_batch(v_behind, crops, dir, batch_size, dir, release = False, writers = writers)
             
             _update_headers_batch(conn, crops, curr_back, target, file_names,
-                            full_width, full_hieght, start_time, start_time + time_block, update = True)
+                            full_width, full_height, start_time, start_time + time_block, update = True)
             start_time = start_time + time_block
         else:
             for writer in writers:
@@ -261,7 +261,7 @@ def write_video_single(conn, \
             writers, file_names = _write_video_batch(v_behind, crops, dir, batch_size, dir, release = False)
 
             _update_headers_batch(conn, crops, curr_back, target, file_names,
-                            full_width, full_hieght, start_time, start_time + time_block, update = True)
+                            full_width, full_height, start_time, start_time + time_block, update = True)
             start_time = start_time + time_block
             curr_back = curr_back + len(crops) + 1
         vid_files.extend(file_names)

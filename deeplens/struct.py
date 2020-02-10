@@ -30,8 +30,8 @@ class VideoStream():
 		"""Constructs a videostream object
 
 		   Input: src- Source camera or file or url
-		          limit- Number of frames to pull
-		          origin- Set coordinate origin
+				  limit- Number of frames to pull
+				  origin- Set coordinate origin
 		"""
 		self.src = src
 		self.limit = limit
@@ -72,16 +72,16 @@ class VideoStream():
 		if self.cap.isOpened() and \
 		   (self.limit < 0 or self.frame_count < self.limit):
 
-		   	ret, frame = self.cap.read()
+			ret, frame = self.cap.read()
 
-		   	if ret:
-		   		self.frame_count += 1
-		   		return {'data': frame, \
-		   				'frame': (self.frame_count - 1),\
-		   				'origin': self.origin}
+			if ret:
+				self.frame_count += 1
+				return {'data': frame, \
+						'frame': (self.frame_count - 1),\
+						'origin': self.origin}
 
-		   	else:
-		   		raise StopIteration("Iterator is closed")
+			else:
+				raise StopIteration("Iterator is closed")
 
 			
 		else:
@@ -89,7 +89,7 @@ class VideoStream():
 			self.cap = None
 			raise StopIteration("Iterator is closed")
 
-	def __call__(propIds = None):
+	def __call__(self, propIds = None):
 		""" Sets the propId argument so that we can
 		take advantage of video manipulation already
 		supported by VideoCapture (cv2)
@@ -97,8 +97,8 @@ class VideoStream():
 			propIds: {'ID': property}
 		"""
 		self.propIds = propIds
-	
-	def get_cap_info(propId):
+
+	def get_cap_info(self, propId):
 		""" If we currently have a VideoCapture op
 		"""
 		if self.cap:
@@ -117,7 +117,7 @@ class IteratorVideoStream():
 		"""Constructs a videostream object
 
 		   Input: src- iterator over frames
-		          limit- Number of frames to pull
+				  limit- Number of frames to pull
 		"""
 		self.src = src
 		self.limit = limit

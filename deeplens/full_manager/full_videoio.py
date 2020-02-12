@@ -243,10 +243,10 @@ def write_video_single(conn, \
     
     _update_headers_batch(conn, crops, curr_back, target, file_names,
                             full_width, full_height, start_time, start_time + time_block, update = False)
-    start_time += start_time + time_block
+    start_time = start_time + time_block
     next_back = curr_back + len(crops) + 1
     vid_files.extend(file_names)
-    return  # TODO: now skip the rest of batches because iter doesn't work
+    # return  # TODO: now skip the rest of batches because iter doesn't work
 
     while v:
         if stream:

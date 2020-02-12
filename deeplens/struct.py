@@ -40,6 +40,10 @@ class VideoStream():
 		self.propIds = None
 		self.cap = None
 
+		# moved from __iter__ to __init__ due to continuous iterating
+		self.frame_count = 0
+		self.cap = cv2.VideoCapture(self.src)
+
 	def __getitem__(self, xform):
 		"""Applies a transformation to the video stream
 		"""
@@ -51,7 +55,6 @@ class VideoStream():
 		   the iteration state
 		"""
 
-		self.cap = cv2.VideoCapture(self.src)
 		if self.propIds:
 			for propId in self.propIds:
 				self.cap.set(propId, self.propIds[propId])
@@ -63,8 +66,6 @@ class VideoStream():
 		#set sizes after the video is opened
 		self.width = int(self.cap.get(3))   # float
 		self.height = int(self.cap.get(4)) # float
-
-		self.frame_count = 0
 
 		return self
 

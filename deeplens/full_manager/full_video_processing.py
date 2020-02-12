@@ -5,7 +5,10 @@ the database group (chidata).
 full_video_processing.py defines a video processing splitter that the
 storage manager require as input.
 """
-IOU_THRESHOLD = 0.7
+import copy
+import logging
+
+IOU_THRESHOLD = 0.3
 TRANSLATION_ERROR = 0.05
 from deeplens.struct import *
 
@@ -20,7 +23,7 @@ class MapJoin():
     def join(self, map1, map2):
         """
         Returns the final output given the temp of current batch, and the temp
-        of pervious batch 
+        of previous batch
         """
         raise NotImplemented("MapJoin must implement a join function")
     def initialize(self, data):
@@ -40,7 +43,7 @@ class Splitter():
     def join(self):
         """
         Returns the final output given the temp of current batch, and the temp
-        of pervious batch 
+        of previous batch
         """
         raise NotImplemented("MapJoin must implement a join function")
     def initialize(self):
@@ -72,9 +75,15 @@ class CropSplitter(MapJoin):
         labels = {}
         index = 0
         frame = 0
+        num_object = 0
+        num_match = 0
         for objects in data:
+            logging.debug("HELLLLOOO~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
             for object in objects:
-                match = None
+                num_object +=1
+                logging.debug('OBJECT')
+                logging.debug(object)
+                match = -1
                 if object['label'] in labels:
                     for i in labels[object['label']]:
                         intersect = float(object['bb'].intersect_area(crops[i]['bb']))
@@ -83,11 +92,13 @@ class CropSplitter(MapJoin):
                         if iou > IOU_THRESHOLD:
                             match = i
                             break
-                    if match:
+                    if match != -1:
+                        num_match += 1
                         crops[match]['bb'] = crops[match]['bb'].union_box(object['bb'])
-                        crops[i]['all'][frame] = object
-                        
-                if not match:
+                        crops[match]['all'][frame] = object
+                        logging.debug(crops[match]['bb'].serialize())
+                logging.debug(match)
+                if match == -1:
                     if object['label'] in labels:
                         labels[object['label']].append(index)
                     else:
@@ -97,6 +108,10 @@ class CropSplitter(MapJoin):
                     crops.append({'bb': object['bb'], 'label': object['label'], 'all': all})
                     index += 1
             frame += 1
+        logging.debug("FINISHED~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        logging.debug(num_match)
+        logging.debug(num_object)
+        logging.debug(len(crops))
         return (crops, labels)
 
     def join(self, map1, map2):
@@ -110,7 +125,7 @@ class CropSplitter(MapJoin):
         # If the two batches have different number of crops or labels
         # we don't join the crops
         if len(crop1) == 0 and len(crop2) == 0:
-            return (crop2, map2, False)
+            return (crop2, map2, True)
         if len(crop1) != len(crop2):
             return (crop2, map2, False)
         if len(labels1) != len(labels2):
@@ -125,10 +140,10 @@ class CropSplitter(MapJoin):
                 return (crop2, map2, False)
             if len(labels1[label]) != len(labels2[label]):
                 return (crop2, map2, False)
-            temp1 = labels2[label]
+            temp1 = copy.deepcopy(labels2[label])
             for i in labels1[label]:
                 remove = -1
-                for j in temp1:
+                for k, j in enumerate(temp1):
                     bb1 = crop1[i]['bb']
                     bb2 = crop2[j]['bb']
                     # Check for interaction between boxes of the same label
@@ -144,14 +159,12 @@ class CropSplitter(MapJoin):
                     if iou > IOU_THRESHOLD and x_diff < TRANSLATION_ERROR and y_diff < TRANSLATION_ERROR:
                         bb =  bb1.x_translate(bb2.x0 - bb1.x0)
                         bb = bb.y_translate(bb2.y0 - bb1.y0)
-                        if self.other_func:
-                            other = self.other_func(crop1[i]['other'], crop2[j]['other'])
-                        else:
-                            other = crop1[i]['other'].update(crop2[j]['other'])
-                        crops.append({'bb':object['bb'], 'label': object['label'], 'other': other})
-                        remove = j
+                        crop1[i]['all'].update(crop2[j]['all'])
+                        crops[i] = {'bb':bb, 'label': label, 'all': crop1[i]['all']}
+                        remove = k
                         break
                 if remove == -1:
                     return (crop2, map2, False) # we couldn't find a matching box with the above condition
-                del temp1[j]
+
+                del temp1[remove]
         return crops, (crops, labels1), True

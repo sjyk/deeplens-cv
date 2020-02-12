@@ -5,6 +5,7 @@ the database group (chidata).
 frame_xform.py defines transformations per frame
 """
 import copy
+from deeplens.struct import Box
 def mask(frame, mask):
     """Masks the content of a frame of the video
     """
@@ -27,5 +28,6 @@ def reverse_crop(frame, crops):
     """
     frame = copy.deepcopy(frame)
     for crop in crops:
+        box = crop['bb']
         frame[box.y0:box.y1, box.x0:box.x1] = 0
     return frame

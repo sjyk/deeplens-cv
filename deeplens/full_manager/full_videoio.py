@@ -7,7 +7,6 @@ primitives to encode and decode archived and regular video formats for a tiered
 storage system.
 """
 
-from deeplens.full_manager.tiered_file import *
 from deeplens.constants import *
 from deeplens.struct import *
 from deeplens.header import *
@@ -42,60 +41,66 @@ def _update_headers_batch(conn, crops, background_id, name, video_refs,
             updates['end_time'] = max(end_time, clip_info[3])
 
             if i != 0:
-                origin_x = crops[i - 1].x0
-                origin_y = crops[i - 1].y0
-                try:
-                    translation = json.loads(clip_info[7])
+                origin_x = crops[i - 1]['bb'].x0
+                origin_y = crops[i - 1]['bb'].y0
+                translation = clip_info[10]
+                if translation == 'NULL':
+                    if origin_x != clip_info[4] or origin_y != clip_info[5]:
+                        updates['translation'] = [(start_time, origin_x, origin_y)]
+                else:
+                    translation = json.loads(clip_info[10])
                     if type(translation) is list:
                         if translation[-1][1] != origin_x or translation[-1][2] != origin_y:
                             translation.append((start_time, origin_x, origin_y))
                             updates['translation'] = translation
                     else:
                         raise ValueError('Translation object is wrongly formatted')
-                except (ValueError, IndexError) as e:
-                    if origin_x !=  clip_info[4] or origin_y != clip_info[5]:
-                        updates['translation'] = [(start_time, origin_x, origin_y)]
-                try:
-                    other = json.loads(clip_info[8])
+                other = clip_info[11]
+                if other == 'NULL':
+                    updates['other'] = crops[i - 1]['all']
+                else:
+                    other = json.loads(clip_info[11])
                     if type(other) is dict:
+                        logging.debug(crops[i - 1])
                         other.update(crops[i - 1]['all'])
                         updates['other'] = other
                     else:
-                        raise ValueError('All objset is wronly formatted')
-                except (ValueError, IndexError) as e: 
-                    updates['other'] = crops[i-1]['all']
+                        raise ValueError('All object is wrongly formatted')
+
             update_clip_header(conn, background_id, name, updates)
     else:
         for i in range(1, len(crops) + 1):
             insert_background_header(conn, background_id, i + background_id, name)
         for i in range(0, len(crops) + 1):
             if i == 0:
-                insert_clip_header(conn, i + background_id, name, 0, 0, origin_x,
-                                origin_y, full_width, full_height, video_refs[i], is_background = True)
+                insert_clip_header(conn, i + background_id, name, start_time, end_time, 0, 0,
+                                full_width, full_height, video_refs[i], is_background = True)
                 
             else:
-                origin_x = crops[i - 1].x0
-                origin_y = crops[i - 1].y0
-                width = crops[i - 1].x1 - crops[i - 1].x0
-                hieght = crops[i - 1].y1 - crops[i - 1].y0
+                origin_x = crops[i - 1]['bb'].x0
+                origin_y = crops[i - 1]['bb'].y0
+                width = crops[i - 1]['bb'].x1 - crops[i - 1]['bb'].x0
+                height = crops[i - 1]['bb'].y1 - crops[i - 1]['bb'].y0
                 insert_clip_header(conn, i + background_id, name, start_time, end_time, origin_x,
-                                origin_y, width, hieght, video_refs[i], other = json.dump(crops[i - 1]['all']))
-                
-                
+                                origin_y, width, height, video_refs[i], other = json.dumps(crops[i - 1]['all'], cls=Serializer))
+
+
         for i in range(0, len(crops)):
-            if type(crops['label']) is list type(crops['all']) is list:
-                for j in range(len(crops['label'])):
-                    insert_label_header(conn, crops['label'][j], background_id + i + 1, name)
+            if type(crops[i]['label']) is list: # TODO: deal with crop all later
+                for j in range(len(crops[i]['label'])):
+                    insert_label_header(conn, crops[i]['label'][j], background_id + i + 1, name)
             else:
-                insert_label_header(conn, crops['label'], background_id + i + 1, name)
+                insert_label_header(conn, crops[i]['label'], background_id + i + 1, name)
 
 
 def _write_video_batch(vstream, \
                         crops, \
-                        dir = DEFAULT_TEMP, \
+                        encoding,
                         batch_size,
-                        offset = 0, \
-                        write_header = True, \
+                        limit,
+                        start_time,
+                        dir = DEFAULT_TEMP, \
+                        frame_rate = DEFAULT_FRAME_RATE,
                         release = True,
                         writers = None):
     '''
@@ -109,15 +114,12 @@ def _write_video_batch(vstream, \
     - Note: each writer must match a crop
     '''
     file_names = []
-    headers = []
-    header_writers = []
     out_vids = []
     if writers == None:
         r_name = get_rnd_strng()
         for i in range(len(crops) + 1):
-            crop = crops[i - 1] 
             seg_name = os.path.join(dir, r_name)
-            file_name = add_ext(seg_name, AVI, seq + i)
+            file_name = add_ext(seg_name, AVI, i)
             file_names.append(file_name)
 
             fourcc = cv2.VideoWriter_fourcc(*encoding)
@@ -128,13 +130,11 @@ def _write_video_batch(vstream, \
                 width = abs(crops[i - 1]['bb'].x1 - crops[i - 1]['bb'].x0)
                 height = abs(crops[i - 1]['bb'].y1 - crops[i - 1]['bb'].y0)
             out_vid = cv2.VideoWriter(file_name,
-                                    fourcc, 
-                                    frame_rate, 
+                                    fourcc,
+                                    frame_rate,
                                     (width, height),
                                     True)
             out_vids.append(out_vid)
-            header = []
-            header_writers
     else:
         out_vids = writers
     
@@ -151,7 +151,7 @@ def _write_video_batch(vstream, \
             out_vids[i].write(fr)
             i +=1
         index += 1
-        if index >= batch_size:
+        if index >= batch_size or limit != -1 and index >= limit - start_time:
             break
     if not release:
         if len(file_names) != 0:
@@ -168,6 +168,8 @@ def _write_video_batch(vstream, \
 def _split_video_batch(vstream,
                         splitter,
                         batch_size,
+                        limit,
+                        start_time,
                         process_vid = False,
                         scratch = None,
                         vstream_behind = None,
@@ -187,18 +189,17 @@ def _split_video_batch(vstream,
     labels = []
     i = 0
     for frame in vstream:
-        objects.append(frame['objects'])
+        labels.append(frame['objects'])
         i += 1
         if v_cache:
             v_cache.append(frame)
-        if i >= batch_size:
+        if i >= batch_size or limit != -1 and i >= limit - start_time:
             break
-    limit = min(limit, i)
     crops = splitter.map(labels)
     if process_vid:
         if not splitter.map_to_video:
             raise ManagerIOError('Splitter does not support map to video')
-        videos = _write_video_batch(vstream_behind, crops, limit)
+        videos = _write_video_batch(vstream_behind, crops, limit) # TODO: parameters wrong
         return (crops, videos)
     return crops
     
@@ -210,48 +211,53 @@ def write_video_single(conn, \
                         dir, \
                         splitter, \
                         map, \
-                        limit = -1,\
-                        batch_size = 100, \
-                        stream = False):
+                        batch_size = 20, \
+                        stream = False,
+                        args={}):
     
-    v = VideoStream(video_file, limit)
+    v = VideoStream(video_file, args['limit'])
     v = iter(v[map])
     full_width = v.width
     full_height = v.height
     curr_back = 0 # current clip background id
     start_time = 0 #current batch start time (NOTE: Not current clip start time)
+    i = 0
     if stream:
         v_behind = [] # if it's a stream, we cache the buffered video instead of having a slow pointer
     else:
-        v_behind = VideoStream(video_file, limit)
-        v_behind = iter(v)
-    objects = []
+        v_behind = VideoStream(video_file, args['limit'])
+        v_behind = iter(v_behind)
+    labels = []
     vid_files = []
+
     for frame in v:
-        objects.append(objects['objects'])
+        labels.append(frame['objects'])
+        logging.debug(labels)
         i += 1
         if stream:
             v_behind.append(frame)
-        if i >= limit:
+        if args['limit'] != -1 and i >= args['limit'] or i >= batch_size:
             break
-    crops, batch_prev = splitter.initialize(objects)
-    (writers, file_names, time_block) = _write_video_batch(v_behind, crops, dir, batch_size, dir, release = False)
+    crops, batch_prev = splitter.initialize(labels)
+    (writers, file_names, time_block) = _write_video_batch(v_behind, crops, args['encoding'], batch_size, args['limit'], start_time, dir, release = False)
     
     _update_headers_batch(conn, crops, curr_back, target, file_names,
                             full_width, full_height, start_time, start_time + time_block, update = False)
     start_time += start_time + time_block
-    curr_back = curr_back + len(crops) + 1
+    next_back = curr_back + len(crops) + 1
     vid_files.extend(file_names)
+    return  # TODO: now skip the rest of batches because iter doesn't work
+
     while v:
         if stream:
             v_behind = []
             v_cache = v_behind
         else:
             v_cache = None
-        batch_crops = _split_video_batch(v, splitter, batch_size, v_cache = v_cache)
+        batch_crops = _split_video_batch(v, splitter, batch_size, args['limit'], start_time, v_cache = v_cache)
         crops, batch_prev, do_join = splitter.join(batch_prev, batch_crops)
         if do_join:
-            writers, _ , time_block = _write_video_batch(v_behind, crops, dir, batch_size, dir, release = False, writers = writers)
+            writers, _ , time_block = _write_video_batch(v_behind, crops, args['encoding'], batch_size, args['limit'], start_time, dir, release = False)
             
             _update_headers_batch(conn, crops, curr_back, target, file_names,
                             full_width, full_height, start_time, start_time + time_block, update = True)
@@ -259,12 +265,12 @@ def write_video_single(conn, \
         else:
             for writer in writers:
                 writer.release()
-            writers, file_names = _write_video_batch(v_behind, crops, dir, batch_size, dir, release = False)
-
+            writers, file_names, time_block = _write_video_batch(v_behind, crops, args['encoding'], batch_size, args['limit'], start_time, dir, release = False)
+            curr_back = next_back
             _update_headers_batch(conn, crops, curr_back, target, file_names,
-                            full_width, full_height, start_time, start_time + time_block, update = True)
+                            full_width, full_height, start_time, start_time + time_block, update = False)
             start_time = start_time + time_block
-            curr_back = curr_back + len(crops) + 1
+            next_back = curr_back + len(crops) + 1
         vid_files.extend(file_names)
     return vid_files
 
@@ -302,8 +308,8 @@ def move_one_file(conn, clip_id, video_name, dest_ref):
 
 def insert_clip_header(conn, clip_id, video_name, start_time, end_time, origin_x, origin_y, height, width, video_ref='', is_background = False, translation = 'NULL', other = 'NULL'):
     c = conn.cursor()
-    c.execute("INSERT INTO clip VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                   (clip_id, video_name, start_time, end_time, origin_x, origin_y, height, width, video_ref, is_background, translation, other))
+    c.execute("INSERT INTO clip VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+               (clip_id, video_name, start_time, end_time, origin_x, origin_y, height, width, video_ref, is_background, translation, other))
     conn.commit()
 
 
@@ -330,7 +336,7 @@ def delete_label_header(conn, video_name, label = None, clip_id = None):
 
 def delete_clip(conn, clip_id, video_name):
     c = conn.cursor()
-    c.execute("SELECT video_ref FROM clip WHERE clip_id = '%d' AND video_name = '%s" % (clip_id, video_name))
+    c.execute("SELECT video_ref FROM clip WHERE clip_id = '%d' AND video_name = '%s'" % (clip_id, video_name))
     video_ref = c.fetchone()[0]
     try:
         os.remove(video_ref)
@@ -344,20 +350,20 @@ def delete_clip(conn, clip_id, video_name):
 
 def delete_video(conn, video_name):
     c = conn.cursor()
-    c.execute("SELECT video_ref FROM clip WHERE video_name = '%s" % (video_name))
+    c.execute("SELECT video_ref FROM clip WHERE video_name = '%s'" % (video_name))
     video_ref = c.fetchone()[0]
     try:
         os.remove(video_ref)
     except FileNotFoundError:
         logging.warning("File %s not found" % video_ref)
-    c.execute("DELETE FROM clip WHERE video_name = '%s' " % (clip_id, video_name))
-    c.execute("DELETE FROM label WHERE video_name = '%s' " % (clip_id, video_name))
-    c.execute("DELETE FROM background WHERE video_name = '%s' " % (clip_id, video_name))
+    c.execute("DELETE FROM clip WHERE video_name = '%s' " % video_name)
+    c.execute("DELETE FROM label WHERE video_name = '%s' " % video_name)
+    c.execute("DELETE FROM background WHERE video_name = '%s' " % video_name)
     conn.commit()
 
-def delete_backgound(conn, background_id, video_name):
+def delete_background(conn, background_id, video_name):
     c = conn.cursor()
-    c.execute("SELECT clip_id FROM background WHERE background_id = '%d' AND video_name = '%s" % (background_id, video_name))
+    c.execute("SELECT clip_id FROM background WHERE background_id = '%d' AND video_name = '%s'" % (background_id, video_name))
     clips = c.fetchall()
     if len(clips) == 0:
         # not exist in header file, nothing to do
@@ -372,9 +378,9 @@ def delete_backgound(conn, background_id, video_name):
             os.remove(video_ref)
         except FileNotFoundError:
             logging.warning("File %s not found" % video_ref)
-        c.execute("DELETE FROM clip WHERE clip_id = '%d' AND video_name = '%s'" % (clip_id, video_name))
+        c.execute("DELETE FROM clip WHERE clip_id = '%d' AND video_name = '%s'" % (clip, video_name))
     
-    c.execute("DELETE FROM label WHERE clip_id = '%d' video_name = '%s' " % (clip_id, video_name))
+    c.execute("DELETE FROM label WHERE clip_id = '%d' video_name = '%s' " % (background_id, video_name))
     c.execute("DELETE FROM background WHERE background_id = '%d'" % background_id)
     conn.commit()
 
@@ -382,12 +388,12 @@ def delete_backgound(conn, background_id, video_name):
 def update_clip_header(conn, clip_id, video_name, args={}):
     c = conn.cursor()
     for key, value in args.items():
-        c.execute("UPDATE clip SET '%s' = '%s' WHERE clip_id = '%d' AND video_name = '%s'" % (key, value, clip_id, video_name))
+        c.execute('UPDATE clip SET "%s" = "%s" WHERE clip_id = "%d" AND video_name = "%s"' % (key, value, clip_id, video_name))
     conn.commit()
 
 def query_clip(conn, clip_id, video_name):
     c = conn.cursor()
-    c.execute("SELECT * FROM clip WHERE clip_id = '%d' AND video_name = '%s" % (clip_id, video_name))
+    c.execute("SELECT * FROM clip WHERE clip_id = '%d' AND video_name = '%s'" % (clip_id, video_name))
     result = c.fetchall()
     return result
 
@@ -398,15 +404,15 @@ def query_background(conn, video_name, background_id=None, clip_id=None):
     elif background_id != None and clip_id != None:
         c.execute("SELECT * FROM background WHERE background_id = '%d' AND clip_id = '%d' AND video_name = '%s'" % (background_id, clip_id, video_name))
     elif background_id != None and clip_id == None:
-        c.execute("SELECT * FROM background WHERE background_id = '%d' and video_name = '%s" % (background_id, video_name))
+        c.execute("SELECT * FROM background WHERE background_id = '%d' and video_name = '%s'" % (background_id, video_name))
     elif background_id == None and clip_id != None:
-        c.execute("SELECT * FROM background WHERE clip_id = '%d' and video_name = '%s" % (clip_id, video_name))
+        c.execute("SELECT * FROM background WHERE clip_id = '%d' and video_name = '%s'" % (clip_id, video_name))
     result = c.fetchall()
     return result
 
 def query_label(conn, label, video_name):
     c = conn.cursor()
-    c.execute("SELECT * FROM label WHERE label = '%s' AND video_name = '%s" % (label, video_name))
+    c.execute("SELECT * FROM label WHERE label = '%s' AND video_name = '%s'" % (label, video_name))
     result = c.fetchall()
     return result
 
@@ -418,7 +424,7 @@ def query(conn, video_name, label, clip_condition = None):
     overlaps. Because of this, it only returns a simple query right now.
     """
     clips = query_label(conn, label, video_name)
-    clip_ids = [label[1] for label in clip_ids]
+    clip_ids = [label[1] for label in clips]
     c = clip_condition(conn, video_name)
     video_refs = []
     for id in clip_ids:

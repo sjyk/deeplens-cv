@@ -8,6 +8,7 @@ video input stream as well as operators that can transform this stream.
 import cv2
 from deeplens.error import *
 import numpy as np
+import json
 
 #sources video from the default camera
 DEFAULT_CAMERA = 0
@@ -318,14 +319,18 @@ class Box():
 	def intersect_area(self, other):
 		if self.intersect(other):
 			x = min(self.x1, other.x1) - max(self.x0, other.x0)
+			if x < 0:
+				x = 0
 			y = min(self.y1, other.y1) - max(self.y0, other.y0)
+			if y < 0:
+				y = 0
 			return x*y
 		else:
 			return 0
 
 	def union_area(self, other):
 		ia = self.intersect_area(other)
-		return (self.area + other.area - ia)
+		return self.area() + other.area() - ia
 	
 	def union_box(self, other):
 		return Box(min(self.x0, other.x0), \
@@ -338,3 +343,6 @@ class Box():
 		return int(self.x0),int(self.y0),int(self.x1),int(self.y1)
 
 
+class Serializer(json.JSONEncoder):
+	def default(self, obj):
+		return obj.serialize()

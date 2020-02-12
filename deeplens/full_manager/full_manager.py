@@ -33,11 +33,10 @@ class FullStorageManager(StorageManager):
     is in the same location as disk, and external storage is another
     directory
     """
-    def __init__(self, content_tagger, content_splitter, basedir, externdir, db_name='header.db'):
+    def __init__(self, content_tagger, content_splitter, basedir, db_name='header.db'):
         self.content_tagger = content_tagger
         self.content_splitter = content_splitter
         self.basedir = basedir
-        self.externdir = externdir
         self.videos = set()
         self.threads = None
         self.STORAGE_BLOCK_SIZE = 60 
@@ -49,50 +48,42 @@ class FullStorageManager(StorageManager):
             except:
                 raise ManagerIOError("Cannot create the directory: " + str(basedir))
 
-        if not os.path.exists(externdir):
-            try:
-                os.makedirs(externdir)
-            except:
-                raise ManagerIOError("Cannot create the directory: " + str(externdir))
 
-        try:
-            self.conn = sqlite3.connect(os.path.join(basedir, db_name))
-            self.cursor = self.conn.cursor()
-            sql_create_background_table = """CREATE TABLE IF NOT EXISTS background (
-                                                 background_id integer NOT NULL,
-                                                 clip_id integer NOT NULL,
-                                                 video_name text NOT NULL
-                                                 PRIMARY KEY (background_id, clip_id, video_name)
-                                             );
-            """
-            sql_create_clip_table = """CREATE TABLE IF NOT EXISTS clip (
-                                           clip_id integer NOT NULL,
-                                           video_name text NOT NULL,
-                                           start_time integer NOT NULL,
-                                           end_time integer NOT NULL,
-                                           origin_x integer NOT NULL,
-                                           origin_y integer NOT NULL,
-                                           height integer NOT NULL,
-                                           width integer NOT NULL,
-                                           video_ref text NOT NULL, 
-                                           is_background NOT NULL,
-                                           translation text,
-                                           other text,
-                                           PRIMARY KEY (clip_id, video_name)
-                                       );
-            """
-            sql_create_label_table = """CREATE TABLE IF NOT EXISTS label (
-                                           label text NOT NULL,
-                                           clip_id integer NOT NULL,
-                                           video_name text NOT NULL,
-                                           PRIMARY KEY (label. clip_id, video_name)
-                                       );
-            """
-            self.cursor.execute(sql_create_label_table)
-            self.cursor.execute(sql_create_background_table)
-            self.cursor.execute(sql_create_clip_table)
-        except sqlite3.Error as e:
-            print(e)
+        self.conn = sqlite3.connect(os.path.join(basedir, db_name))
+        self.cursor = self.conn.cursor()
+        sql_create_background_table = """CREATE TABLE IF NOT EXISTS background (
+                                             background_id integer NOT NULL,
+                                             clip_id integer NOT NULL,
+                                             video_name text NOT NULL,
+                                             PRIMARY KEY (background_id, clip_id, video_name)
+                                         );
+        """
+        sql_create_clip_table = """CREATE TABLE IF NOT EXISTS clip (
+                                       clip_id integer NOT NULL,
+                                       video_name text NOT NULL,
+                                       start_time integer NOT NULL,
+                                       end_time integer NOT NULL,
+                                       origin_x integer NOT NULL,
+                                       origin_y integer NOT NULL,
+                                       height integer NOT NULL,
+                                       width integer NOT NULL,
+                                       video_ref text NOT NULL,
+                                       is_background NOT NULL,
+                                       translation text,
+                                       other text,
+                                       PRIMARY KEY (clip_id, video_name)
+                                   );
+        """
+        sql_create_label_table = """CREATE TABLE IF NOT EXISTS label (
+                                       label text NOT NULL,
+                                       clip_id integer NOT NULL,
+                                       video_name text NOT NULL,
+                                       PRIMARY KEY (label, clip_id, video_name)
+                                   );
+        """
+        self.cursor.execute(sql_create_label_table)
+        self.cursor.execute(sql_create_background_table)
+        self.cursor.execute(sql_create_clip_table)
 
     def put(self, filename, target, args=DEFAULT_ARGS, in_extern_storage = False):
         """put adds a video to the storage manager from a file. It should either add
@@ -105,7 +96,7 @@ class FullStorageManager(StorageManager):
             physical_dir = self.basedir
         
 
-        write_video_single(self.conn, filename, target, physical_dir, self.content_splitter, self.content_tagger)
+        write_video_single(self.conn, filename, target, physical_dir, self.content_splitter, self.content_tagger, args=DEFAULT_ARGS)
         
         self.videos.add(target)
 

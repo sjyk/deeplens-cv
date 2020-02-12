@@ -128,7 +128,7 @@ class TensorFlowObjectDetect(BufferMap):
           continue
 
         if detection_dict['detection_scores'][j] >= self.confidence:
-          tags.append('label': label, 'bb': box})
+          tags.append({'label': label, 'bb': box})
 
       return {'objects': tags}
 

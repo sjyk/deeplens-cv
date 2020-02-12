@@ -195,6 +195,8 @@ def _split_video_batch(vstream,
             v_cache.append(frame)
         if i >= batch_size or limit != -1 and i >= limit - start_time:
             break
+    if i == 0:
+        return None
     crops = splitter.map(labels)
     if process_vid:
         if not splitter.map_to_video:
@@ -248,13 +250,15 @@ def write_video_single(conn, \
     vid_files.extend(file_names)
     # return  # TODO: now skip the rest of batches because iter doesn't work
 
-    while v:
+    while True:
         if stream:
             v_behind = []
             v_cache = v_behind
         else:
             v_cache = None
         batch_crops = _split_video_batch(v, splitter, batch_size, args['limit'], start_time, v_cache = v_cache)
+        if batch_crops == None:
+            break
         crops, batch_prev, do_join = splitter.join(batch_prev, batch_crops)
         if do_join:
             writers, _ , time_block = _write_video_batch(v_behind, crops, args['encoding'], batch_size, args['limit'], start_time, dir, release = False)

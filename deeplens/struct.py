@@ -54,6 +54,10 @@ class VideoStream():
 		"""Constructs the iterator object and initializes
 		   the iteration state
 		"""
+		if self.cap == None:
+			# iterate the same videostream again after the previous run has finished
+			self.frame_count = 0
+			self.cap = cv2.VideoCapture(self.src)
 
 		if self.propIds:
 			for propId in self.propIds:

@@ -438,5 +438,5 @@ def query(conn, video_name, label, clip_condition = None):
             video_refs.append(clip_ref)
 
     return video_refs
-            
+
 

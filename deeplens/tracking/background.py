@@ -1,4 +1,4 @@
-"""This file is part of DeepLens which is released under MIT License and 
+"""This file is part of DeepLens which is released under MIT License and
 is copyrighted by the University of Chicago. This project is developed by
 the database group (chidata).
 
@@ -8,6 +8,7 @@ are useful for processing fixed camera videos.
 
 import cv2
 import numpy as np
+from deeplens.struct import Box
 
 #fixed camera bg segmentation
 #finds "moving" pixels
@@ -44,10 +45,10 @@ class FixedCameraBGFGSegmenter(object):
 					dynamic_mask = thresh.astype(np.float32)
 				else:
 					dynamic_mask += thresh.astype(np.float32)/255
-	
+
 
 			prev = blurred
-			count += 1	
+			count += 1
 
 		cthresh = count * self.movement_prob
 
@@ -57,5 +58,5 @@ class FixedCameraBGFGSegmenter(object):
 		x1 =  np.max(np.argwhere(dynamic_mask > cthresh), axis=0)[1]
 
 		#flipped axis in crop
-		
-		return (x0, y0, x1, y1)
+
+		return {'label': 'foreground', 'bb': Box(x0, y0, x1, y1)}

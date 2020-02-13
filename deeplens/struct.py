@@ -256,10 +256,10 @@ class Box():
 		"""The constructor for a box, all of the inputs have to be castable to 
 		integers. By convention x0 <= x1 and y0 <= y1
 		"""
-		self.x0 = x0
-		self.y0 = y0
-		self.x1 = x1
-		self.y1 = y1
+		self.x0 = int(x0)
+		self.y0 = int(y0)
+		self.x1 = int(x1)
+		self.y1 = int(y1)
 
 		if x0 > x1 or y0 > y1:
 			raise InvalidRegionError("The specified box is invalid: " + str([x0,y0,x1,y1]))
@@ -346,6 +346,29 @@ class Box():
 	"""
 	def serialize(self):
 		return int(self.x0),int(self.y0),int(self.x1),int(self.y1)
+
+
+class CustomTagger(Operator):
+	def __init__(self, tagger):
+		super(CustomTagger, self).__init__()
+		self.tagger = tagger
+
+	def __iter__(self):
+		self.input_iter = iter(self.video_stream)
+		self.super_iter()
+		return self
+
+	def _get_tags(self):
+		tags = []
+
+		tag = self.tagger(self.input_iter)
+		tags.append(tag)
+
+		return tags
+
+	def __next__(self):
+		_ = next(self.input_iter)
+		return {'objects': self._get_tags()}
 
 
 class Serializer(json.JSONEncoder):

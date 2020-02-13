@@ -18,4 +18,4 @@ f = FixedCameraBGFGSegmenter()
 fg = f.segment(v)
 #print(fg)
 
-play(v[Crop(*fg)])
+play(v[Crop(*fg['bb'])])

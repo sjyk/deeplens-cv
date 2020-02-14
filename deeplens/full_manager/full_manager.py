@@ -23,7 +23,7 @@ import os
 import sqlite3
 import logging
 
-DEFAULT_ARGS = {'encoding': MP4V, 'size': -1, 'limit': -1, 'sample': 1.0, 'offset': 0}
+DEFAULT_ARGS = {'encoding': MP4V, 'size': -1, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 20}
 
 # NOTE: bounding boxes are at a clip level
 
@@ -96,7 +96,7 @@ class FullStorageManager(StorageManager):
             physical_dir = self.basedir
         
 
-        write_video_single(self.conn, filename, target, physical_dir, self.content_splitter, self.content_tagger, args=DEFAULT_ARGS)
+        write_video_single(self.conn, filename, target, physical_dir, self.content_splitter, self.content_tagger, args=args)
         
         self.videos.add(target)
 

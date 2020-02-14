@@ -349,9 +349,12 @@ class Box():
 
 
 class CustomTagger(Operator):
-	def __init__(self, tagger):
+	def __init__(self, tagger, batch_size):
 		super(CustomTagger, self).__init__()
+		# a custom tagger function that takes video_stream and batch_size; it raises StopIteration when finishes
 		self.tagger = tagger
+		self.batch_size = batch_size
+		self.next_count = 0  # how many next() we have called after _get_tags()
 
 	def __iter__(self):
 		self.input_iter = iter(self.video_stream)
@@ -359,15 +362,20 @@ class CustomTagger(Operator):
 		return self
 
 	def _get_tags(self):
-		tags = []
+		if self.next_count == 0 or self.next_count >= self.batch_size:
+			self.next_count = 0
+			# we assume it iterates the entire batch size and save the results
+			self.tags = []
+			try:
+				tag = self.tagger(self.input_iter, self.batch_size)
+			except StopIteration:
+				raise StopIteration("Iterator is closed")
+			self.tags.append(tag)
 
-		tag = self.tagger(self.input_iter)
-		tags.append(tag)
-
-		return tags
+		self.next_count += 1
+		return self.tags
 
 	def __next__(self):
-		_ = next(self.input_iter)
 		return {'objects': self._get_tags()}
 
 

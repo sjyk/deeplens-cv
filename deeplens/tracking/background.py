@@ -24,7 +24,7 @@ class FixedCameraBGFGSegmenter(object):
 
 
 	#returns a bounding box around the foreground.
-	def segment(self, vstream):
+	def segment(self, vstream, batch_size):
 
 		dynamic_mask = None
 		prev = None
@@ -49,6 +49,12 @@ class FixedCameraBGFGSegmenter(object):
 
 			prev = blurred
 			count += 1
+
+			if count >= batch_size:
+				break
+
+		if count == 0:
+			raise StopIteration("Iterator is closed")
 
 		cthresh = count * self.movement_prob
 

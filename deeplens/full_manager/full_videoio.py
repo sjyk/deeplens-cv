@@ -213,10 +213,10 @@ def write_video_single(conn, \
                         dir, \
                         splitter, \
                         map, \
-                        batch_size = 20, \
                         stream = False,
                         args={}):
-    
+
+    batch_size = args['batch_size']
     v = VideoStream(video_file, args['limit'])
     v = iter(v[map])
     full_width = v.width

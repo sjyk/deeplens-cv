@@ -8,7 +8,7 @@ storage manager require as input.
 import copy
 import logging
 
-IOU_THRESHOLD = 0.3
+IOU_THRESHOLD = 0.7
 TRANSLATION_ERROR = 0.05
 from deeplens.struct import *
 
@@ -53,7 +53,7 @@ class Splitter():
     data: bounding boxes across different frames
 """
 class CropSplitter(MapJoin):
-    def __init__(self, other_func = None):
+    def __init__(self):
         super().__init__()
         self.map_to_video = True
 
@@ -62,7 +62,7 @@ class CropSplitter(MapJoin):
         returns (crops, temp_data)
         """
         crops, labels = self.map(data)
-        return crops, (crops, labels)
+        return crops, (crops, labels), False
 
     def map(self, data):
         """
@@ -70,7 +70,7 @@ class CropSplitter(MapJoin):
         data: bounding boxes per frame
 
         returns temp_data
-        """
+        """ 
         crops = []
         labels = {}
         index = 0

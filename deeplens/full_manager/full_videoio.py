@@ -240,7 +240,7 @@ def write_video_single(conn, \
             v_behind.append(frame)
         if args['limit'] != -1 and i >= args['limit'] or i >= batch_size:
             break
-    crops, batch_prev = splitter.initialize(labels)
+    crops, batch_prev, _ = splitter.initialize(labels)
     (writers, file_names, time_block) = _write_video_batch(v_behind, crops, args['encoding'], batch_size, args['limit'], start_time, dir, release = False)
     
     _update_headers_batch(conn, crops, curr_back, target, file_names,

@@ -1,6 +1,34 @@
 
 from deeplens.struct import *
 from deeplens.full_manager.full_video_processing import *
+import cv2
+import numpy as np
+from deeplens.constants import *
+
+def create_repeating_file(name):
+    cap = cv2.VideoCapture(name)
+    fourcc = int(cap.get(cv2.CAP_PROP_FOURCC))
+    frame_rate = cap.get(cv2.CAP_PROP_FPS)
+    #fourcc = cv2.VideoWriter_fourcc(*MP4V)
+    write_vid = cv2.VideoWriter('cut3.mp4', fourcc, 1, (int(cap.get(3)),int(cap.get(4))))
+    for i in range(20):
+        test, frame = cap.read()
+        if not test:
+            break
+        write_vid.write(frame)
+    cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+    for i in range(20):
+        test, frame = cap.read()
+        if not test:
+            break
+        write_vid.write(frame)
+    cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+    for i in range(20):
+        test, frame = cap.read()
+        if not test:
+            break
+        write_vid.write(frame)
+
 def print_crops(crops, labels = None):
     for crop in crops:
         print('New Crop~~~~')
@@ -31,4 +59,4 @@ def main():
     # Test if join works with video_io
 
 if __name__ == '__main__':
-    main()
+    create_repeating_file('cut2.mp4')

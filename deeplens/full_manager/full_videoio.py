@@ -36,38 +36,39 @@ def _update_headers_batch(conn, crops, background_id, name, video_refs,
         # Updates 
         for i in range(0, len(crops) + 1):
             clip_info = query_clip(conn, i + background_id, name)[0]
+            print(i + background_id)
             updates = {}
             updates['start_time'] = min(start_time, clip_info[2])
             updates['end_time'] = max(end_time, clip_info[3])
-
+            print(updates['end_time'])
             if i != 0:
                 origin_x = crops[i - 1]['bb'].x0
                 origin_y = crops[i - 1]['bb'].y0
                 translation = clip_info[10]
                 if translation == 'NULL':
                     if origin_x != clip_info[4] or origin_y != clip_info[5]:
-                        updates['translation'] = [(start_time, origin_x, origin_y)]
+                        updates['translation'] = json.dumps([(start_time, origin_x, origin_y)])
                 else:
                     translation = json.loads(clip_info[10])
                     if type(translation) is list:
                         if translation[-1][1] != origin_x or translation[-1][2] != origin_y:
                             translation.append((start_time, origin_x, origin_y))
-                            updates['translation'] = translation
+                            updates['translation'] = json.dumps(translation)
                     else:
                         raise ValueError('Translation object is wrongly formatted')
                 other = clip_info[11]
                 if other == 'NULL':
-                    updates['other'] = crops[i - 1]['all']
+                    updates['other'] = json.dumps(crops[i - 1]['all'], cls=Serializer)
                 else:
                     other = json.loads(clip_info[11])
                     if type(other) is dict:
                         logging.debug(crops[i - 1])
                         other.update(crops[i - 1]['all'])
-                        updates['other'] = other
+                        updates['other'] = json.dumps(other, cls=Serializer)
                     else:
                         raise ValueError('All object is wrongly formatted')
 
-            update_clip_header(conn, background_id, name, updates)
+            update_clip_header(conn, background_id + i, name, updates)
     else:
         for i in range(1, len(crops) + 1):
             insert_background_header(conn, background_id, i + background_id, name)
@@ -100,7 +101,7 @@ def _write_video_batch(vstream, \
                         limit,
                         start_time,
                         dir = DEFAULT_TEMP, \
-                        frame_rate = DEFAULT_FRAME_RATE,
+                        frame_rate = 1,
                         release = True,
                         writers = None):
     '''
@@ -240,7 +241,7 @@ def write_video_single(conn, \
             v_behind.append(frame)
         if args['limit'] != -1 and i >= args['limit'] or i >= batch_size:
             break
-    crops, batch_prev = splitter.initialize(labels)
+    crops, batch_prev, _ = splitter.initialize(labels)
     (writers, file_names, time_block) = _write_video_batch(v_behind, crops, args['encoding'], batch_size, args['limit'], start_time, dir, release = False)
     
     _update_headers_batch(conn, crops, curr_back, target, file_names,
@@ -248,8 +249,6 @@ def write_video_single(conn, \
     start_time = start_time + time_block
     next_back = curr_back + len(crops) + 1
     vid_files.extend(file_names)
-    # return  # TODO: now skip the rest of batches because iter doesn't work
-
     while True:
         if stream:
             v_behind = []
@@ -260,8 +259,9 @@ def write_video_single(conn, \
         if batch_crops == None:
             break
         crops, batch_prev, do_join = splitter.join(batch_prev, batch_crops)
+        print(do_join)
         if do_join:
-            writers, _ , time_block = _write_video_batch(v_behind, crops, args['encoding'], batch_size, args['limit'], start_time, dir, release = False)
+            writers, _ , time_block = _write_video_batch(v_behind, crops, args['encoding'], batch_size, args['limit'], start_time, dir, release = False, writers = writers)
             
             _update_headers_batch(conn, crops, curr_back, target, file_names,
                             full_width, full_height, start_time, start_time + time_block, update = True)
@@ -392,7 +392,7 @@ def delete_background(conn, background_id, video_name):
 def update_clip_header(conn, clip_id, video_name, args={}):
     c = conn.cursor()
     for key, value in args.items():
-        c.execute('UPDATE clip SET "%s" = "%s" WHERE clip_id = "%d" AND video_name = "%s"' % (key, value, clip_id, video_name))
+        c.execute("UPDATE clip SET '%s' = '%s' WHERE clip_id = '%d' AND video_name = '%s'" % (key, value, clip_id, video_name))
     conn.commit()
 
 def query_clip(conn, clip_id, video_name):

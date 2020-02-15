@@ -306,7 +306,6 @@ class Box():
 	def _one_y_cond(self, other):
 		return (other.y1 >= self.y0 and other.y1 <= self.y1)
 
-
 	"""Intersection and containement
 	"""
 	def contains(self, other):
@@ -316,10 +315,9 @@ class Box():
 			   self._one_y_cond(other)
 
 	def intersect(self, other):
-		return self._zero_x_cond(other) or \
-			   self._zero_y_cond(other) or \
-			   self._one_x_cond(other) or \
-			   self._one_y_cond(other)
+		x = self.x1 >= other.x0 and other.x1 >= self.x0
+		y = self.y1 >= other.y0 and other.y1 >= self.y0
+		return x and y
 
 	def intersect_area(self, other):
 		if self.intersect(other):

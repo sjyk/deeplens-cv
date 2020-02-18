@@ -429,13 +429,20 @@ def query(conn, video_name, label, clip_condition = None):
     """
     clips = query_label(conn, label, video_name)
     clip_ids = [label[1] for label in clips]
-    c = clip_condition(conn, video_name)
+
+    #small bug fix
+    if clip_condition == None:
+        c = clip_ids
+    else:
+        c = clip_condition(conn, video_name)
+
     video_refs = []
     for id in clip_ids:
         if id in c:
             clip = query_clip(conn, id, video_name)
             clip_ref = clip[0][8]
-            video_refs.append(clip_ref)
+            origin = np.array((clip[0][4],clip[0][5]))
+            video_refs.append(VideoStream(clip_ref,origin=origin))
 
     return video_refs
 

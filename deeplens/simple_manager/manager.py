@@ -23,14 +23,13 @@ class SimpleStorageManager(StorageManager):
 	   into equiwidth segments.
 	"""
 
-	DEFAULT_ARGS = {'encoding': GSC, 'size': -1, 'limit': -1, 'sample': 1.0, 'offset': 0}
+	DEFAULT_ARGS = {'encoding': GSC, 'size': -1, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 20}
 
 
-	def __init__(self, content_tagger, basedir):
-		'''Every simplestoragemanager takes as input a content_tagger and a 
+	def __init__(self, basedir):
+		'''Every simplestoragemanager takes as input  a 
 		   basedir for storage.
 		'''
-		self.content_tagger = content_tagger
 		self.basedir = basedir
 		self.videos = set()
 
@@ -47,10 +46,10 @@ class SimpleStorageManager(StorageManager):
 		self.doPut(filename, target, args)
 
 
-	def get(self, name, condition, clip_size):
+	def get(self, name, condition, args=DEFAULT_ARGS):
 		'''Get takes in a name and a condition that the system tries a best effort to push down
 		'''
-		return self.doGet(name, condition, clip_size)
+		return self.doGet(name, condition, args['batch_size'])
 
 
 	def delete(self, name):
@@ -98,7 +97,6 @@ class SimpleStorageManager(StorageManager):
 		"""
 		v = VideoStream(filename, args['limit'])
 		v = v[Sample(args['sample'])]
-		v = v[self.content_tagger]
 
 		physical_clip = os.path.join(self.basedir, target)
 		delete_video_if_exists(physical_clip)

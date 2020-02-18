@@ -1,22 +1,30 @@
 from deeplens.tracking.event import Metric
-from deeplens.dataflow.map import Crop
+from deeplens.dataflow.map import Crop, GC
 from deeplens.struct import build
 
 class DeepLensOptimizer():
 
 	def __init__(self,
 				 crop_pd=True,
-				 crop_pd_ratio=1.1):
+				 crop_pd_ratio=1.1,
+				 gc=True):
 
 		self.crop_pd = crop_pd
 		self.crop_pd_ratio = crop_pd_ratio
-		self.gc = True
+		self.gc = gc
 
 	#only handles one region
 	def get_metric_region(self, pipeline):
 		for index, op in enumerate(pipeline):
 			if isinstance(op, Metric):
 				return op.region
+		return None
+
+	#only handles one region
+	def get_metric_index(self, pipeline):
+		for index, op in enumerate(pipeline):
+			if isinstance(op, Metric):
+				return index
 		return None
 
 	def optimize(self, stream):
@@ -28,6 +36,12 @@ class DeepLensOptimizer():
 			if not (region is None):
 				region = region * self.crop_pd_ratio
 				pipeline.insert(1,Crop(region.x0, region.y0, region.x1, region.y1))
+
+		if self.gc:
+			index = self.get_metric_index(pipeline)
+			if not (index is None):
+				pipeline.insert(index,GC())
+
 
 
 		return build(pipeline) 

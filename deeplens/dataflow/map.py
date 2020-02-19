@@ -6,7 +6,6 @@ map.py defines the simplest dataflow component in DeepLens
 """
 import random
 
-import cv2
 from deeplens.utils.utils import *
 from deeplens.struct import Operator
 

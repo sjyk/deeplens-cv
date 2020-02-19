@@ -4,7 +4,6 @@ the database group (chidata).
 
 core.py defines the basic storage api in deeplens.
 """
-from deeplens.constants import *
 
 class StorageManager():
 	"""The StorageManager is the basic abstract class that represents a
@@ -19,7 +18,8 @@ class StorageManager():
 		raise NotImplemented("putFromFile not implemented")
 
 	def get(self, name, condition, clip_size):
-		"""retrievies a clip of a certain size satisfying the condition
+		# NOTE: clip_size is not needed in FullStorageManager
+		"""retrieves a clip of a certain size satisfying the condition
 		"""
 		raise NotImplemented("getIf not implemented")
 
@@ -34,19 +34,3 @@ class StorageManager():
 
 	def size(self, name):
 		raise NotImplemented("size() not implemented")
-
-
-
-#condition is a predicate push down condition
-class Condition():
-
-	def __init__(self, \
-				 filter, \
-				 crop=None, \
-				 resolution=1.0, \
-				 sampling=1.0):
-
-		self.filter = filter
-		self.crop = crop
-		self.resolution = resolution
-		self.sampling = sampling

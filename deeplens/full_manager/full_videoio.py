@@ -7,10 +7,7 @@ primitives to encode and decode archived and regular video formats for a tiered
 storage system.
 """
 
-from deeplens.constants import *
-from deeplens.struct import *
 from deeplens.header import *
-from deeplens.utils.clip import *
 from deeplens.simple_manager.file import *
 from deeplens.utils.frame_xform import *
 
@@ -19,8 +16,6 @@ import os
 from os import path
 import time
 import shutil
-from pathlib import Path
-from datetime import datetime
 import logging
 import json
 
@@ -420,29 +415,24 @@ def query_label(conn, label, video_name):
     result = c.fetchall()
     return result
 
-def query(conn, video_name, label, clip_condition = None):
+def query(conn, video_name, clip_condition):
     """
-    TODO: Currently clip_condition is a user function, which queries for clip ids from the
-    clip tabel. However, we should create an object
-    for it later. Additionally, we should think about how to present the information in terms of 
-    overlaps. Because of this, it only returns a simple query right now.
-    """
-    clips = query_label(conn, label, video_name)
-    clip_ids = [label[1] for label in clips]
+    Args:
+        conn (SQLite conn object) - please pass self.conn directly
+        video_name (string) - identifier of the entire video (not clip)
+        clip_condition (Condition object) - conditions of the query. e.g. Condition(filter='car')
 
-    #small bug fix
-    if clip_condition == None:
-        c = clip_ids
-    else:
-        c = clip_condition(conn, video_name)
+    Returns:
+        video_refs - list of VideoStream objects that you can iterate through
+    """
+    clip_ids = clip_condition.query(conn, video_name)
 
     video_refs = []
     for id in clip_ids:
-        if id in c:
-            clip = query_clip(conn, id, video_name)
-            clip_ref = clip[0][8]
-            origin = np.array((clip[0][4],clip[0][5]))
-            video_refs.append(VideoStream(clip_ref,origin=origin))
+        clip = query_clip(conn, id, video_name)
+        clip_ref = clip[0][8]
+        origin = np.array((clip[0][4],clip[0][5]))
+        video_refs.append(VideoStream(clip_ref,origin=origin))
 
     return video_refs
 

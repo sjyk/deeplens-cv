@@ -10,7 +10,6 @@ import logging
 
 IOU_THRESHOLD = 0.7
 TRANSLATION_ERROR = 0.05
-from deeplens.struct import *
 
 """ Defines a map join operation
 """

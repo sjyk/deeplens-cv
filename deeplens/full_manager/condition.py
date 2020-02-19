@@ -14,23 +14,30 @@ from deeplens.struct import Box
 class Condition():
 
 	def __init__(self,
-				 filter,            # filter is a string
-				 crop=None,         # crop is a Box object
+				 label,      # label is a string
+				 crop=None,  # crop is a Box object
 				 resolution=1.0,
-				 sampling=1.0):
+				 sampling=1.0,
+				 custom_filter=None):
 
-		self.filter = filter
+		self.label = label
 		self.crop = crop
 		self.resolution = resolution
 		self.sampling = sampling
+		self.custom_filter = custom_filter
 
 	def query(self, conn, video_name):
-		clips = query_label(conn, self.filter, video_name)
+		clips = query_label(conn, self.label, video_name)
 		clip_ids = [label[1] for label in clips]
 
 		if self.crop != None:
 			assert isinstance(self.crop, Box)
 			clip_ids = self._crop(conn, video_name, clip_ids)
+
+		if self.custom_filter != None:
+			assert callable(self.custom_filter)
+			filtered_ids = self.custom_filter(conn, video_name)
+			clip_ids = list(set(clip_ids).intersection(filtered_ids))
 
 		return clip_ids
 
@@ -45,3 +52,4 @@ class Condition():
 					self.crop.intersect_area(clip_position) / clip_position.area() >= 0.7:
 				cropped_ids.append(id)
 		return cropped_ids
+

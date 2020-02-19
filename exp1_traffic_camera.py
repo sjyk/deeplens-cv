@@ -48,7 +48,7 @@ def runNaive(tot=1000, sel=0.1):
 	sel = sel/2
 	region = Box(200,550,350,750)
 	pipelines = c[Cut(500-int(tot*sel),500+int(tot*sel))][KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)]
-	print('Naive', count(pipelines, ['one'], stats=True))
+	print('Naive.'+str(tot)+"."+str(sel), count(pipelines, ['one'], stats=True)[1])
 
 
 #Simple storage manager with temporal filters
@@ -67,7 +67,7 @@ def runSimple(tot=1000, sel=0.1):
 	for c in clips:
 		pipelines.append(c[KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)])
 
-	print('Simple', counts(pipelines, ['one'], stats=True))
+	print('Simple.'+str(tot)+"."+str(sel), counts(pipelines, ['one'], stats=True)[1])
 
 
 #Full storage manager with bg-fg optimization
@@ -86,7 +86,7 @@ def runFull(tot=1000, sel=0.1):
 	for c in clips:
 		pipelines.append(c[KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)])
 
-	print('Full', counts(pipelines, ['one'], stats=True))
+	print('Full.'+str(tot)+"."+str(sel), counts(pipelines, ['one'], stats=True)[1])
 
 
 #All optimizations
@@ -108,10 +108,14 @@ def runFullOpt(tot=1000, sel=0.1):
 		pipeline = d.optimize(pipeline)
 		pipelines.append(pipeline)
 
-	print('FullOpt', counts(pipelines, ['one'], stats=True))
+	print('FullOpt.'+str(tot)+"."+str(sel), counts(pipelines, ['one'], stats=True)[1])
 
 
-runNaive(tot=1000, sel=0.2)
-runSimple(tot=1000, sel=0.2)
-runFull(tot=1000, sel=0.2)
-runFullOpt(tot=1000, sel=0.2)
+
+for si in range(2,10):
+	for N in range(1000,10000,1000):
+		s = si/10
+		runNaive(tot=N, sel=s)
+		runSimple(tot=N, sel=s)
+		runFull(tot=N, sel=s)
+		runFullOpt(tot=N, sel=s)

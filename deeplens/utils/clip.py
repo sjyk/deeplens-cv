@@ -57,8 +57,6 @@ def materialize_clip(clip, boundaries, streams):
 	execution_plan = get_clip_split_merge(clip, boundaries)
 	subiterators = []
 
-	print(execution_plan, clip, boundaries)
-
 	for crop in execution_plan:
 		index, bounds = crop
 		start = bounds[0]#streams[index][1]

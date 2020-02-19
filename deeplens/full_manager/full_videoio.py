@@ -31,11 +31,11 @@ def _update_headers_batch(conn, crops, background_id, name, video_refs,
         # Updates 
         for i in range(0, len(crops) + 1):
             clip_info = query_clip(conn, i + background_id, name)[0]
-            print(i + background_id)
+            #print(i + background_id)
             updates = {}
             updates['start_time'] = min(start_time, clip_info[2])
             updates['end_time'] = max(end_time, clip_info[3])
-            print(updates['end_time'])
+            #print(updates['end_time'])
             if i != 0:
                 origin_x = crops[i - 1]['bb'].x0
                 origin_y = crops[i - 1]['bb'].y0
@@ -254,7 +254,7 @@ def write_video_single(conn, \
         if batch_crops == None:
             break
         crops, batch_prev, do_join = splitter.join(batch_prev, batch_crops)
-        print(do_join)
+        #print(do_join)
         if do_join:
             writers, _ , time_block = _write_video_batch(v_behind, crops, args['encoding'], batch_size, args['limit'], start_time, dir, release = False, writers = writers)
             

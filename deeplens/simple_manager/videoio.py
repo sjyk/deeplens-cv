@@ -257,8 +257,7 @@ def read_if(output, condition, clip_size=5, scratch = DEFAULT_TEMP):
 
 	for header_data, video in pre_parsed:
 
-
-		if condition.filter(header_data):
+		if condition(header_data):
 			pstart, pend = find_clip_boundaries((header_data['start'], \
 											     header_data['end']), \
 												 clips)
@@ -271,7 +270,7 @@ def read_if(output, condition, clip_size=5, scratch = DEFAULT_TEMP):
 					
 				cH = cut_header(header_data, clips[rel_clip][0], clips[rel_clip][1])
 
-				if condition.filter(cH):
+				if condition(cH):
 					relevant_clips.add(rel_clip)
 
 			boundaries.append((header_data['start'],header_data['end']))

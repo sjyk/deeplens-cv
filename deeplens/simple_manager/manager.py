@@ -23,7 +23,7 @@ class SimpleStorageManager(StorageManager):
 	   into equiwidth segments.
 	"""
 
-	DEFAULT_ARGS = {'encoding': GSC, 'size': -1, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 20}
+	DEFAULT_ARGS = {'encoding': GSC, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 20}
 
 
 	def __init__(self, basedir):
@@ -101,7 +101,7 @@ class SimpleStorageManager(StorageManager):
 		physical_clip = os.path.join(self.basedir, target)
 		delete_video_if_exists(physical_clip)
 
-		if args['size'] == -1:
+		if args['batch_size'] == -1:
 			write_video(v, \
 					    physical_clip, args['encoding'], \
 					    ObjectHeader(offset=args['offset']))
@@ -110,7 +110,7 @@ class SimpleStorageManager(StorageManager):
 							  physical_clip, \
 							  args['encoding'], \
 							  ObjectHeader(offset=args['offset']), \
-							  args['size'])
+							  args['batch_size'])
 
 		self.videos.add(target)
 

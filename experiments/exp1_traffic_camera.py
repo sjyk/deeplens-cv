@@ -1,7 +1,13 @@
+import environ
+import sys
+from environ import *
+
 from deeplens.full_manager.condition import Condition
 from deeplens.full_manager.full_video_processing import CropSplitter
-from deeplens.struct import *
 from deeplens.tracking.background import FixedCameraBGFGSegmenter
+from deeplens.optimizer.deeplens import DeepLensOptimizer
+
+from deeplens.struct import *
 from deeplens.utils import *
 from deeplens.dataflow.map import *
 from deeplens.full_manager.full_manager import *
@@ -10,53 +16,31 @@ from deeplens.dataflow.agg import *
 from deeplens.tracking.contour import *
 from deeplens.tracking.event import *
 from deeplens.core import *
-
 from deeplens.simple_manager.manager import *
-
-from deeplens.optimizer.deeplens import DeepLensOptimizer
 
 import cv2
 import numpy as np
-import os
-import shutil
 
-
-def time_filter(start, end):
-
-	def do_filter(conn, video_name):
-		c = conn.cursor()
-		c.execute("SELECT clip_id FROM clip WHERE ((start_time >= %s AND start_time <= %s) OR (end_time >= %s AND end_time <= %s) ) AND video_name = '%s'" % (str(start),str(end), str(start),str(end), video_name))
-		return [cl[0] for cl in c.fetchall()]
-
-	return do_filter
-
-def overlap(s1,e1, s2, e2):
-	r1 = set(range(s1,e1))
-	r2 = set(range(s2,e2))
-	return (len(r1.intersection(r2)) > 0)
-
-
-def cleanUp():
-	if os.path.exists('./videos'):
-		shutil.rmtree('./videos')
 
 #loads directly from the mp4 file
-def runNaive(tot=1000, sel=0.1):
+def runNaive(src, tot=1000, sel=0.1):
 	cleanUp()
 
-	c = VideoStream("tcam.mp4", limit=tot)
+	c = VideoStream(src, limit=tot)
 	sel = sel/2
 	region = Box(200,550,350,750)
 	pipelines = c[Cut(tot//2-int(tot*sel),tot//2+int(tot*sel))][KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)]
-	print('Naive.'+str(tot)+"."+str(sel), count(pipelines, ['one'], stats=True)[1])
+	result = count(pipelines, ['one'], stats=True)[1]['elapsed']
+
+	logrecord('naive',({'size': tot, 'sel': sel, 'file': src}), 'get', str(result), 's')
 
 
 #Simple storage manager with temporal filters
-def runSimple(tot=1000, sel=0.1):
+def runSimple(src, tot=1000, sel=0.1):
 	cleanUp()
 
 	manager = SimpleStorageManager('videos')
-	manager.put('tcam.mp4', 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': 20})
+	manager.put(src, 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': 20})
 
 	region = Box(200,550,350,750)
 
@@ -67,15 +51,17 @@ def runSimple(tot=1000, sel=0.1):
 	for c in clips:
 		pipelines.append(c[KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)])
 
-	print('Simple.'+str(tot)+"."+str(sel), counts(pipelines, ['one'], stats=True)[1])
+	result = counts(pipelines, ['one'], stats=True)[1]['elapsed']
+
+	logrecord('simple',({'size': tot, 'sel': sel, 'file': src}), 'get', str(result), 's')
 
 
 #Full storage manager with bg-fg optimization
-def runFull(tot=1000, sel=0.1):
+def runFull(src, tot=1000, sel=0.1):
 	cleanUp()
 
 	manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=100), CropSplitter(), 'videos')
-	manager.put('tcam.mp4', 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': 1000, 'batch_size': 100})
+	manager.put(src, 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': 100})
 
 	region = Box(200, 550, 350, 750)
 	sel = sel/2
@@ -86,15 +72,18 @@ def runFull(tot=1000, sel=0.1):
 	for c in clips:
 		pipelines.append(c[KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)])
 
-	print('Full.'+str(tot)+"."+str(sel), counts(pipelines, ['one'], stats=True)[1])
+	result = counts(pipelines, ['one'], stats=True)[1]['elapsed']
+
+	logrecord('full',({'size': tot, 'sel': sel, 'file': src}), 'get', str(result), 's')
+
 
 
 #All optimizations
-def runFullOpt(tot=1000, sel=0.1):
+def runFullOpt(src, tot=1000, sel=0.1):
 	cleanUp()
 
 	manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=100), CropSplitter(), 'videos')
-	manager.put('tcam.mp4', 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': 1000, 'batch_size': 100})
+	manager.put(src, 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': 100})
 
 	region = Box(200, 550, 350, 750)
 	sel = sel/2
@@ -108,13 +97,9 @@ def runFullOpt(tot=1000, sel=0.1):
 		pipeline = d.optimize(pipeline)
 		pipelines.append(pipeline)
 
-	print('FullOpt.'+str(tot)+"."+str(sel), counts(pipelines, ['one'], stats=True)[1])
+	result = counts(pipelines, ['one'], stats=True)[1]['elapsed']
+
+	logrecord('fullopt',({'size': tot, 'sel': sel, 'file': src}), 'get', str(result), 's')
 
 
-N = 1000
-for si in range(9,10):
-		s = si/10
-		runNaive(tot=N, sel=s)
-		runSimple(tot=N, sel=s)
-		runFull(tot=N, sel=s)
-		runFullOpt(tot=N, sel=s)
+do_experiments(sys.argv[1], [runNaive, runSimple, runFull, runFullOpt], 1000, range(2,10))

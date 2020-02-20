@@ -25,7 +25,7 @@ def time_filter(start, end):
 
 	def do_filter(conn, video_name):
 		c = conn.cursor()
-		c.execute("SELECT clip_id FROM clip WHERE start_time >= %s AND end_time <= %s AND video_name = '%s'" % (str(start), str(end), video_name))
+		c.execute("SELECT clip_id FROM clip WHERE ((start_time <= %s AND end_time <= %s) OR (start_time <= %s AND end_time <= %s) ) AND video_name = '%s'" % (str(start),str(start), str(end),str(end), video_name))
 		return [cl[0] for cl in c.fetchall()]
 
 	return do_filter
@@ -112,7 +112,7 @@ def runFullOpt(tot=1000, sel=0.1):
 
 
 N = 1000
-for si in range(2,10):
+for si in range(9,10):
 		s = si/10
 		runNaive(tot=N, sel=s)
 		runSimple(tot=N, sel=s)

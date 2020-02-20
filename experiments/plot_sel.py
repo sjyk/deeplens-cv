@@ -15,7 +15,7 @@ for line in lines:
 		plots[key] = [[],[]]
 
 	settings = json.loads(line[1])
-	plots[key][0].append(float(settings['sel']))
+	plots[key][0].append(2*float(settings['sel']))
 	plots[key][1].append(float(line[3]))
 
 markers = 'oDsv'

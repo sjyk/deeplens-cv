@@ -83,6 +83,10 @@ class CropSplitter(MapJoin):
                 logging.debug('OBJECT')
                 logging.debug(object)
                 match = -1
+
+                if 'label' not in object:
+                    continue
+
                 if object['label'] in labels:
                     for i in labels[object['label']]:
                         intersect = float(object['bb'].intersect_area(crops[i]['bb']))

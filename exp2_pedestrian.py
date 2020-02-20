@@ -113,7 +113,7 @@ def runFullOpt(tot=1000, sel=0.1):
 
 
 N = 1000
-for si in range(2,3):
+for si in range(2,10):
 		s = si/10
 		runNaive(tot=N, sel=s)
 		runSimple(tot=N, sel=s)

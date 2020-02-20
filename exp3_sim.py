@@ -40,14 +40,16 @@ def cleanUp():
 	if os.path.exists('./videos'):
 		shutil.rmtree('./videos')
 
+
 #loads directly from the mp4 file
 def runNaive(tot=1000, sel=0.1):
 	cleanUp()
 
-	c = VideoStream("tcam.mp4", limit=tot)
+	c = VideoStream('/Users/sanjaykrishnan/Downloads/panoramic-000-000.mp4', limit=tot)
 	sel = sel/2
-	region = Box(200,550,350,750)
-	pipelines = c[Cut(tot//2-int(tot*sel),tot//2+int(tot*sel))][KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)]
+	region = Box(500, 350, 750, 450)
+	pipelines = c[Cut(tot//2-int(tot*sel),tot//2+int(tot*sel))][KeyPoints(blur=3)][ActivityMetric('one', region)][Filter('one', [-0.5,1,-0.5], 0.25, delay=40)]
+
 	print('Naive.'+str(tot)+"."+str(sel), count(pipelines, ['one'], stats=True)[1])
 
 
@@ -56,16 +58,16 @@ def runSimple(tot=1000, sel=0.1):
 	cleanUp()
 
 	manager = SimpleStorageManager('videos')
-	manager.put('tcam.mp4', 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': 20})
+	manager.put('/Users/sanjaykrishnan/Downloads/panoramic-000-000.mp4', 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': 20})
 
-	region = Box(200,550,350,750)
+	region = Box(500, 350, 750, 450)
 
 	sel = sel/2
 
 	clips = manager.get('test',lambda f: overlap(f['start'],f['end'],tot//2-int(tot*sel),tot//2+int(tot*sel)))
 	pipelines = []
 	for c in clips:
-		pipelines.append(c[KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)])
+		pipelines.append(c[KeyPoints(blur=3)][ActivityMetric('one', region)][Filter('one', [-0.5,1,-0.5], 0.25, delay=40)])
 
 	print('Simple.'+str(tot)+"."+str(sel), counts(pipelines, ['one'], stats=True)[1])
 
@@ -74,17 +76,17 @@ def runSimple(tot=1000, sel=0.1):
 def runFull(tot=1000, sel=0.1):
 	cleanUp()
 
-	manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=100), CropSplitter(), 'videos')
-	manager.put('tcam.mp4', 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': 1000, 'batch_size': 100})
+	manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter(movement_threshold=21,blur=7,movement_prob=0.9).segment, batch_size=100), CropSplitter(), 'videos')
+	manager.put('/Users/sanjaykrishnan/Downloads/panoramic-000-000.mp4', 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': 1000, 'batch_size': 100})
 
-	region = Box(200, 550, 350, 750)
+	region = Box(500, 350, 750, 450)
 	sel = sel/2
 
 	clips = manager.get('test', Condition(label='foreground', custom_filter=time_filter(tot//2-int(tot*sel),tot//2+int(tot*sel))))
 	pipelines = []
 
 	for c in clips:
-		pipelines.append(c[KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)])
+		pipelines.append(c[KeyPoints(blur=3)][ActivityMetric('one', region)][Filter('one', [-0.5,1,-0.5], 0.25, delay=40)])
 
 	print('Full.'+str(tot)+"."+str(sel), counts(pipelines, ['one'], stats=True)[1])
 
@@ -93,18 +95,18 @@ def runFull(tot=1000, sel=0.1):
 def runFullOpt(tot=1000, sel=0.1):
 	cleanUp()
 
-	manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=100), CropSplitter(), 'videos')
-	manager.put('tcam.mp4', 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': 1000, 'batch_size': 100})
+	manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter(movement_threshold=21,blur=7,movement_prob=0.9).segment, batch_size=100), CropSplitter(), 'videos')
+	manager.put('/Users/sanjaykrishnan/Downloads/panoramic-000-000.mp4', 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': 1000, 'batch_size': 100})
 
-	region = Box(200, 550, 350, 750)
+	region = Box(500, 350, 750, 450)
 	sel = sel/2
 	
 	clips = manager.get('test', Condition(label='foreground',custom_filter=time_filter(tot//2-int(tot*sel),tot//2+int(tot*sel))))
 
 	pipelines = []
-	d = DeepLensOptimizer()
+	d = DeepLensOptimizer(crop_pd=False)
 	for c in clips:
-		pipeline = c[KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)]
+		pipeline = c[KeyPoints(blur=3)][ActivityMetric('one', region)][Filter('one', [-0.5,1,-0.5], 0.25, delay=40)]
 		pipeline = d.optimize(pipeline)
 		pipelines.append(pipeline)
 

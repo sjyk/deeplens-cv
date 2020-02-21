@@ -73,6 +73,6 @@ class FixedCameraBGFGSegmenter(object):
 			#flipped axis in crop
 
 			return {'label': 'foreground', 'bb': Box(x0, y0, x1, y1)}
-			
+
 		except:
 			return {}

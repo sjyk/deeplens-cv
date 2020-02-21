@@ -33,3 +33,10 @@ def do_experiments(data, baseline_lst, size, sels):
 		s = si/10
 		for b in baseline_lst:
 			b(data,tot=size, sel=s)
+
+
+def do_experiments_size(data, baseline_lst, sizes, sel):
+	for si in sizes:
+		s = sel
+		for b in baseline_lst:
+			b(data,tot=si, sel=s)

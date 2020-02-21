@@ -60,7 +60,7 @@ def runSimple(src, tot=1000, sel=0.1):
 def runFull(src, tot=1000, sel=0.1):
 	cleanUp()
 
-	manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter(movement_threshold=21,blur=7,movement_prob=0.9).segment, batch_size=100), CropSplitter(), 'videos')
+	manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter(movement_threshold=21,blur=7,movement_prob=0.99).segment, batch_size=100), CropSplitter(), 'videos')
 	manager.put(src, 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': 100})
 
 	region = Box(200, 550, 350, 750)
@@ -82,7 +82,7 @@ def runFull(src, tot=1000, sel=0.1):
 def runFullOpt(src, tot=1000, sel=0.1):
 	cleanUp()
 
-	manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter(movement_threshold=21,blur=7,movement_prob=0.9).segment, batch_size=100), CropSplitter(), 'videos')
+	manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter(movement_threshold=21,blur=7,movement_prob=0.99).segment, batch_size=100), CropSplitter(), 'videos')
 	manager.put(src, 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': 100})
 
 	region = Box(200, 550, 350, 750)
@@ -91,7 +91,7 @@ def runFullOpt(src, tot=1000, sel=0.1):
 	clips = manager.get('test', Condition(label='foreground',custom_filter=time_filter(tot//2-int(tot*sel),tot//2+int(tot*sel))))
 
 	pipelines = []
-	d = DeepLensOptimizer(crop_pd=False)
+	d = DeepLensOptimizer()
 	for c in clips:
 		pipeline = c[KeyPoints(blur=3)][ActivityMetric('one', region)][Filter('one', [-0.5,1,-0.5], 0.25, delay=40)]
 		pipeline = d.optimize(pipeline)

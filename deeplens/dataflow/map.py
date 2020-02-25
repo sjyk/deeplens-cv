@@ -6,7 +6,6 @@ map.py defines the simplest dataflow component in DeepLens
 """
 import random
 
-import cv2
 from deeplens.utils.utils import *
 from deeplens.struct import Operator
 
@@ -202,6 +201,28 @@ class Sample(Operator):
 	def _serialize(self):
 		return {'ratio': self.ratio}
 
+
+class SkipEmpty(Operator): 
+
+
+	def __iter__(self):
+		self.frame_iter = iter(self.video_stream)
+		self.super_iter()
+		return self
+
+
+	def __next__(self):
+		"""This implements the skipping logic for the Sampling transformation
+		"""
+
+		out = next(self.frame_iter)
+		self.super_next()
+
+		while np.size(out['data']) == 0:
+			out = next(self.frame_iter)
+			self.super_next()
+
+		return out
 
 
 class SampleClip(Operator):

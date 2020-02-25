@@ -113,7 +113,7 @@ class VideoStream():
 			return None
 
 
-class IteratorVideoStream():
+class IteratorVideoStream(VideoStream):
 	"""The video stream class opens a stream of video
 	   from an iterator over frames (e.g., a sequence
 	   of png files). Compatible with opencv streams.
@@ -143,24 +143,28 @@ class IteratorVideoStream():
 		except:
 			raise CorruptedOrMissingVideo(str(self.src) + " is corrupted or missing.")
 
-		self.next_frame = next(self.frame_iter)
+		try:
+			self.next_frame = next(self.frame_iter)
+			# set sizes after the video is opened
+			self.width = int(self.next_frame['data'].shape[0])  # float
+			self.height = int(self.next_frame['data'].shape[1])  # float
 
-		# set sizes after the video is opened
-		self.width = int(self.next_frame.shape[0])  # float
-		self.height = int(self.next_frame.shape[1])  # float
-
-		self.frame_count = 1
+			self.frame_count = 1
+		except:
+			self.next_frame = None
 
 		return self
 
 	def __next__(self):
-		if (self.limit < 0 or self.frame_count <= self.limit):
+		if self.next_frame == None:
+			raise StopIteration("Iterator is closed")
 
+		if (self.limit < 0 or self.frame_count <= self.limit):
 			ret = self.next_frame
 			self.next_frame = next(self.frame_iter)
 			self.frame_count += 1
-
-			return {'data': ret, 'frame': (self.frame_count - 1)}
+			ret.update({'frame': (self.frame_count - 1)})
+			return ret
 		else:
 			raise StopIteration("Iterator is closed")
 

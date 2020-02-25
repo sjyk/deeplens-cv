@@ -1,6 +1,6 @@
 from deeplens.tracking.event import Metric
 from deeplens.dataflow.map import Mask
-from deeplens.struct import build
+from deeplens.struct import build, Operator, Box
 
 class BlazeItOptimizer():
 
@@ -18,7 +18,6 @@ class BlazeItOptimizer():
 				return op.region
 		return None
 
-
 	def optimize(self, stream):
 		pipeline = stream.lineage()
 
@@ -29,4 +28,4 @@ class BlazeItOptimizer():
 			region = region * self.crop_pd_ratio
 			pipeline.insert(1, Mask(region.x0, region.y0, region.x1, region.y1))
 
-		return build(pipeline) 
+		return build(pipeline)

@@ -7,10 +7,7 @@ primitives to encode and decode archived and regular video formats for a tiered
 storage system.
 """
 
-from deeplens.constants import *
-from deeplens.struct import *
 from deeplens.header import *
-from deeplens.utils.clip import *
 from deeplens.simple_manager.file import *
 from deeplens.utils.frame_xform import *
 
@@ -19,8 +16,6 @@ import os
 from os import path
 import time
 import shutil
-from pathlib import Path
-from datetime import datetime
 import logging
 import json
 
@@ -36,11 +31,19 @@ def _update_headers_batch(conn, crops, background_id, name, video_refs,
         # Updates 
         for i in range(0, len(crops) + 1):
             clip_info = query_clip(conn, i + background_id, name)[0]
+<<<<<<< HEAD
             print(i + background_id)
             updates = {}
             updates['start_time'] = min(start_time, clip_info[2])
             updates['end_time'] = max(end_time, clip_info[3])
             print(updates['end_time'])
+=======
+            #print(i + background_id)
+            updates = {}
+            updates['start_time'] = min(start_time, clip_info[2])
+            updates['end_time'] = max(end_time, clip_info[3])
+            #print(updates['end_time'])
+>>>>>>> 4b8f7df0db07e0d2c749fde4b7e8836952bbc3e1
             if i != 0:
                 origin_x = crops[i - 1]['bb'].x0
                 origin_y = crops[i - 1]['bb'].y0
@@ -259,7 +262,11 @@ def write_video_single(conn, \
         if batch_crops == None:
             break
         crops, batch_prev, do_join = splitter.join(batch_prev, batch_crops)
+<<<<<<< HEAD
         print(do_join)
+=======
+        #print(do_join)
+>>>>>>> 4b8f7df0db07e0d2c749fde4b7e8836952bbc3e1
         if do_join:
             writers, _ , time_block = _write_video_batch(v_behind, crops, args['encoding'], batch_size, args['limit'], start_time, dir, release = False, writers = writers)
             
@@ -420,22 +427,24 @@ def query_label(conn, label, video_name):
     result = c.fetchall()
     return result
 
-def query(conn, video_name, label, clip_condition = None):
+def query(conn, video_name, clip_condition):
     """
-    TODO: Currently clip_condition is a user function, which queries for clip ids from the
-    clip tabel. However, we should create an object
-    for it later. Additionally, we should think about how to present the information in terms of 
-    overlaps. Because of this, it only returns a simple query right now.
+    Args:
+        conn (SQLite conn object) - please pass self.conn directly
+        video_name (string) - identifier of the entire video (not clip)
+        clip_condition (Condition object) - conditions of the query. e.g. Condition(filter='car')
+
+    Returns:
+        video_refs - list of VideoStream objects that you can iterate through
     """
-    clips = query_label(conn, label, video_name)
-    clip_ids = [label[1] for label in clips]
-    c = clip_condition(conn, video_name)
+    clip_ids = clip_condition.query(conn, video_name)
+
     video_refs = []
     for id in clip_ids:
-        if id in c:
-            clip = query_clip(conn, id, video_name)
-            clip_ref = clip[0][8]
-            video_refs.append(clip_ref)
+        clip = query_clip(conn, id, video_name)
+        clip_ref = clip[0][8]
+        origin = np.array((clip[0][4],clip[0][5]))
+        video_refs.append(VideoStream(clip_ref,origin=origin))
 
     return video_refs
 

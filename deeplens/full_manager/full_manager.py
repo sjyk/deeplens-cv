@@ -14,9 +14,6 @@ from deeplens.core import StorageManager
 from deeplens.full_manager.full_videoio import *
 
 from deeplens.constants import *
-from deeplens.struct import *
-from deeplens.dataflow.map import Sample
-from deeplens.header import *
 from deeplens.error import *
 
 import os
@@ -100,14 +97,15 @@ class FullStorageManager(StorageManager):
         
         self.videos.add(target)
 
-    def get(self, name, label, condition = None):
+    def get(self, name, condition):
         """retrievies a clip of satisfying the condition.
         If the clip was in external storage, get moves it to disk. TODO: Figure out if I should implement this feature or not
         """
-        if name not in self.videos:
-            raise VideoNotFound(name + " not found in " + str(self.videos))
+        # TODO: This should be done by looking up SQLite database
+        # if name not in self.videos:
+        #     raise VideoNotFound(name + " not found in " + str(self.videos))
 
-        return query(self.conn, name, label, clip_condition = condition)
+        return query(self.conn, name, clip_condition = condition)
     
     def delete(self, name):
         delete_video(self.conn, name)

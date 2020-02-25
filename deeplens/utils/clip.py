@@ -9,6 +9,7 @@ import itertools
 import copy
 
 from deeplens.dataflow.map import Cut
+from deeplens.struct import IteratorVideoStream
 
 #gets the boundaries of the clips
 def clip_boundaries(start,end,size):
@@ -58,12 +59,12 @@ def materialize_clip(clip, boundaries, streams):
 
 	for crop in execution_plan:
 		index, bounds = crop
-		start = 0# streams[index][1]
+		start = bounds[0]#streams[index][1]
 		bounds2 = (bounds[0] - start, bounds[1] - start)
 		subiterators.append(streams[index][Cut(*bounds2)])
 
 	#v = VideoTransform()
-	return itertools.chain(*subiterators)
+	return IteratorVideoStream(itertools.chain(*subiterators))
 
 
 def cut_header(header, start, end):

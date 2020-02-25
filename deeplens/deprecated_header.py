@@ -114,7 +114,7 @@ class ObjectHeader(TimeHeader, StorageHeader):
 	#handle the update
 	def update(self, frame):
 		if 'tags' not in frame:
-			raise ValueError('Not compatible with this type of video')
+			frame['tags'] = []
 
 		for label, bb in frame['tags']:
 			self.label_set.add(label)

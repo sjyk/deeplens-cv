@@ -57,12 +57,22 @@ class FixedCameraBGFGSegmenter(object):
 			raise StopIteration("Iterator is closed")
 
 		cthresh = count * self.movement_prob
+		#print(cthresh, np.max(dynamic_mask))
 
-		y0 =  np.min(np.argwhere(dynamic_mask > cthresh), axis=0)[0]
-		x0 =  np.min(np.argwhere(dynamic_mask > cthresh), axis=0)[1]
-		y1 =  np.max(np.argwhere(dynamic_mask > cthresh), axis=0)[0]
-		x1 =  np.max(np.argwhere(dynamic_mask > cthresh), axis=0)[1]
+		#print(np.max(dynamic_mask))
 
-		#flipped axis in crop
+		try:
+			y0 =  np.min(np.argwhere(dynamic_mask > cthresh), axis=0)[0]
+			x0 =  np.min(np.argwhere(dynamic_mask > cthresh), axis=0)[1]
+			y1 =  np.max(np.argwhere(dynamic_mask > cthresh), axis=0)[0]
+			x1 =  np.max(np.argwhere(dynamic_mask > cthresh), axis=0)[1]
 
-		return {'label': 'foreground', 'bb': Box(x0, y0, x1, y1)}
+			if np.abs(x0-x1) <= 0 or np.abs(y0-y1) <= 0:
+				return {}
+
+			#flipped axis in crop
+
+			return {'label': 'foreground', 'bb': Box(x0, y0, x1, y1)}
+
+		except:
+			return {}

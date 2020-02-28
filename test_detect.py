@@ -2,13 +2,13 @@ import logging
 import sys
 from multiprocessing.pool import Pool
 
-from dlcv.struct import *
-from dlcv.utils import *
-from dlcv.dataflow.map import *
-from dlcv.dataflow.agg import *
-from dlcv.tracking.contour import *
-from dlcv.tracking.event import *
-from dlcv.object_detection.detect import *
+from deeplens.struct import *
+from deeplens.utils import *
+from deeplens.dataflow.map import *
+from deeplens.dataflow.agg import *
+from deeplens.tracking.contour import *
+from deeplens.tracking.event import *
+from deeplens.object_detection.detect import *
 from timeit import default_timer as timer
 
 

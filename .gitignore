@@ -102,3 +102,20 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# macOS .DS_Store
+.DS_Store
+
+# JetBrains config file
+.idea
+
+# video files
+videos/**
+*.mp4
+*.avi
+*.db
+
+#Model
+ssd_mobilenet_v1_coco_2017_11_17/**
+mscoco_label_map.pbtxt
+

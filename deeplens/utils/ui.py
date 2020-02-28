@@ -15,12 +15,14 @@ def show(frame):
 	cv2.waitKey(0)
 
 #overlays a bounding box with labels over a frame
-def overlay(frame, bbs):
+def overlay(frame, bbs, labelp=True, thickness=10):
 	ff = np.copy(frame)
 
 	for label, bb in bbs:
-		cv2.rectangle(ff, (bb[0],bb[1]), (bb[2],bb[3]),(0,255,0), 2)
-		cv2.putText(ff, label, (bb[0],bb[1]), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), lineType=cv2.LINE_AA) 
+		cv2.rectangle(ff, (bb[0],bb[1]), (bb[2],bb[3]),(0,255,0), thickness)
+		
+		if labelp:
+			cv2.putText(ff, label, (bb[0],bb[1]), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), lineType=cv2.LINE_AA) 
 
 	return ff
 

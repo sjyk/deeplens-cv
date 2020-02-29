@@ -92,8 +92,12 @@ class FullStorageManager(StorageManager):
         else:
             physical_dir = self.basedir
         
-
-        write_video_single(self.conn, filename, target, physical_dir, self.content_splitter, self.content_tagger, args=args)
+        if type(filename) == int:
+            stream = True
+        else:
+            stream = False
+            
+        write_video_single(self.conn, filename, target, physical_dir, self.content_splitter, self.content_tagger, stream = stream, args=args)
         
         self.videos.add(target)
 

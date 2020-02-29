@@ -37,7 +37,7 @@ class Map(Operator):
 		return self.map(frame)
 
 
-
+# Con
 class Crop(Map):
 	"""The Crop() operator crops all future frames to the given bounding box
 	"""

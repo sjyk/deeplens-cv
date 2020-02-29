@@ -6,7 +6,7 @@ agg.py defines aggregation functions
 """
 
 from deeplens.dataflow.validation import check_metrics_and_filters, countable
-
+import logging
 import time
 
 def count(stream, keys, stats=False):
@@ -30,6 +30,13 @@ def count(stream, keys, stats=False):
 				counter[key] = counter.get(key,0) + frame[key]
 			except:
 				pass
+
+	# profiling
+	for obj in stream.lineage():
+		if hasattr(obj, "time_elapsed"):
+			logging.info("%s: %s" % (type(obj).__name__, obj.time_elapsed))
+		else:
+			logging.info("%s time not measured" % type(obj).__name__)
 
 	if not stats:
 		return counter
@@ -60,6 +67,13 @@ def counts(streams, keys, stats=False):
 					counter[key] = counter.get(key,0) + frame[key]
 				except:
 					pass
+
+		# profiling
+		for obj in stream.lineage():
+			if hasattr(obj, "time_elapsed"):
+				logging.info("%s: %s" % (type(obj).__name__, obj.time_elapsed))
+			else:
+				logging.info("%s time not measured" % type(obj).__name__)
 
 	if not stats:
 		return counter

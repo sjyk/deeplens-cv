@@ -218,7 +218,6 @@ def write_video_single(conn, \
                         map, \
                         stream = False,
                         args={}):
-
     batch_size = args['batch_size']
     v = VideoStream(video_file, args['limit'])
     v = iter(v[map])
@@ -260,8 +259,6 @@ def write_video_single(conn, \
         else:
             v_cache = None
         batch_crops = _split_video_batch(v, splitter, batch_size, args['limit'], start_time, v_cache = v_cache)
-        print('HELOO')
-        print(len(v_cache))
         if batch_crops == None:
             break
         crops, batch_prev, do_join = splitter.join(batch_prev, batch_crops)

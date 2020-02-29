@@ -18,6 +18,7 @@ import time
 import shutil
 import logging
 import json
+import threading
 
 
 
@@ -31,13 +32,11 @@ def _update_headers_batch(conn, crops, background_id, name, video_refs,
         # Updates 
         for i in range(0, len(crops) + 1):
             clip_info = query_clip(conn, i + background_id, name)[0]
-
             #print(i + background_id)
             updates = {}
             updates['start_time'] = min(start_time, clip_info[2])
             updates['end_time'] = max(end_time, clip_info[3])
             #print(updates['end_time'])
-
             if i != 0:
                 origin_x = crops[i - 1]['bb'].x0
                 origin_y = crops[i - 1]['bb'].y0
@@ -122,8 +121,12 @@ def _write_video_batch(vstream, \
 
             fourcc = cv2.VideoWriter_fourcc(*encoding)
             if i == 0:
-                width = vstream.width
-                height = vstream.height
+                try:
+                    width = vstream.width
+                    height = vstream.height
+                except AttributeError:
+                    width = vstream[0].shape[1]
+                    height = vstream[0].shape[0]
             else:
                 width = abs(crops[i - 1]['bb'].x1 - crops[i - 1]['bb'].x0)
                 height = abs(crops[i - 1]['bb'].y1 - crops[i - 1]['bb'].y0)
@@ -138,14 +141,16 @@ def _write_video_batch(vstream, \
     
     index = 0
     for frame in vstream:
+        if type(frame) == dict:
+            frame = frame['data']
         if len(crops) == 0:
-            out_vids[0].write(frame['data'])
+            out_vids[0].write(frame)
         else:
-            out_vids[0].write(reverse_crop(frame['data'], crops))
+            out_vids[0].write(reverse_crop(frame, crops))
 
         i = 1
         for cr in crops:
-            fr = crop_box(frame['data'], cr['bb'])
+            fr = crop_box(frame, cr['bb'])
             out_vids[i].write(fr)
             i +=1
         index += 1
@@ -189,8 +194,8 @@ def _split_video_batch(vstream,
     for frame in vstream:
         labels.append(frame['objects'])
         i += 1
-        if v_cache:
-            v_cache.append(frame)
+        if v_cache != None:
+            v_cache.append(frame['frame'])
         if i >= batch_size or limit != -1 and i >= limit - start_time:
             break
     if i == 0:
@@ -204,7 +209,7 @@ def _split_video_batch(vstream,
     return crops
     
 
-# TODO: headers and parallelize
+# TODO: parallelize
 def write_video_single(conn, \
                         video_file, \
                         target,
@@ -217,6 +222,8 @@ def write_video_single(conn, \
     batch_size = args['batch_size']
     v = VideoStream(video_file, args['limit'])
     v = iter(v[map])
+    if stream:
+        v.set_stream(True)
     full_width = v.width
     full_height = v.height
     curr_back = 0 # current clip background id
@@ -235,7 +242,7 @@ def write_video_single(conn, \
         logging.debug(labels)
         i += 1
         if stream:
-            v_behind.append(frame)
+            v_behind.append(frame['frame'])
         if args['limit'] != -1 and i >= args['limit'] or i >= batch_size:
             break
     crops, batch_prev, _ = splitter.initialize(labels)
@@ -253,6 +260,8 @@ def write_video_single(conn, \
         else:
             v_cache = None
         batch_crops = _split_video_batch(v, splitter, batch_size, args['limit'], start_time, v_cache = v_cache)
+        print('HELOO')
+        print(len(v_cache))
         if batch_crops == None:
             break
         crops, batch_prev, do_join = splitter.join(batch_prev, batch_crops)
@@ -274,6 +283,33 @@ def write_video_single(conn, \
             next_back = curr_back + len(crops) + 1
         vid_files.extend(file_names)
     return vid_files
+
+def write_video_parrallel_1(conn, \
+                        video_file, \
+                        threading, \
+                        target,
+                        dir, \
+                        splitter, \
+                        map, \
+                        stream = False,
+                        args={}):
+    '''
+    parallelized the put function for preprocessing only
+    '''
+    pass
+
+def write_video_parrallel_2(conn, \
+                        video_file, \
+                        target,
+                        dir, \
+                        splitter, \
+                        map, \
+                        stream = False,
+                        args={}):
+    '''
+    parallelized the put function for preprocessing and crops
+    '''
+    pass
 
 def delete_video_if_exists(conn, video_name):
     c = conn.cursor()

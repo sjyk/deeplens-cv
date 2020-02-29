@@ -24,15 +24,16 @@ class FixedCameraBGFGSegmenter(object):
 
 
 	#returns a bounding box around the foreground.
-	def segment(self, vstream, batch_size):
+	def segment(self, vstream, batch_size, video = False):
 
 		dynamic_mask = None
 		prev = None
 		count = 0
-
+		frames = []
 		for frame in vstream:
 			img = frame['data']
-
+			if video:
+				frames.append(img)
 			gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 			blurred = cv2.GaussianBlur(gray, (self.blur, self.blur), 0)
 
@@ -71,8 +72,11 @@ class FixedCameraBGFGSegmenter(object):
 				return {}
 
 			#flipped axis in crop
-
+			if video:
+				return {'label': 'foreground', 'bb': Box(x0, y0, x1, y1)}, frames
 			return {'label': 'foreground', 'bb': Box(x0, y0, x1, y1)}
 
 		except:
+			if video:
+				return {}, frames
 			return {}

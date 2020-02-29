@@ -43,7 +43,7 @@ class Map(Operator):
 		return ret
 
 
-
+# Con
 class Crop(Map):
 	"""The Crop() operator crops all future frames to the given bounding box
 	"""

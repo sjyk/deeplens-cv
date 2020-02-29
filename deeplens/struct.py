@@ -361,6 +361,8 @@ class CustomTagger(Operator):
 		self.tagger = tagger
 		self.batch_size = batch_size
 		self.next_count = 0  # how many next() we have called after _get_tags()
+		self.stream = False
+		self.frames = []
 
 	def __iter__(self):
 		self.input_iter = iter(self.video_stream)
@@ -373,7 +375,11 @@ class CustomTagger(Operator):
 			# we assume it iterates the entire batch size and save the results
 			self.tags = []
 			try:
-				tag = self.tagger(self.input_iter, self.batch_size)
+				if self.stream:
+					tag, frames = self.tagger(self.input_iter, self.batch_size, video = True)
+					self.frames = frames
+				else:
+					tag = self.tagger(self.input_iter, self.batch_size)
 			except StopIteration:
 				raise StopIteration("Iterator is closed")
 			self.tags.append(tag)
@@ -382,8 +388,14 @@ class CustomTagger(Operator):
 		return self.tags
 
 	def __next__(self):
-		return {'objects': self._get_tags()}
+		if self.stream:
+			tags = self._get_tags()
+			return {'objects': tags, 'frame': self.frames[self.next_count - 1]}
+		else:
+			return {'objects': self._get_tags()}
 
+	def set_stream(self, stream):
+		self.stream = stream
 
 class Serializer(json.JSONEncoder):
 	def default(self, obj):

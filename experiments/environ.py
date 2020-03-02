@@ -17,7 +17,7 @@ def time_filter(start, end):
 def overlap(s1,e1, s2, e2):
 	r1 = set(range(s1,e1+1))
 	r2 = set(range(s2,e2+1))
-	return (len(r1.intersection(r2)) > 0)
+	return (len(r1.intersection(r2)) > 1)
 
 
 def cleanUp():

@@ -17,11 +17,6 @@ def count(stream, keys, stats=False):
 	"""Count counts the true hits of a defined event.
 	"""
 
-	#validating that the pipeline is fine, fix
-	#check_metrics_and_filters(stream.lineage())
-	#for key in keys:
-	#	countable(stream.lineage(), key)
-
 	#actual logic is here
 	counter = {}
 	frame_count = 0
@@ -51,11 +46,13 @@ def count(stream, keys, stats=False):
 def counts(streams, keys, stats=False):
 	"""Count counts the true hits of a defined event.
 	"""
+	stream = IteratorVideoStream(itertools.chain(*streams))
 
-	#validating that the pipeline is fine
-	check_metrics_and_filters(streams[0].lineage())
-	for key in keys:
-		countable(streams[0].lineage(), key)
+	lineage = []
+	for s in streams:
+		lineage.extend(s.lineage())
 
-	return count(IteratorVideoStream(itertools.chain(*streams)), keys, stats)
+	stream.global_lineage = lineage
+
+	return count(stream, keys, stats)
 

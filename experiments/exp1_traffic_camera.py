@@ -30,7 +30,7 @@ def runNaive(src, tot=1000, sel=0.1):
 	sel = sel/2
 	region = Box(200,550,350,750)
 	pipelines = c[Cut(tot//2-int(tot*sel),tot//2+int(tot*sel))][KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)]
-	result = count(pipelines, ['one'], stats=True)[1]['elapsed']
+	result = count(pipelines, ['one'], stats=True)
 
 	logrecord('naive',({'size': tot, 'sel': sel, 'file': src}), 'get', str(result), 's')
 
@@ -51,7 +51,7 @@ def runSimple(src, tot=1000, sel=0.1):
 	for c in clips:
 		pipelines.append(c[KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)])
 
-	result = counts(pipelines, ['one'], stats=True)[1]['elapsed']
+	result = counts(pipelines, ['one'], stats=True)
 
 	logrecord('simple',({'size': tot, 'sel': sel, 'file': src}), 'get', str(result), 's')
 
@@ -72,7 +72,7 @@ def runFull(src, tot=1000, sel=0.1):
 	for c in clips:
 		pipelines.append(c[KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)])
 
-	result = counts(pipelines, ['one'], stats=True)[1]['elapsed']
+	result = counts(pipelines, ['one'], stats=True)
 
 	logrecord('full',({'size': tot, 'sel': sel, 'file': src}), 'get', str(result), 's')
 
@@ -97,7 +97,7 @@ def runFullOpt(src, tot=1000, sel=0.1):
 		pipeline = d.optimize(pipeline)
 		pipelines.append(pipeline)
 
-	result = counts(pipelines, ['one'], stats=True)[1]['elapsed']
+	result = counts(pipelines, ['one'], stats=True)
 
 	logrecord('fullopt',({'size': tot, 'sel': sel, 'file': src}), 'get', str(result), 's')
 

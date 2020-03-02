@@ -131,6 +131,7 @@ class IteratorVideoStream(VideoStream):
 		"""
 		self.src = src
 		self.limit = limit
+		self.global_lineage = []
 
 	def __getitem__(self, xform):
 		"""Applies a transformation to the video stream
@@ -171,6 +172,9 @@ class IteratorVideoStream(VideoStream):
 			return ret
 		else:
 			raise StopIteration("Iterator is closed")
+
+	def lineage(self):
+		return self.global_lineage
 
 
 #helper methods

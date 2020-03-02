@@ -467,6 +467,7 @@ def query(conn, video_name, clip_condition):
         clip = query_clip(conn, id, video_name)
         clip_ref = clip[0][8]
         origin = np.array((clip[0][4],clip[0][5]))
+        #print(clip[0])
         video_refs.append(VideoStream(clip_ref,origin=origin))
 
     return video_refs

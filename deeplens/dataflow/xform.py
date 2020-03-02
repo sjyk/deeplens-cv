@@ -19,3 +19,8 @@ class Blur(Map):
 		ff['data'] = cv2.GaussianBlur(ff['data'], (self.filter, self.filter), 0)
 		return ff
 
+class Null(Map):
+
+	def map(self, data):
+		return data
+

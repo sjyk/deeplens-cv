@@ -24,6 +24,9 @@ def count(stream, keys, stats=False):
 	for frame in stream:
 		frame_count += 1
 
+		if frame_count == 1:
+			logging.info("Processing first frame of stream")
+
 		for key in keys:
 			try:
 				counter[key] = counter.get(key,0) + frame[key]

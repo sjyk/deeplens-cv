@@ -110,7 +110,7 @@ class FullStorageManager(StorageManager):
         # TODO: This should be done by looking up SQLite database
         # if name not in self.videos:
         #     raise VideoNotFound(name + " not found in " + str(self.videos))
-
+        logging.info("Calling get()")
         return query(self.conn, name, clip_condition = condition)
     
     def delete(self, name):

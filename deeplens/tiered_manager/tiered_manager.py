@@ -21,6 +21,7 @@ from deeplens.header import *
 from deeplens.error import *
 
 import os
+import logging
 
 DEFAULT_ARGS = {'encoding': MP4V, 'size': -1, 'limit': -1, 'sample': 1.0, 'offset': 0}
 
@@ -80,6 +81,7 @@ class TieredStorageManager(StorageManager):
         """retrievies a clip of a certain size satisfying the condition.
         If the clip was in external storage, get moves it to disk.
         """
+        logging.info("Calling get()")
         if name not in self.videos:
             raise VideoNotFound(name + " not found in " + str(self.videos))
 

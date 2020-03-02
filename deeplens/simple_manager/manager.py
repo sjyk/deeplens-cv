@@ -16,6 +16,7 @@ from deeplens.dataflow.map import *
 from deeplens.error import *
 
 import os
+import logging
 
 
 class SimpleStorageManager(StorageManager):
@@ -49,6 +50,7 @@ class SimpleStorageManager(StorageManager):
 	def get(self, name, condition, args=DEFAULT_ARGS):
 		'''Get takes in a name and a condition that the system tries a best effort to push down
 		'''
+		logging.info("Calling get()")
 		return self.doGet(name, condition, args['batch_size'])
 
 

@@ -258,26 +258,10 @@ def read_if(output, condition, clip_size=5, scratch = DEFAULT_TEMP):
 	for header_data, video in pre_parsed:
 
 		if condition(header_data):
-			pstart, pend = find_clip_boundaries((header_data['start'], \
-											     header_data['end']), \
-												 clips)
 
-			#handles edge cases
-			if pstart == None or pend == None:
-				continue
-
-			for rel_clip in range(pstart, pend+1):
-					
-				cH = cut_header(header_data, clips[rel_clip][0], clips[rel_clip][1])
-
-				if condition(cH):
-					relevant_clips.add(rel_clip)
-
-			boundaries.append((header_data['start'],header_data['end']))
-			
-		streams.append(VideoStream(video))
+			streams.append((header_data['end'],VideoStream(video)))
 
 	#sort the list
-	relevant_clips = sorted(list(relevant_clips))
+	relevant_clips = sorted(list(streams))
 
-	return [materialize_clip(clips[i], boundaries, streams) for i in relevant_clips]
+	return [stream for _, stream in relevant_clips]

@@ -9,7 +9,7 @@ def time_filter(start, end):
 
 	def do_filter(conn, video_name):
 		c = conn.cursor()
-		c.execute("SELECT clip_id FROM clip WHERE ((start_time >= %s AND start_time <= %s) OR (end_time >= %s AND end_time <= %s) ) AND video_name = '%s'" % (str(start),str(end), str(start),str(end), video_name))
+		c.execute("SELECT clip_id FROM clip WHERE ((start_time > %s AND start_time < %s) OR (end_time > %s AND end_time < %s) ) AND video_name = '%s'" % (str(start),str(end), str(start),str(end), video_name))
 		return [cl[0] for cl in c.fetchall()]
 
 	return do_filter

@@ -9,6 +9,7 @@ import cv2
 from deeplens.error import *
 import numpy as np
 import json
+from timeit import default_timer as timer
 
 #sources video from the default camera
 DEFAULT_CAMERA = 0
@@ -39,6 +40,7 @@ class VideoStream():
 		self.origin = origin
 		self.propIds = None
 		self.cap = None
+		self.time_elapsed = 0
 
 		# moved from __iter__ to __init__ due to continuous iterating
 		self.frame_count = 0
@@ -78,7 +80,9 @@ class VideoStream():
 		if self.cap.isOpened() and \
 		   (self.limit < 0 or self.frame_count < self.limit):
 
+			time_start = timer()
 			ret, frame = self.cap.read()
+			self.time_elapsed += timer() - time_start
 
 			if ret:
 				self.frame_count += 1

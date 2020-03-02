@@ -9,8 +9,8 @@ import random
 from deeplens.utils.utils import *
 from deeplens.struct import Operator
 
-import time
 import numpy as np
+from timeit import default_timer as timer
 
 class Map(Operator):
 	"""Map is an abstract dataflow operator that applies a transformation
@@ -29,13 +29,18 @@ class Map(Operator):
 	def __iter__(self):
 		self.frame_iter = iter(self.video_stream)
 		self.super_iter()
+		self.time_elapsed = 0
 		return self
 
 	def __next__(self):
 		frame = next(self.frame_iter)
 		self.super_next()
-		return self.map(frame)
 
+		time_start = timer()
+		ret = self.map(frame)
+		self.time_elapsed += timer() - time_start
+
+		return ret
 
 # Con
 class Crop(Map):

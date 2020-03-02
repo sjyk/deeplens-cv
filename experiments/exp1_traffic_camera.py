@@ -102,4 +102,5 @@ def runFullOpt(src, tot=1000, sel=0.1):
 	logrecord('fullopt',({'size': tot, 'sel': sel, 'file': src}), 'get', str(result), 's')
 
 
+logging.basicConfig(level=logging.INFO)
 do_experiments(sys.argv[1], [runNaive, runSimple, runFull, runFullOpt], 1000, range(2,10))

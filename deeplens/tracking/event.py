@@ -8,6 +8,7 @@ event.py defines some of the main detection primitives used in dlcv.
 from deeplens.struct import Operator, Box
 from deeplens.dataflow.map import Map
 import numpy as np
+from timeit import default_timer as timer
 
 """in dlcv there are Metrics and Events. Metrics translate geometric
 vision primtives into numerical time-series, and Events detect patterns
@@ -84,6 +85,7 @@ class Filter(Operator):
 		self.threshold = threshold
 		self.name = name
 		self.delay = delay
+		self.time_elapsed = 0
 
 
 	def __iter__(self):
@@ -104,7 +106,8 @@ class Filter(Operator):
 
 	def __next__(self):
 		out = next(self.frame_iter)
-		
+
+		time_start = timer()
 		self.buffer.append(out[self.name])
 		self.buffer = self.buffer[1:len(self.kernel)+1]
 
@@ -118,6 +121,7 @@ class Filter(Operator):
 			out[self.name] = False
 
 		self.frame_count += 1
+		self.time_elapsed += timer() - time_start
 
 		return out
 

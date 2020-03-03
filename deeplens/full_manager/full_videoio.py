@@ -342,19 +342,19 @@ def move_one_file(conn, clip_id, video_name, dest_ref):
 
 def insert_clip_header(conn, clip_id, video_name, start_time, end_time, origin_x, origin_y, height, width, video_ref='', is_background = False, translation = 'NULL', other = 'NULL'):
     c = conn.cursor()
-    c.execute("INSERT INTO clip VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    c.execute("INSERT OR REPLACE INTO clip VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                (clip_id, video_name, start_time, end_time, origin_x, origin_y, height, width, video_ref, is_background, translation, other))
     conn.commit()
 
 
 def insert_background_header(conn, background_id, clip_id, video_name):
     c = conn.cursor()
-    c.execute("INSERT INTO background VALUES (?, ?, ?)", (background_id, clip_id, video_name))
+    c.execute("INSERT OR REPLACE INTO background VALUES (?, ?, ?)", (background_id, clip_id, video_name))
     conn.commit()
 
 def insert_label_header(conn, label, clip_id, video_name):
     c = conn.cursor()
-    c.execute("INSERT INTO label VALUES (?, ?, ?)", (label, clip_id, video_name))
+    c.execute("INSERT OR REPLACE INTO label VALUES (?, ?, ?)", (label, clip_id, video_name))
     conn.commit()
 
 def delete_label_header(conn, video_name, label = None, clip_id = None):

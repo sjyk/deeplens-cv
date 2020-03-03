@@ -151,11 +151,12 @@ class IteratorVideoStream(VideoStream):
 		try:
 			self.next_frame = next(self.frame_iter)
 			# set sizes after the video is opened
-			self.width = int(self.next_frame['data'].shape[0])  # float
-			self.height = int(self.next_frame['data'].shape[1])  # float
+			if 'data' in self.next_frame:
+				self.width = int(self.next_frame['data'].shape[0])  # float
+				self.height = int(self.next_frame['data'].shape[1])  # float
 
 			self.frame_count = 1
-		except:
+		except StopIteration:
 			self.next_frame = None
 
 		return self

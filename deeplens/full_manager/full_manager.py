@@ -9,7 +9,6 @@ movement and access.
 """ 
 
 
-#TODO: Note, we ignored multi-threading for now
 from deeplens.core import StorageManager
 from deeplens.full_manager.full_videoio import *
 

@@ -118,9 +118,20 @@ class FullStorageManager(StorageManager):
         for i, name in enumerate(filenames):
             put_arg = (db_path, name, targets[i], physical_dir, self.content_splitter, self.content_tagger, 0, False, args)
             put_args.append(put_arg)
-        
+            self.delete(targets[i])
         with Pool(processes = args['num_processes']) as pool:
             pool.starmap(write_video_single, put_args)
+        for target in targets:
+            self.videos.add(target)
+
+    def put_fixed(self, filename, target, crops, batch = False, args=DEFAULT_ARGS, in_extern_storage = False):
+        self.delete(target)
+        if in_extern_storage: 
+            physical_dir = self.externdir
+        else:
+            physical_dir = self.basedir
+        write_video_fixed(self.conn, filename, target, physical_dir, crops, batch = batch, args=args)
+        self.videos.add(target)
 
     def get(self, name, condition):
         """retrievies a clip of satisfying the condition.

@@ -37,11 +37,9 @@ def _update_headers_batch(conn, crops, background_id, name, video_refs,
         # Updates 
         for i in range(0, len(crops) + 1):
             clip_info = query_clip(conn, i + background_id, name)[0]
-            #print(i + background_id)
             updates = {}
             updates['start_time'] = min(start_time, clip_info[2])
             updates['end_time'] = max(end_time, clip_info[3])
-            #print(updates['end_time'])
             if i != 0:
                 origin_x = crops[i - 1]['bb'].x0
                 origin_y = crops[i - 1]['bb'].y0
@@ -318,9 +316,7 @@ def write_video_parrallel(db_path, \
         vid_path = temp_path %i
         if not os.path.exists(vid_path):
             break
-        print(i)
-        ctarget = target + '_' + str(i)
-        single_args = (db_path, vid_path, ctarget, dir, splitter, map, start_time, False, args)
+        single_args = (db_path, vid_path, target, dir, splitter, map, start_time, False, args)
         duration = get_duration(vid_path)
         duration = int(duration*fps)
         start_time += duration
@@ -330,7 +326,41 @@ def write_video_parrallel(db_path, \
     with Pool(processes = num_processes) as pool:
         pool.starmap(write_video_single, single_argss)
     
+def write_video_fixed(conn, \
+                    video_file, \
+                    target,
+                    dir, \
+                    crops, \
+                    start_time = 0, \
+                    batch = False, \
+                    args={}):
     
+    if type(conn) == str:
+        conn = sqlite3.Connection(conn)
+    v = VideoStream(video_file, args['limit'])
+    v = iter(v)
+    full_width = v.width
+    full_height = v.height
+    curr_back = 0 # current clip background id
+    start_time = start_time #current batch start time
+    if not batch:
+        (_ , file_names, time_block) = _write_video_batch(v, crops, args['encoding'], -1 , dir = dir, release = True)
+        _update_headers_batch(conn, crops, curr_back, target, file_names,
+                            full_width, full_height, start_time, start_time + time_block, update = False)
+        return file_names
+    
+    vid_files = []
+    batch_size = args['batch_size']
+    while True:
+        _, file_names, time_block = _write_video_batch(v, crops, args['encoding'], batch_size, dir, release = True)
+        if time_block == 0:
+            break
+        _update_headers_batch(conn, crops, curr_back, target, file_names,
+                        full_width, full_height, start_time, start_time + time_block, update = False)
+        start_time = start_time + time_block
+        curr_back = curr_back + len(crops) + 1
+        vid_files.extend(file_names)
+    return vid_files
 
 def delete_video_if_exists(conn, video_name):
     c = conn.cursor()

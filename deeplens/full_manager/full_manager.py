@@ -84,7 +84,7 @@ class FullStorageManager(StorageManager):
         self.cursor.execute(sql_create_background_table)
         self.cursor.execute(sql_create_clip_table)
 
-    def put(self, filename, target, args=DEFAULT_ARGS, in_extern_storage = False, parallel = True):
+    def put(self, filename, target, args=DEFAULT_ARGS, in_extern_storage = False, parallel = False):
         """put adds a video to the storage manager from a file. It should either add
             the video to disk, or a reference in disk to deep storage.
         """

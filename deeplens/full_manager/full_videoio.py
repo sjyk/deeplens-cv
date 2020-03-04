@@ -12,6 +12,7 @@ from deeplens.simple_manager.file import *
 from deeplens.utils.frame_xform import *
 from deeplens.extern.ffmpeg import *
 import sqlite3
+import random
 
 import cv2
 import os
@@ -27,16 +28,16 @@ from multiprocessing import Pool
 
 
 
-def _update_headers_batch(conn, crops, background_id, name, video_refs,
-                            full_width, full_height, start_time, end_time, update = False):
+def _update_headers_batch(conn, crops, name, video_refs,
+                            full_width, full_height, start_time, end_time, ids = None, update = False):
     """
     Update or create new headers all headers for one batch. In terms of updates, we assume certain
     constraints on the system, and only update possible changes.
     """
     if update:
         # Updates 
-        for i in range(0, len(crops) + 1):
-            clip_info = query_clip(conn, i + background_id, name)[0]
+        for i, id in enumerate(ids):
+            clip_info = query_clip(conn, id, name)[0]
             updates = {}
             updates['start_time'] = min(start_time, clip_info[2])
             updates['end_time'] = max(end_time, clip_info[3])
@@ -67,13 +68,14 @@ def _update_headers_batch(conn, crops, background_id, name, video_refs,
                     else:
                         raise ValueError('All object is wrongly formatted')
 
-            update_clip_header(conn, background_id + i, name, updates)
+            update_clip_header(conn, id, name, updates)
     else:
+        ids = [random.getrandbits(63) for i in range(len(crops) + 1)]
         for i in range(1, len(crops) + 1):
-            insert_background_header(conn, background_id, i + background_id, name)
+            insert_background_header(conn, ids[0], ids[i], name)
         for i in range(0, len(crops) + 1):
             if i == 0:
-                insert_clip_header(conn, i + background_id, name, start_time, end_time, 0, 0,
+                insert_clip_header(conn, ids[0], name, start_time, end_time, 0, 0,
                                 full_width, full_height, video_refs[i], is_background = True)
                 
             else:
@@ -81,16 +83,18 @@ def _update_headers_batch(conn, crops, background_id, name, video_refs,
                 origin_y = crops[i - 1]['bb'].y0
                 width = crops[i - 1]['bb'].x1 - crops[i - 1]['bb'].x0
                 height = crops[i - 1]['bb'].y1 - crops[i - 1]['bb'].y0
-                insert_clip_header(conn, i + background_id, name, start_time, end_time, origin_x,
+                insert_clip_header(conn, ids[i], name, start_time, end_time, origin_x,
                                 origin_y, width, height, video_refs[i], other = json.dumps(crops[i - 1]['all'], cls=Serializer))
 
 
         for i in range(0, len(crops)):
             if type(crops[i]['label']) is list: # TODO: deal with crop all later
                 for j in range(len(crops[i]['label'])):
-                    insert_label_header(conn, crops[i]['label'][j], background_id + i + 1, name)
+                    insert_label_header(conn, crops[i]['label'][j], ids[i + 1], name)
             else:
-                insert_label_header(conn, crops[i]['label'], background_id + i + 1, name)
+                insert_label_header(conn, crops[i]['label'], ids[i + 1], name)
+        
+        return ids
 
 
 def _write_video_batch(vstream, \
@@ -253,10 +257,9 @@ def write_video_single(conn, \
     crops, batch_prev, _ = splitter.initialize(labels)
     (writers, file_names, time_block) = _write_video_batch(v_behind, crops, args['encoding'], batch_size, dir = dir, release = False)
     
-    _update_headers_batch(conn, crops, curr_back, target, file_names,
+    ids = _update_headers_batch(conn, crops, target, file_names,
                             full_width, full_height, start_time, start_time + time_block, update = False)
     start_time = start_time + time_block
-    next_back = curr_back + len(crops) + 1
     vid_files.extend(file_names)
     while True:
         if stream:
@@ -271,18 +274,16 @@ def write_video_single(conn, \
         if do_join:
             writers, _ , time_block = _write_video_batch(v_behind, crops, args['encoding'], batch_size, dir, release = False, writers = writers)
             
-            _update_headers_batch(conn, crops, curr_back, target, file_names,
-                            full_width, full_height, start_time, start_time + time_block, update = True)
+            ids = _update_headers_batch(conn, crops, target, file_names,
+                            full_width, full_height, start_time, start_time + time_block, ids = ids, update = True)
             start_time = start_time + time_block
         else:
             for writer in writers:
                 writer.release()
             writers, file_names, time_block = _write_video_batch(v_behind, crops, args['encoding'], batch_size, dir, release = False)
-            curr_back = next_back
-            _update_headers_batch(conn, crops, curr_back, target, file_names,
+            ids = _update_headers_batch(conn, crops, target, file_names,
                             full_width, full_height, start_time, start_time + time_block, update = False)
             start_time = start_time + time_block
-            next_back = curr_back + len(crops) + 1
         vid_files.extend(file_names)
     return vid_files
     
@@ -341,11 +342,10 @@ def write_video_fixed(conn, \
     v = iter(v)
     full_width = v.width
     full_height = v.height
-    curr_back = 0 # current clip background id
     start_time = start_time #current batch start time
     if not batch:
         (_ , file_names, time_block) = _write_video_batch(v, crops, args['encoding'], -1 , dir = dir, release = True)
-        _update_headers_batch(conn, crops, curr_back, target, file_names,
+        _update_headers_batch(conn, crops, target, file_names,
                             full_width, full_height, start_time, start_time + time_block, update = False)
         return file_names
     
@@ -355,10 +355,9 @@ def write_video_fixed(conn, \
         _, file_names, time_block = _write_video_batch(v, crops, args['encoding'], batch_size, dir, release = True)
         if time_block == 0:
             break
-        _update_headers_batch(conn, crops, curr_back, target, file_names,
+        _update_headers_batch(conn, crops, target, file_names,
                         full_width, full_height, start_time, start_time + time_block, update = False)
         start_time = start_time + time_block
-        curr_back = curr_back + len(crops) + 1
         vid_files.extend(file_names)
     return vid_files
 

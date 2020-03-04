@@ -270,10 +270,6 @@ def write_video_single(conn, \
         if batch_crops == None:
             break
         crops, batch_prev, do_join = splitter.join(batch_prev, batch_crops)
-<<<<<<< HEAD
-
-=======
->>>>>>> cleanup and parallelism
         if do_join:
             writers, _ , time_block = _write_video_batch(v_behind, crops, args['encoding'], batch_size, dir, release = False, writers = writers)
             
@@ -298,7 +294,6 @@ def write_video_parrallel(db_path, \
                         dir, \
                         splitter, \
                         map, \
-                        num_processes = 4, \
                         scratch = DEFAULT_TEMP, \
                         args={}):
     '''
@@ -309,7 +304,7 @@ def write_video_parrallel(db_path, \
     cap = cv2.VideoCapture(video_file)
     fps = cap.get(cv2.CAP_PROP_FPS)
     temp_ext = os.path.splitext(video_file)[1]
-
+    num_processes = args['num_processes']
     if args['limit'] != -1:
         end_time = float(args['limit'])/fps
         video_file = approx_etrim_video(video_file, end_time, scratch = scratch, ext = temp_ext)

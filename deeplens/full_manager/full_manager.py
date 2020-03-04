@@ -19,8 +19,9 @@ from deeplens.error import *
 import os
 import sqlite3
 import logging
+from multiprocessing import Pool
 
-DEFAULT_ARGS = {'encoding': MP4V, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 20}
+DEFAULT_ARGS = {'encoding': MP4V, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 20, 'num_processes': 4}
 
 # NOTE: bounding boxes are at a clip level
 
@@ -106,6 +107,20 @@ class FullStorageManager(StorageManager):
             write_video_single(self.conn, filename, target, physical_dir, self.content_splitter, self.content_tagger, stream = stream, args=args)
         
         self.videos.add(target)
+    
+    def put_many(self, filenames, targets, args=DEFAULT_ARGS, in_extern_storage = False):
+        put_args = []
+        db_path = os.path.join(self.basedir, self.db_name)
+        if in_extern_storage: 
+            physical_dir = self.externdir
+        else:
+            physical_dir = self.basedir
+        for i, name in enumerate(filenames):
+            put_arg = (db_path, name, targets[i], physical_dir, self.content_splitter, self.content_tagger, 0, False, args)
+            put_args.append(put_arg)
+        
+        with Pool(processes = args['num_processes']) as pool:
+            pool.starmap(write_video_single, put_args)
 
     def get(self, name, condition):
         """retrievies a clip of satisfying the condition.

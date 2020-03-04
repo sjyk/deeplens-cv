@@ -20,7 +20,7 @@ import os
 import sqlite3
 import logging
 
-DEFAULT_ARGS = {'encoding': MP4V, 'size': -1, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 20}
+DEFAULT_ARGS = {'encoding': MP4V, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 20}
 
 # NOTE: bounding boxes are at a clip level
 
@@ -36,7 +36,6 @@ class FullStorageManager(StorageManager):
         self.basedir = basedir
         self.videos = set()
         self.threads = None
-        self.STORAGE_BLOCK_SIZE = 60 
         self.db_name =  db_name
 
         if not os.path.exists(basedir):
@@ -84,11 +83,11 @@ class FullStorageManager(StorageManager):
         self.cursor.execute(sql_create_background_table)
         self.cursor.execute(sql_create_clip_table)
 
-    def put(self, filename, target, args=DEFAULT_ARGS, in_extern_storage = False):
+    def put(self, filename, target, args=DEFAULT_ARGS, in_extern_storage = False, parallel = True):
         """put adds a video to the storage manager from a file. It should either add
             the video to disk, or a reference in disk to deep storage.
         """
-        #delete_video_if_exists(physical_clip) TODO: Update function
+        self.delete(target)
         if in_extern_storage: 
             physical_dir = self.externdir
         else:
@@ -98,8 +97,13 @@ class FullStorageManager(StorageManager):
             stream = True
         else:
             stream = False
-            
-        write_video_single(self.conn, filename, target, physical_dir, self.content_splitter, self.content_tagger, stream = stream, args=args)
+        
+        if parallel and not stream:
+            db_path = os.path.join(self.basedir, self.db_name)
+            write_video_parrallel(db_path, filename, target, physical_dir, self.content_splitter, self.content_tagger, args=args)
+        
+        else:
+            write_video_single(self.conn, filename, target, physical_dir, self.content_splitter, self.content_tagger, stream = stream, args=args)
         
         self.videos.add(target)
 
@@ -119,10 +123,6 @@ class FullStorageManager(StorageManager):
 
     def list(self):
         return list(self.videos)
-    
-    #TODO implement after we support threading
-    def setThreadPool(self):
-        raise NotImplementedError("This storage manager does not support threading")
 
     def size(self, name):
         """ Return the total amount of space a deeplens video takes up
@@ -143,22 +143,3 @@ class FullStorageManager(StorageManager):
         return size
     
     #TODO: We should make the storage distributed instead
-    def moveToExtern(self, name, condition): 
-        """ Move clips that fulfil the condition to disk
-        """
-        extern_dir = os.path.join(self.externdir, name)
-        physical_clip = os.path.join(self.basedir, name)
-        return move_to_extern_if(physical_clip, condition, extern_dir)
-
-    def moveFromExtern(self, name, condition): 
-        """ Move clips that fulfil the condition to disk
-        """
-        physical_clip = os.path.join(self.basedir, name)
-        move_from_extern_if(physical_clip, condition, threads=None)
-
-    def isExtern(self, name, condition):
-        """ Default: returns True if any of the files that meet the requirements
-        is in external storage
-        """
-        physical_clip = os.path.join(self.basedir, name)
-        return check_extern_if(physical_clip, condition, threads=None)

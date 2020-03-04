@@ -10,6 +10,8 @@ storage system.
 from deeplens.header import *
 from deeplens.simple_manager.file import *
 from deeplens.utils.frame_xform import *
+from deeplens.extern.ffmpeg import *
+import sqlite3
 
 import cv2
 import os
@@ -18,7 +20,10 @@ import time
 import shutil
 import logging
 import json
-import threading
+#import threading
+#import queue
+from multiprocessing import Pool
+#import glob
 
 
 
@@ -94,8 +99,6 @@ def _write_video_batch(vstream, \
                         crops, \
                         encoding,
                         batch_size,
-                        limit,
-                        start_time,
                         dir = DEFAULT_TEMP, \
                         frame_rate = 1,
                         release = True,
@@ -154,7 +157,7 @@ def _write_video_batch(vstream, \
             out_vids[i].write(fr)
             i +=1
         index += 1
-        if index >= batch_size or limit != -1 and index >= limit - start_time:
+        if index >= batch_size:
             break
     if not release:
         if len(file_names) != 0:
@@ -171,8 +174,7 @@ def _write_video_batch(vstream, \
 def _split_video_batch(vstream,
                         splitter,
                         batch_size,
-                        limit,
-                        start_time,
+                        args = None,
                         process_vid = False,
                         scratch = None,
                         vstream_behind = None,
@@ -196,7 +198,7 @@ def _split_video_batch(vstream,
         i += 1
         if v_cache != None:
             v_cache.append(frame['frame'])
-        if i >= batch_size or limit != -1 and i >= limit - start_time:
+        if i >= batch_size and batch_size != -1:
             break
     if i == 0:
         return None
@@ -204,29 +206,35 @@ def _split_video_batch(vstream,
     if process_vid:
         if not splitter.map_to_video:
             raise ManagerIOError('Splitter does not support map to video')
-        videos = _write_video_batch(vstream_behind, crops, limit) # TODO: parameters wrong
+        videos = _write_video_batch(vstream_behind, crops, args['encoding'], batch_size, scratch, release = True)# TODO: parameters wrong
         return (crops, videos)
     return crops
     
 
-# TODO: parallelize
+# TODO: support specified crops and parrallelism
 def write_video_single(conn, \
                         video_file, \
                         target,
                         dir, \
                         splitter, \
                         map, \
-                        stream = False,
+                        start_time = 0, \
+                        stream = False, \
                         args={}):
+    if type(conn) == str:
+        conn = sqlite3.Connection(conn)
     batch_size = args['batch_size']
     v = VideoStream(video_file, args['limit'])
     v = iter(v[map])
     if stream:
-        v.set_stream(True)
+        try:
+            v.set_stream(True)
+        except NameError:
+            logging.warning("set_stream isn't a function in map")
     full_width = v.width
     full_height = v.height
     curr_back = 0 # current clip background id
-    start_time = 0 #current batch start time (NOTE: Not current clip start time)
+    start_time = start_time #current batch start time
     i = 0
     if stream:
         v_behind = [] # if it's a stream, we cache the buffered video instead of having a slow pointer
@@ -242,10 +250,10 @@ def write_video_single(conn, \
         i += 1
         if stream:
             v_behind.append(frame['frame'])
-        if args['limit'] != -1 and i >= args['limit'] or i >= batch_size:
+        if i >= batch_size:
             break
     crops, batch_prev, _ = splitter.initialize(labels)
-    (writers, file_names, time_block) = _write_video_batch(v_behind, crops, args['encoding'], batch_size, args['limit'], start_time, dir, release = False)
+    (writers, file_names, time_block) = _write_video_batch(v_behind, crops, args['encoding'], batch_size, dir = dir, release = False)
     
     _update_headers_batch(conn, crops, curr_back, target, file_names,
                             full_width, full_height, start_time, start_time + time_block, update = False)
@@ -258,13 +266,16 @@ def write_video_single(conn, \
             v_cache = v_behind
         else:
             v_cache = None
-        batch_crops = _split_video_batch(v, splitter, batch_size, args['limit'], start_time, v_cache = v_cache)
+        batch_crops = _split_video_batch(v, splitter, batch_size, start_time, v_cache = v_cache)
         if batch_crops == None:
             break
         crops, batch_prev, do_join = splitter.join(batch_prev, batch_crops)
+<<<<<<< HEAD
 
+=======
+>>>>>>> cleanup and parallelism
         if do_join:
-            writers, _ , time_block = _write_video_batch(v_behind, crops, args['encoding'], batch_size, args['limit'], start_time, dir, release = False, writers = writers)
+            writers, _ , time_block = _write_video_batch(v_behind, crops, args['encoding'], batch_size, dir, release = False, writers = writers)
             
             _update_headers_batch(conn, crops, curr_back, target, file_names,
                             full_width, full_height, start_time, start_time + time_block, update = True)
@@ -272,7 +283,7 @@ def write_video_single(conn, \
         else:
             for writer in writers:
                 writer.release()
-            writers, file_names, time_block = _write_video_batch(v_behind, crops, args['encoding'], batch_size, args['limit'], start_time, dir, release = False)
+            writers, file_names, time_block = _write_video_batch(v_behind, crops, args['encoding'], batch_size, dir, release = False)
             curr_back = next_back
             _update_headers_batch(conn, crops, curr_back, target, file_names,
                             full_width, full_height, start_time, start_time + time_block, update = False)
@@ -280,33 +291,51 @@ def write_video_single(conn, \
             next_back = curr_back + len(crops) + 1
         vid_files.extend(file_names)
     return vid_files
-
-def write_video_parrallel_1(conn, \
-                        video_file, \
-                        threading, \
-                        target,
-                        dir, \
-                        splitter, \
-                        map, \
-                        stream = False,
-                        args={}):
-    '''
-    parallelized the put function for preprocessing only
-    '''
-    pass
-
-def write_video_parrallel_2(conn, \
+    
+def write_video_parrallel(db_path, \
                         video_file, \
                         target,
                         dir, \
                         splitter, \
                         map, \
-                        stream = False,
+                        num_processes = 4, \
+                        scratch = DEFAULT_TEMP, \
                         args={}):
     '''
-    parallelized the put function for preprocessing and crops
+    put function with parallization
+    Note: The map/join primitive doesn't completely hold in the parallel case
+    Note: The limit is approximate (a more accurate/slower limit can be implemented if needed)
     '''
-    pass
+    cap = cv2.VideoCapture(video_file)
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    temp_ext = os.path.splitext(video_file)[1]
+
+    if args['limit'] != -1:
+        end_time = float(args['limit'])/fps
+        video_file = approx_etrim_video(video_file, end_time, scratch = scratch, ext = temp_ext)
+    single_argss = []
+    
+    temp_path = split_by_key_frames(video_file, scratch = DEFAULT_TEMP, ext = temp_ext)
+    temp_names = []
+    i = 0
+    start_time = 0
+    while True:
+        vid_path = temp_path %i
+        if not os.path.exists(vid_path):
+            break
+        print(i)
+        ctarget = target + '_' + str(i)
+        single_args = (db_path, vid_path, ctarget, dir, splitter, map, start_time, False, args)
+        duration = get_duration(vid_path)
+        duration = int(duration*fps)
+        start_time += duration
+        single_argss.append(single_args)
+        i += 1
+    
+    with Pool(processes = num_processes) as pool:
+        pool.starmap(write_video_single, single_argss)
+    
+    
 
 def delete_video_if_exists(conn, video_name):
     c = conn.cursor()
@@ -385,11 +414,12 @@ def delete_clip(conn, clip_id, video_name):
 def delete_video(conn, video_name):
     c = conn.cursor()
     c.execute("SELECT video_ref FROM clip WHERE video_name = '%s'" % (video_name))
-    video_ref = c.fetchone()[0]
-    try:
-        os.remove(video_ref)
-    except FileNotFoundError:
-        logging.warning("File %s not found" % video_ref)
+    video_refs = c.fetchall()
+    for ref in video_refs:
+        try:
+            os.remove(ref)
+        except FileNotFoundError:
+            logging.warning("File %s not found" % video_ref)
     c.execute("DELETE FROM clip WHERE video_name = '%s' " % video_name)
     c.execute("DELETE FROM label WHERE video_name = '%s' " % video_name)
     c.execute("DELETE FROM background WHERE video_name = '%s' " % video_name)

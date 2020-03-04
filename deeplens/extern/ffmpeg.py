@@ -2,6 +2,7 @@ import os
 import subprocess
 from deeplens.utils.clip import *
 from deeplens.simple_manager.file import *
+import cv2
 
 from multiprocessing import Pool
 
@@ -21,12 +22,39 @@ def concatenate(files, output, scratch_file = None, scratch = DEFAULT_TEMP):
 	return int(float(result.stdout))
 
 
+def get_key_frames(file):
+	ARGS = 'ffprobe -v error -skip_frame nokey -show_entries frame=pkt_pts_time -select_streams v -of csv=p=0 {}'.format(file).split()
+	result = subprocess.run(ARGS, stdout=subprocess.PIPE)
+	frames = result.stdout.decode("utf-8").split('\n')
+	frames = list(filter(None, frames))
+	frames = list(map(float, frames))
+	return frames
+
+def split_by_key_frames(file, scratch = DEFAULT_TEMP, name = None, ext = AVI):
+	if name == None:
+		name = get_rnd_strng()
+	file_name = name + '%d'
+	file_name = add_ext(file_name, ext)
+	path = os.path.join(scratch,file_name)
+	ARGS = 'ffmpeg -i {} -acodec copy -f segment -vcodec copy -reset_timestamps 1 -map 0 {}'.format(file, path).split()
+	subprocess.run(ARGS, stdout=subprocess.PIPE)
+	return path
+
 def get_duration(file):
 	ARGS = 'ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1'.split()
 	ARGS.append(file)
 	result = subprocess.run(ARGS, stdout=subprocess.PIPE)
 	return int(float(result.stdout))
- 
+
+def approx_etrim_video(file, end_time, scratch = DEFAULT_TEMP, name = None, ext = AVI):
+	if name == None:
+		name = get_rnd_strng()
+	file_name = add_ext(name, ext)
+	path = os.path.join(scratch,file_name)
+	ARGS = 'ffmpeg -ss 0 -i {} -to {} -c copy {}'.format(file, str(end_time), path).split()
+	result = subprocess.run(ARGS, stdout=subprocess.PIPE)
+	return path
+
 
 def _inner(block):
 	start, filename, manager, args, target = block

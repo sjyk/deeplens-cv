@@ -176,10 +176,6 @@ def _write_video_batch(vstream, \
 def _split_video_batch(vstream,
                         splitter,
                         batch_size,
-                        args = None,
-                        process_vid = False,
-                        scratch = None,
-                        vstream_behind = None,
                         v_cache = None):
     '''
     Private function which labels and crops a batch of video frames.
@@ -190,7 +186,6 @@ def _split_video_batch(vstream,
     - process_vid: whether we also process the video batch after applying a map to it
     -   Note: if this is True, we also need scratch and vstream_behind
     - scratch: where to store the video batch after processing it
-    - vstream_behind: a copy of the previous video stream so that we can apply map onto it
     - v_cache: cache a buffer of the vstream (neccessary for streaming)
     '''
     labels = []
@@ -205,11 +200,6 @@ def _split_video_batch(vstream,
     if i == 0:
         return None
     crops = splitter.map(labels)
-    if process_vid:
-        if not splitter.map_to_video:
-            raise ManagerIOError('Splitter does not support map to video')
-        videos = _write_video_batch(vstream_behind, crops, args['encoding'], batch_size, scratch, release = True)# TODO: parameters wrong
-        return (crops, videos)
     return crops
     
 
@@ -267,14 +257,14 @@ def write_video_single(conn, \
             v_cache = v_behind
         else:
             v_cache = None
-        batch_crops = _split_video_batch(v, splitter, batch_size, start_time, v_cache = v_cache)
+        batch_crops = _split_video_batch(v, splitter, batch_size, v_cache = v_cache)
         if batch_crops == None:
             break
         crops, batch_prev, do_join = splitter.join(batch_prev, batch_crops)
         if do_join:
             writers, _ , time_block = _write_video_batch(v_behind, crops, args['encoding'], batch_size, dir, release = False, writers = writers)
             
-            ids = _update_headers_batch(conn, crops, target, file_names,
+            _update_headers_batch(conn, crops, target, file_names,
                             full_width, full_height, start_time, start_time + time_block, ids = ids, update = True)
             start_time = start_time + time_block
         else:

@@ -147,7 +147,6 @@ def _write_video_batch(vstream, \
             out_vids.append(out_vid)
     else:
         out_vids = writers
-    print("TEST3")
     index = 0
     for frame in vstream:
         if type(frame) == dict:
@@ -165,7 +164,6 @@ def _write_video_batch(vstream, \
         index += 1
         if index >= batch_size:
             break
-    print("TEST4")
     if not release:
         if len(file_names) != 0:
             return (out_vids, file_names, index)
@@ -173,7 +171,6 @@ def _write_video_batch(vstream, \
             return (out_vids, None, index)
     else:
         if len(file_names) != 0:
-            print("TEST5")
             return (None, file_names, index)
     return (None, None, index)
 
@@ -270,9 +267,7 @@ def write_video_single(conn, \
                             full_width, full_height, start_time, start_time + time_block, ids = ids, update = True)
             start_time = start_time + time_block
         else:
-            print('TEST1')
             writers, file_names, time_block = _write_video_batch(v_behind, target, crops, args['encoding'], batch_size, dir, release = False)           
-            print('TEST2')
             ids = _update_headers_batch(conn, crops, target, file_names,
                             full_width, full_height, start_time, start_time + time_block, update = False)
             start_time = start_time + time_block

@@ -40,7 +40,10 @@ def runSimple(src, tot=1000, sel=0.1):
 	cleanUp()
 
 	manager = SimpleStorageManager('videos')
-	manager.put(src, 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': 20})
+	now = timer()
+	manager.put(src, 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': 20, 'num_processes': 4})
+	put_time = timer() - now
+	print("Put time for simple:", put_time)
 
 	region = Box(200,550,350,750)
 
@@ -60,8 +63,11 @@ def runSimple(src, tot=1000, sel=0.1):
 def runFull(src, tot=1000, sel=0.1):
 	cleanUp()
 
-	manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=100), CropSplitter(), 'videos')
-	manager.put(src, 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': 100})
+	manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=20), CropSplitter(), 'videos')
+	now = timer()
+	manager.put(src, 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': 20, 'num_processes': 4})
+	put_time = timer() - now
+	print("Put time for simple:", put_time)
 
 	region = Box(200, 550, 350, 750)
 	sel = sel/2
@@ -82,8 +88,11 @@ def runFull(src, tot=1000, sel=0.1):
 def runFullOpt(src, tot=1000, sel=0.1):
 	cleanUp()
 
-	manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=100), CropSplitter(), 'videos')
-	manager.put(src, 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': 100})
+	manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=20), CropSplitter(), 'videos')
+	now = timer()
+	manager.put(src, 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': 20, 'num_processes': 4})
+	put_time = timer() - now
+	print("Put time for simple:", put_time)
 
 	region = Box(200, 550, 350, 750)
 	sel = sel/2

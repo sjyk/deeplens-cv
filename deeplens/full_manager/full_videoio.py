@@ -431,7 +431,7 @@ def delete_video(conn, video_name):
         try:
             os.remove(ref)
         except FileNotFoundError:
-            logging.warning("File %s not found" % video_ref)
+            logging.warning("File %s not found" % ref)
     c.execute("DELETE FROM clip WHERE video_name = '%s' " % video_name)
     c.execute("DELETE FROM label WHERE video_name = '%s' " % video_name)
     c.execute("DELETE FROM background WHERE video_name = '%s' " % video_name)

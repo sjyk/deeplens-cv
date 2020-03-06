@@ -75,9 +75,12 @@ def _update_headers_batch(conn, crops, name, video_refs,
             insert_background_header(conn, ids[0], ids[i], name)
         for i in range(0, len(crops) + 1):
             if i == 0:
-                insert_clip_header(conn, ids[0], name, start_time, end_time, 0, 0,
-                                full_width, full_height, video_refs[i], is_background = True)
-                
+                if len(crops):
+                    insert_clip_header(conn, ids[0], name, start_time, end_time, 0, 0,
+                                    full_width, full_height, video_refs[i], is_background = True)
+                else:
+                    insert_clip_header(conn, ids[0], name, start_time, end_time, 0, 0,
+                                    full_width, full_height, video_refs[i], is_background = False)
             else:
                 origin_x = crops[i - 1]['bb'].x0
                 origin_y = crops[i - 1]['bb'].y0
@@ -98,6 +101,7 @@ def _update_headers_batch(conn, crops, name, video_refs,
 
 
 def _write_video_batch(vstream, \
+                        vid_name, \
                         crops, \
                         encoding,
                         batch_size,
@@ -118,7 +122,7 @@ def _write_video_batch(vstream, \
     file_names = []
     out_vids = []
     if writers == None:
-        r_name = get_rnd_strng()
+        r_name = vid_name + get_rnd_strng(64)
         for i in range(len(crops) + 1):
             seg_name = os.path.join(dir, r_name)
             file_name = add_ext(seg_name, AVI, i)
@@ -143,7 +147,7 @@ def _write_video_batch(vstream, \
             out_vids.append(out_vid)
     else:
         out_vids = writers
-    
+    print("TEST3")
     index = 0
     for frame in vstream:
         if type(frame) == dict:
@@ -161,15 +165,15 @@ def _write_video_batch(vstream, \
         index += 1
         if index >= batch_size:
             break
+    print("TEST4")
     if not release:
         if len(file_names) != 0:
             return (out_vids, file_names, index)
         else:
             return (out_vids, None, index)
     else:
-        for vid in out_vids:
-            vid.release()
         if len(file_names) != 0:
+            print("TEST5")
             return (None, file_names, index)
     return (None, None, index)
 
@@ -206,7 +210,7 @@ def _split_video_batch(vstream,
 # TODO: support specified crops and parrallelism
 def write_video_single(conn, \
                         video_file, \
-                        target,
+                        target, \
                         dir, \
                         splitter, \
                         map, \
@@ -245,8 +249,7 @@ def write_video_single(conn, \
         if i >= batch_size:
             break
     crops, batch_prev, _ = splitter.initialize(labels)
-    (writers, file_names, time_block) = _write_video_batch(v_behind, crops, args['encoding'], batch_size, dir = dir, release = False)
-    
+    (writers, file_names, time_block) = _write_video_batch(v_behind, target, crops, args['encoding'], batch_size, dir = dir, release = False)
     ids = _update_headers_batch(conn, crops, target, file_names,
                             full_width, full_height, start_time, start_time + time_block, update = False)
     start_time = start_time + time_block
@@ -262,19 +265,19 @@ def write_video_single(conn, \
             break
         crops, batch_prev, do_join = splitter.join(batch_prev, batch_crops)
         if do_join:
-            writers, _ , time_block = _write_video_batch(v_behind, crops, args['encoding'], batch_size, dir, release = False, writers = writers)
-            
+            writers, _ , time_block = _write_video_batch(v_behind, target, crops, args['encoding'], batch_size, dir, release = False, writers = writers)
             _update_headers_batch(conn, crops, target, file_names,
                             full_width, full_height, start_time, start_time + time_block, ids = ids, update = True)
             start_time = start_time + time_block
         else:
-            for writer in writers:
-                writer.release()
-            writers, file_names, time_block = _write_video_batch(v_behind, crops, args['encoding'], batch_size, dir, release = False)
+            print('TEST1')
+            writers, file_names, time_block = _write_video_batch(v_behind, target, crops, args['encoding'], batch_size, dir, release = False)           
+            print('TEST2')
             ids = _update_headers_batch(conn, crops, target, file_names,
                             full_width, full_height, start_time, start_time + time_block, update = False)
             start_time = start_time + time_block
         vid_files.extend(file_names)
+    conn.close()
     return vid_files
     
 def write_video_parrallel(db_path, \
@@ -334,7 +337,7 @@ def write_video_fixed(conn, \
     full_height = v.height
     start_time = start_time #current batch start time
     if not batch:
-        (_ , file_names, time_block) = _write_video_batch(v, crops, args['encoding'], -1 , dir = dir, release = True)
+        (_ , file_names, time_block) = _write_video_batch(v, target, crops, args['encoding'], -1 , dir = dir, release = True)
         _update_headers_batch(conn, crops, target, file_names,
                             full_width, full_height, start_time, start_time + time_block, update = False)
         return file_names
@@ -342,7 +345,7 @@ def write_video_fixed(conn, \
     vid_files = []
     batch_size = args['batch_size']
     while True:
-        _, file_names, time_block = _write_video_batch(v, crops, args['encoding'], batch_size, dir, release = True)
+        _, file_names, time_block = _write_video_batch(v, target, crops, args['encoding'], batch_size, dir, release = True)
         if time_block == 0:
             break
         _update_headers_batch(conn, crops, target, file_names,

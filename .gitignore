@@ -109,6 +109,9 @@ venv.bak/
 # JetBrains config file
 .idea
 
+# Visual Studio Code config file
+.vscode
+
 # video files
 videos/**
 *.mp4

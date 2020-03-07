@@ -387,7 +387,8 @@ class CustomTagger(Operator):
 					tag = self.tagger(self.input_iter, self.batch_size)
 			except StopIteration:
 				raise StopIteration("Iterator is closed")
-			self.tags.append(tag)
+			if tag:
+				self.tags.append(tag)
 
 		self.next_count += 1
 		return self.tags

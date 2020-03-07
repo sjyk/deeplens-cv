@@ -114,6 +114,10 @@ class YoutubeTagger(object):
         #we can switch to binary search later...
         for l in labelLst:
             if self.frame_count <= l.frame_no:
+                print(l.xmin)
+                print(l.xmax)
+                print(l.ymin)
+                print(l.ymax)
                 res_tag = [{'label' : l.getLabel(), 'bb' : l.getBox()}]
                 self.frame_count += 1
                 return res_tag

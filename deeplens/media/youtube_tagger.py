@@ -92,7 +92,7 @@ class YoutubeTagger(object):
         xmax = float(row[6])
         ymin = float(row[7])
         ymax = float(row[8])
-        return FrameInfo(youtubeID, sec_no, fps, frame_no, obj_type, xmin, xmax, ymax, ymin)
+        return FrameInfo(youtubeID, sec_no, fps, frame_no, obj_type, xmin, xmax, ymin, ymax)
     
     def __iter__(self):
         self.input_iter = iter(self.video_stream)

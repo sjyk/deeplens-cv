@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import csv
-from deeplens.struct import Box
+from deeplens.struct import Box, Operator
 from deeplens.struct import VideoStream
 import os
 
@@ -46,7 +46,7 @@ class FrameInfo(object):
     def getBox(self):
         return Box(self.xmin, self.ymin, self.xmax, self.ymax)
 
-class YoutubeTagger(object):
+class YoutubeTagger(Operator):
     def __init__(self, video_url, labelsPath):
         #super(YoutubeTagger, self).__init__()
         self.video_url = video_url
@@ -57,6 +57,16 @@ class YoutubeTagger(object):
         self.height = self.video_stream.height
         self.labelsPath = labelsPath
         self.csvDict = self.getAllYTTags()
+
+    # subscripting binds a transformation to the current stream
+    def apply(self, vstream):
+        self.video_stream = vstream
+        return self
+
+    def __getitem__(self, xform):
+        """Applies a transformation to the video stream
+        """
+        return xform.apply(self)
     
     def getAllYTTags(self):
         fd = open(self.labelsPath, 'r')
@@ -84,18 +94,19 @@ class YoutubeTagger(object):
         return outputDict
     
     def toFrameInfo(self, row):
-        youtubeID = row[0]
-        sec_no = float(row[1])
-        fps = int(row[2])
-        frame_no = int(row[3])
-        obj_type = row[4]
+        # on my laptop, the to_csv function in pandas generates columns in alphabetical order
+        youtubeID = row[8]
+        sec_no = float(row[3])
+        fps = int(row[1])
+        frame_no = int(row[2])
+        obj_type = row[0]
         xmin = float(row[5])
         xmin = xmin * self.width
-        xmax = float(row[6])
+        xmax = float(row[4])
         xmax = xmax * self.width
         ymin = float(row[7])
         ymin = ymin * self.height
-        ymax = float(row[8])
+        ymax = float(row[6])
         ymax = ymax * self.height
         return FrameInfo(youtubeID, sec_no, fps, frame_no, obj_type, xmin, xmax, ymin, ymax)
     
@@ -113,13 +124,13 @@ class YoutubeTagger(object):
         
     
     def _get_tag(self, frame_count):
-        res_tag = []
+        res_tag = {'objects': []}
         videoID = self.parseID()
         labelLst = self.csvDict[videoID]
         #we can switch to binary search later...
         for l in labelLst:
             if frame_count <= l.frame_no:
-                res_tag = [{'label' : l.getLabel(), 'bb' : l.getBox()}]
+                res_tag = {'objects': [{'label' : l.getLabel(), 'bb' : l.getBox()}]}
                 return res_tag
         return res_tag
     

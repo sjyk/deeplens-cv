@@ -122,7 +122,7 @@ class YoutubeTagger(object):
         return res_tag
     
     def __next__(self):
-        frame_count = self.video_stream.next()['frame']
+        frame_count = self.video_stream.__next__()['frame']
         return self._get_tag(frame_count)
                 
                 

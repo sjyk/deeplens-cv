@@ -53,6 +53,8 @@ class YoutubeTagger(object):
         #I guess I have to manually generate a video stream here...
         self.video_stream = VideoStream(self.video_url)
         self.video_stream = iter(self.video_stream)
+        self.width = self.video_stream.width
+        self.height = self.video_stream.height
         self.labelsPath = labelsPath
         self.csvDict = self.getAllYTTags()
     
@@ -88,9 +90,13 @@ class YoutubeTagger(object):
         frame_no = int(row[3])
         obj_type = row[4]
         xmin = float(row[5])
+        xmin = xmin * self.width
         xmax = float(row[6])
+        xmax = xmax * self.width
         ymin = float(row[7])
+        ymin = ymin * self.height
         ymax = float(row[8])
+        ymax = ymax * self.height
         return FrameInfo(youtubeID, sec_no, fps, frame_no, obj_type, xmin, xmax, ymin, ymax)
     
     def __iter__(self):

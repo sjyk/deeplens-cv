@@ -95,7 +95,7 @@ class VideoStream():
 
 			
 		else:
-			self.cap.release()
+			# self.cap.release()  # commented out due to CorruptedOrMissingVideo error
 			self.cap = None
 			raise StopIteration("Iterator is closed")
 

@@ -6,5 +6,10 @@ for now...
 """
 youtubeTagger = YoutubeTagger('./train/AAI0cDTWFvE.mp4', './train/processed_yt_bb_detection_train.csv')
 for frame in youtubeTagger:
-    print(frame)
+    bb= frame['bb']
+    x0 = str(bb.x0)
+    x1 = str(bb.x1)
+    y0 = str(bb.y0)
+    y1 = str(bb.y1)
+    print(frame['label'] + ',' + x0 + ',' + x1 + ',' + y0 + ',' + y1)
 

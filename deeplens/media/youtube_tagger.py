@@ -2,8 +2,7 @@ import cv2
 import numpy as np
 import csv
 from deeplens.struct import Box
-from deeplens.struct import Operator
-import copy
+from deeplens.struct import VideoStream
 import os
 
 """
@@ -47,10 +46,13 @@ class FrameInfo(object):
     def getBox(self):
         return Box(self.xmin, self.ymin, self.xmax, self.ymax)
 
-class YoutubeTagger(Operator):
+class YoutubeTagger(object):
     def __init__(self, video_url, labelsPath):
-        super(YoutubeTagger, self).__init__()
+        #super(YoutubeTagger, self).__init__()
         self.video_url = video_url
+        #I guess I have to manually generate a video stream here...
+        self.video_stream = VideoStream(self.video_url)
+        self.video_stream = iter(self.video_stream)
         self.labelsPath = labelsPath
         self.frame_count = 0
         self.csvDict = self.getAllYTTags()
@@ -94,7 +96,7 @@ class YoutubeTagger(Operator):
     
     def __iter__(self):
         self.input_iter = iter(self.video_stream)
-        self.super_iter()
+        #self.super_iter()
         return self
     
     def parseID(self):

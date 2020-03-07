@@ -54,7 +54,6 @@ class YoutubeTagger(object):
         self.video_stream = VideoStream(self.video_url)
         self.video_stream = iter(self.video_stream)
         self.labelsPath = labelsPath
-        self.frame_count = 0
         self.csvDict = self.getAllYTTags()
     
     def getAllYTTags(self):
@@ -107,24 +106,24 @@ class YoutubeTagger(object):
         return fname[:-4]
         
     
-    def _get_tag(self):
+    def _get_tag(self, frame_count):
         res_tag = []
         videoID = self.parseID()
         labelLst = self.csvDict[videoID]
         #we can switch to binary search later...
         for l in labelLst:
-            if self.frame_count <= l.frame_no:
+            if frame_count <= l.frame_no:
                 print(l.xmin)
                 print(l.xmax)
                 print(l.ymin)
                 print(l.ymax)
                 res_tag = [{'label' : l.getLabel(), 'bb' : l.getBox()}]
-                self.frame_count += 1
                 return res_tag
         return res_tag
     
     def __next__(self):
-        return self._get_tag()
+        frame_count = self.video_stream.next()['frame']
+        return self._get_tag(frame_count)
                 
                 
                 

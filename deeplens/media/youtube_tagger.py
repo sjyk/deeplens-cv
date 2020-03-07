@@ -84,7 +84,7 @@ class YoutubeTagger(object):
     
     def toFrameInfo(self, row):
         youtubeID = row[0]
-        sec_no = int(row[1])
+        sec_no = float(row[1])
         fps = int(row[2])
         frame_no = int(row[3])
         obj_type = row[4]

@@ -11,5 +11,5 @@ for frame in youtubeTagger:
     x1 = str(bb.x1)
     y0 = str(bb.y0)
     y1 = str(bb.y1)
-    print(frame['label'] + ',' + x0 + ',' + x1 + ',' + y0 + ',' + y1)
+    print(frame[0]['label'] + ',' + x0 + ',' + x1 + ',' + y0 + ',' + y1)
 

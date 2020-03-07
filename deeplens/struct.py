@@ -116,6 +116,9 @@ class VideoStream():
 		else:
 			return None
 
+	def lineage(self):
+		return [self]
+
 
 class IteratorVideoStream(VideoStream):
 	"""The video stream class opens a stream of video

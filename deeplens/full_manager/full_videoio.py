@@ -272,7 +272,7 @@ def write_video_single(conn, \
                             full_width, full_height, start_time, start_time + time_block, update = False)
             start_time = start_time + time_block
         vid_files.extend(file_names)
-    conn.close()
+    # conn.close()  # don't close the database before we finish get()!
     return vid_files
     
 def write_video_parrallel(db_path, \

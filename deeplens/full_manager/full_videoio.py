@@ -294,8 +294,6 @@ def write_video_single(conn, \
     ids = _new_headers_batch(conn, all_crops, target, file_names,
                     full_width, full_height, start_time, start_time + time_block)
     vid_files.extend(file_names)
-    conn.close()
-    vid_files.extend(file_names)
     # conn.close()  # don't close the database before we finish get()!
     return vid_files
     

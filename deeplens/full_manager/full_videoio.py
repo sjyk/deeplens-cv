@@ -295,8 +295,7 @@ def write_video_single(conn, \
                     full_width, full_height, start_time, start_time + time_block)
     vid_files.extend(file_names)
     conn.close()
-    print('bye')
-        vid_files.extend(file_names)
+    vid_files.extend(file_names)
     # conn.close()  # don't close the database before we finish get()!
     return vid_files
     

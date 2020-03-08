@@ -296,6 +296,8 @@ def write_video_single(conn, \
     vid_files.extend(file_names)
     conn.close()
     print('bye')
+        vid_files.extend(file_names)
+    # conn.close()  # don't close the database before we finish get()!
     return vid_files
     
 def write_video_parrallel(db_path, \
@@ -454,7 +456,7 @@ def delete_video(conn, video_name):
         try:
             os.remove(ref)
         except FileNotFoundError:
-            logging.warning("File %s not found" % video_ref)
+            logging.warning("File %s not found" % ref)
     c.execute("DELETE FROM clip WHERE video_name = '%s' " % video_name)
     c.execute("DELETE FROM label WHERE video_name = '%s' " % video_name)
     c.execute("DELETE FROM background WHERE video_name = '%s' " % video_name)

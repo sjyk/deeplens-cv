@@ -95,7 +95,7 @@ class VideoStream():
 
 			
 		else:
-			self.cap.release()
+			# self.cap.release()  # commented out due to CorruptedOrMissingVideo error
 			self.cap = None
 			raise StopIteration("Iterator is closed")
 
@@ -115,6 +115,9 @@ class VideoStream():
 			return self.cap.get(propId)
 		else:
 			return None
+
+	def lineage(self):
+		return [self]
 
 
 class IteratorVideoStream(VideoStream):

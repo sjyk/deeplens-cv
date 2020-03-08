@@ -86,7 +86,8 @@ class CropSplitter(MapJoin):
 
                 if 'label' not in object:
                     continue
-
+                if object['bb'].x1 - object['bb'].x0 < 10 or object['bb'].y1 - object['bb'].y0 < 10:
+                    break
                 if object['label'] in labels:
                     for i in labels[object['label']]:
                         intersect = float(object['bb'].intersect_area(crops[i]['bb']))

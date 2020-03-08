@@ -23,9 +23,10 @@ def test_iteration():
         print(bbstr)
         print(frame['objects'][0]['label'])
 
-def test_put(src):
-    if os.path.exists('./videos'):
-        shutil.rmtree('./videos')
+def test_put(src, cleanUp = False):
+    if cleanUp:
+        if os.path.exists('./videos'):
+            shutil.rmtree('./videos')
     youtubeTagger = YoutubeTagger(src, './train/processed_yt_bb_detection_train.csv')
     manager = FullStorageManager(youtubeTagger, CropSplitter(), 'videos')
     start = time.time()
@@ -38,4 +39,4 @@ def test_put(src):
     result = counts(pipelines, ['one'], stats=True)
     logrecord('full', ({'file': src}), 'get', str(result), 's')
 
-test_put('./train/AAB6lO-XiKE.mp4')
+test_put('./train/AAB6lO-XiKE.mp4', cleanUp=False)

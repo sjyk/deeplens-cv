@@ -115,7 +115,11 @@ class FullStorageManager(StorageManager):
         else:
             physical_dir = self.basedir
         for i, name in enumerate(filenames):
-            put_arg = (db_path, name, targets[i], physical_dir, self.content_splitter, self.content_tagger, 0, False, args)
+            if self.content_tagger == None:
+                tagger = name
+            else:
+                tagger = self.content_tagger
+            put_arg = (db_path, name, targets[i], physical_dir, self.content_splitter, tagger, 0, False, args)
             put_args.append(put_arg)
             self.delete(targets[i])
         with Pool(processes = args['num_processes']) as pool:

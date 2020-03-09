@@ -11,6 +11,7 @@ from deeplens.header import *
 from deeplens.simple_manager.file import *
 from deeplens.utils.frame_xform import *
 from deeplens.extern.ffmpeg import *
+from deeplens.media.youtube_tagger import *
 import sqlite3
 import random
 
@@ -224,6 +225,8 @@ def write_video_single(conn, \
                         start_time = 0, \
                         stream = False, \
                         args={}):
+    if type(map) == str:
+        map = YoutubeTagger(map, './train/processed_yt_bb_detection_train.csv')
     if type(conn) == str:
         conn = sqlite3.Connection(conn)
     batch_size = args['batch_size']
@@ -283,6 +286,8 @@ def write_video_single(conn, \
         if not do_join:
             #print('hello' + str(i))
             _, file_names, time_block = _write_video_batch(v_behind, target, all_crops, args['encoding'], batch_size, dir, release = True)           
+            if time_block == 0:
+                break
             ids = _new_headers_batch(conn, all_crops, target, file_names,
                             full_width, full_height, start_time, start_time + time_block)
             start_time = start_time + time_block
@@ -302,7 +307,7 @@ def write_video_parrallel(db_path, \
                         target,
                         dir, \
                         splitter, \
-                        map, \
+                        map = None, \
                         scratch = DEFAULT_TEMP, \
                         args={}):
     '''
@@ -327,7 +332,11 @@ def write_video_parrallel(db_path, \
         vid_path = temp_path %i
         if not os.path.exists(vid_path):
             break
-        single_args = (db_path, vid_path, target, dir, splitter, map, start_time, False, args)
+        if map == None:
+            mapper = video_file
+        else:
+            mapper = map
+        single_args = (db_path, vid_path, target, dir, splitter, mapper, start_time, False, args)
         duration = get_duration(vid_path)
         duration = int(duration*fps)
         start_time += duration
@@ -451,7 +460,7 @@ def delete_video(conn, video_name):
     video_refs = c.fetchall()
     for ref in video_refs:
         try:
-            os.remove(ref)
+            os.remove(ref[0])
         except FileNotFoundError:
             logging.warning("File %s not found" % ref)
     c.execute("DELETE FROM clip WHERE video_name = '%s' " % video_name)

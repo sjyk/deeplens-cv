@@ -12,10 +12,11 @@ from deeplens.constants import *
 from experiments.environ import logrecord
 
 
-def test_put(src):
-    if os.path.exists('./videos'):
-        shutil.rmtree('./videos')
-    youtubeTagger = YoutubeTagger(src,'./deeplens/media/train/processed_yt_bb_detection_train.csv')
+def test_put(src, cleanUp = False):
+    if cleanUp:
+        if os.path.exists('./videos'):
+            shutil.rmtree('./videos')
+    youtubeTagger = YoutubeTagger(src, './train/processed_yt_bb_detection_train.csv')
     manager = FullStorageManager(youtubeTagger, CropSplitter(), 'videos')
     start = time.time()
     manager.put(src, 'test', parallel = False, args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': -1, 'batch_size': 20, 'num_processes': 4})
@@ -38,8 +39,8 @@ youtube_ids2=list(dict.fromkeys(youtube_ids))
 whole_start = time.time()
 for item in youtube_ids2:
     try:
-    	video_path="./deeplens/media/train/"+item+".mp4"
-    	test_put(video_path)
+        video_path="./deeplens/media/train/"+item+".mp4"
+        test_put(video_path)
     except:
         print("missing file",item)
 print("whole_put_get_time:",time.time()-whole_start)

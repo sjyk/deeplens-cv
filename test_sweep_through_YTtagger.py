@@ -16,7 +16,7 @@ def test_put(src, cleanUp = False):
     if cleanUp:
         if os.path.exists('./videos'):
             shutil.rmtree('./videos')
-    youtubeTagger = YoutubeTagger(src, './train/processed_yt_bb_detection_train.csv')
+    youtubeTagger = YoutubeTagger(src, './deeplens/media/train/processed_yt_bb_detection_train.csv')
     manager = FullStorageManager(youtubeTagger, CropSplitter(), 'videos')
     start = time.time()
     manager.put(src, 'test', parallel = False, args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': -1, 'batch_size': 20, 'num_processes': 4})

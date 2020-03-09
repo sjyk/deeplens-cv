@@ -30,7 +30,7 @@ def test_put(src, cleanUp = False):
     youtubeTagger = YoutubeTagger(src, './train/processed_yt_bb_detection_train.csv')
     manager = FullStorageManager(youtubeTagger, CropSplitter(), 'videos')
     start = time.time()
-    manager.put(src, 'test', parallel = False, args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': -1, 'batch_size': 20, 'num_processes': 4})
+    manager.put(src, os.path.basename(src), parallel = False, args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': -1, 'batch_size': 20, 'num_processes': 4})
     print("Put time:", time.time() - start)
     clips = manager.get('test', Condition(label='person'))
     pipelines = []

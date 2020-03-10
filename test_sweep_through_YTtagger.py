@@ -91,6 +91,8 @@ df = pd.read_csv('./deeplens/media/train/processed_yt_bb_detection_train.csv', s
 youtube_ids=df['youtube_id']
 youtube_ids2=list(dict.fromkeys(youtube_ids))
 
+
+print("Number of CPUs: ", os.cpu_count())
 total_start = timer()
 for item in youtube_ids2:
     try:
@@ -113,19 +115,6 @@ total_start = timer()
 for item in youtube_ids2:
     try:
         video_path="./deeplens/media/train/"+item+".mp4"
-        runFull(video_path, cleanUp=False)
-    except:
-        print("missing file for full", item)
-print("Total time for full (cleanUp = False):", timer() - total_start)
-
-total_start = timer()
-runFullPutMany(["./deeplens/media/train/"+item+".mp4" for item in youtube_ids2], cleanUp=False)
-print("Total time for full with put many (cleanUp = False):", timer() - total_start)
-
-total_start = timer()
-for item in youtube_ids2:
-    try:
-        video_path="./deeplens/media/train/"+item+".mp4"
         runSimple(video_path, cleanUp=True)
     except:
         print("missing file for simple", item)
@@ -135,11 +124,25 @@ total_start = timer()
 for item in youtube_ids2:
     try:
         video_path="./deeplens/media/train/"+item+".mp4"
+        runFull(video_path, cleanUp=False)
+    except:
+        print("missing file for full", item)
+print("Total time for full with parallelism within a video (cleanUp = False):", timer() - total_start)
+
+total_start = timer()
+for item in youtube_ids2:
+    try:
+        video_path="./deeplens/media/train/"+item+".mp4"
         runFull(video_path, cleanUp=True)
     except:
         print("missing file for full", item)
-print("Total time for full (cleanUp = True):", timer() - total_start)
+print("Total time for full with parallelism within a video (cleanUp = True):", timer() - total_start)
+
+total_start = timer()
+runFullPutMany(["./deeplens/media/train/"+item+".mp4" for item in youtube_ids2], cleanUp=False)
+print("Total time for full with parallelism across videos (cleanUp = False):", timer() - total_start)
+
 
 total_start = timer()
 runFullPutMany(["./deeplens/media/train/"+item+".mp4" for item in youtube_ids2], cleanUp=True)
-print("Total time for full with put many (cleanUp = True):", timer() - total_start)
+print("Total time for full with parallelism across videos (cleanUp = True):", timer() - total_start)

@@ -7,6 +7,7 @@ from deeplens.full_manager.condition import Condition
 from deeplens.full_manager.full_manager import FullStorageManager
 from deeplens.full_manager.full_video_processing import CropSplitter
 from deeplens.constants import *
+from deeplens.media.youtube_tagger import YoutubeTagger
 from deeplens.simple_manager.manager import SimpleStorageManager
 from deeplens.struct import VideoStream
 from deeplens.tracking.contour import KeyPoints
@@ -19,7 +20,7 @@ def runFull(src, cleanUp = False):
         if os.path.exists('./videos_full'):
             shutil.rmtree('./videos_full')
 
-    manager = FullStorageManager(None, CropSplitter(), 'videos_full')
+    manager = FullStorageManager(YoutubeTagger(src, './deeplens/media/train/processed_yt_bb_detection_train.csv'), CropSplitter(), 'videos_full')
     now = timer()
     manager.put(src, os.path.basename(src), parallel = False, args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': -1, 'batch_size': 50, 'num_processes': os.cpu_count()})
     put_time = timer() - now

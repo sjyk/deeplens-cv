@@ -95,21 +95,35 @@ class YoutubeTagger(Operator):
     
     def toFrameInfo(self, row):
         # on my laptop, the to_csv function in pandas generates columns in alphabetical order
-        youtubeID = row[0]
-        sec_no = float(row[1])
-        fps = int(row[2])
-        frame_no = int(row[3])
-        obj_type = row[4]
+        # youtubeID = row[0]
+        # sec_no = float(row[1])
+        # fps = int(row[2])
+        # frame_no = int(row[3])
+        # obj_type = row[4]
+        # xmin = float(row[5])
+        # xmin = xmin * self.width
+        # xmax = float(row[6])
+        # xmax = xmax * self.width
+        # ymin = float(row[7])
+        # ymin = ymin * self.height
+        # ymax = float(row[8])
+        # ymax = ymax * self.height
+        # return FrameInfo(youtubeID, sec_no, fps, frame_no, obj_type, xmin, xmax, ymin, ymax)
+        youtubeID = row[8]
+        sec_no = float(row[3])
+        fps = int(row[1])
+        frame_no = int(row[2])
+        obj_type = row[0]
         xmin = float(row[5])
         xmin = xmin * self.width
-        xmax = float(row[6])
+        xmax = float(row[4])
         xmax = xmax * self.width
         ymin = float(row[7])
         ymin = ymin * self.height
-        ymax = float(row[8])
+        ymax = float(row[6])
         ymax = ymax * self.height
         return FrameInfo(youtubeID, sec_no, fps, frame_no, obj_type, xmin, xmax, ymin, ymax)
-    
+
     def __iter__(self):
         self.input_iter = iter(self.video_stream)
         #self.super_iter()

@@ -224,7 +224,9 @@ def write_video_single(conn, \
                         map, \
                         start_time = 0, \
                         stream = False, \
-                        args={}):
+                        args={}, 
+                        log = False):
+    start = time.time()
     if type(map) == str:
         map = YoutubeTagger(map, './train/processed_yt_bb_detection_train.csv')
     if type(conn) == str:
@@ -299,6 +301,18 @@ def write_video_single(conn, \
     ids = _new_headers_batch(conn, all_crops, target, file_names,
                     full_width, full_height, start_time, start_time + time_block)
     vid_files.extend(file_names)
+    end = time.time()
+    log_info = {}
+    log_info['video_id'] = target
+    log_info['duration'] = end - start
+    log_info['end_time'] = end
+    logging.info(json.dumps(log_info))
+    if log:
+        log_file = get_rnd_strng() + '.txt'
+        log_file = os.path.join(dir, log_file)
+        with open(log_file, 'w') as f:
+            json.dump(log_file, f)
+        return vid_files, log_file
     # conn.close()  # don't close the database before we finish get()!
     return vid_files
     

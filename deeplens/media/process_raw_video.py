@@ -11,16 +11,19 @@ path="./train/"
 
 #extract the video according to detected object's timestamp
 def extract_video(video,start_time,duration,path="./"):
-    video_name=path+video+".mp4"
-    tmp=path+"tmp_trim.mp4"
-    if os.path.exists(video_name):
-        os.remove(video_name)
+    try:
+        video_name=path+video+".mp4"
+        tmp=path+"tmp_trim.mp4"
+        if os.path.exists(video_name):
+            os.remove(video_name)
 
-    youtube_fetch(video, path)
-    command = "ffmpeg -ss "+start_time+" -t "+duration+" -y -i "+video_name +"  "+tmp
-    subprocess.call(command, shell=True)
-    os.remove(video_name)
-    os.rename(tmp,video_name)
+        youtube_fetch(video, path)
+        command = "ffmpeg -ss "+start_time+" -t "+duration+" -y -i "+video_name +"  "+tmp
+        subprocess.call(command, shell=True)
+        os.remove(video_name)
+        os.rename(tmp,video_name)
+    except Exception as e:
+        print(e)
 
 #extract_video('AAB6lO-XiKE', "10","20","hello1123")
 def extract_props_toCSV(path, input_file):

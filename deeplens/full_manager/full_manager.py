@@ -19,6 +19,8 @@ import os
 import sqlite3
 import logging
 from multiprocessing import Pool
+import time
+from deeplens.utils.parallel_log_reduce import paralleL_log_reduce
 
 DEFAULT_ARGS = {'encoding': MP4V, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 20, 'num_processes': 4}
 
@@ -108,6 +110,7 @@ class FullStorageManager(StorageManager):
         self.videos.add(target)
     
     def put_many(self, filenames, targets, args=DEFAULT_ARGS, in_extern_storage = False):
+        start_time = time.time()
         put_args = []
         db_path = os.path.join(self.basedir, self.db_name)
         if in_extern_storage: 
@@ -115,13 +118,25 @@ class FullStorageManager(StorageManager):
         else:
             physical_dir = self.basedir
         for i, name in enumerate(filenames):
-            put_arg = (db_path, name, targets[i], physical_dir, self.content_splitter, self.content_tagger, 0, False, args)
+            if self.content_tagger == None:
+                tagger = name
+            else:
+                tagger = self.content_tagger
+            put_arg = (db_path, name, targets[i], physical_dir, self.content_splitter, tagger, 0, False, args, True)
             put_args.append(put_arg)
             self.delete(targets[i])
+        
+        logs = None
         with Pool(processes = args['num_processes']) as pool:
-            pool.starmap(write_video_single, put_args)
+            results = pool.starmap(write_video_single, put_args)
+            logs = [result[1] for result in results]
+
         for target in targets:
             self.videos.add(target)
+
+        times = paralleL_log_reduce(logs, start_time)
+        return times
+        
 
     def put_fixed(self, filename, target, crops, batch = False, args=DEFAULT_ARGS, in_extern_storage = False):
         self.delete(target)
@@ -167,4 +182,3 @@ class FullStorageManager(StorageManager):
 
         return size
     
-    #TODO: We should make the storage distributed instead

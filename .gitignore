@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# vscode config
+.vscode/
+
 # Distribution / packaging
 .Python
 build/
@@ -109,11 +112,15 @@ venv.bak/
 # JetBrains config file
 .idea
 
+# Visual Studio Code config file
+.vscode
+
 # video files
 videos/**
 *.mp4
 *.avi
 *.db
+train/
 
 #Model
 ssd_mobilenet_v1_coco_2017_11_17/**

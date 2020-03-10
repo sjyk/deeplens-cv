@@ -1,4 +1,4 @@
-from deeplens.full_manager.full_video_processing import CropSplitter
+from deeplens.full_manager.full_video_processing import *
 from deeplens.struct import *
 from deeplens.tracking.background import FixedCameraBGFGSegmenter
 from deeplens.utils import *
@@ -9,10 +9,12 @@ import os
 import shutil
 import time
 
+print('test')
 if os.path.exists('./videos'):
     shutil.rmtree('./videos')
 manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=5), CropSplitter(), 'videos')
 start = time.time()
-manager.put('./cut2.mp4', 'test', parallel = True, args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': -1, 'batch_size': 20, 'num_processes': 4})
+manager.put('./BigBuckBunny.mp4', 'test', parallel = True, args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': -1, 'batch_size': 20, 'num_processes': 8})
+print('test2')
 end = time.time()
 print(end - start)

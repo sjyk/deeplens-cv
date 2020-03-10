@@ -228,7 +228,7 @@ def write_video_single(conn, \
                         log = False):
     start = time.time()
     if type(map) == str:
-        map = YoutubeTagger(map, './train/processed_yt_bb_detection_train.csv')
+        map = YoutubeTagger(map, './deeplens/media/train/processed_yt_bb_detection_train.csv')
     if type(conn) == str:
         conn = sqlite3.Connection(conn)
     batch_size = args['batch_size']
@@ -534,6 +534,12 @@ def query_background(conn, video_name, background_id=None, clip_id=None):
 def query_label(conn, label, video_name):
     c = conn.cursor()
     c.execute("SELECT * FROM label WHERE label = '%s' AND video_name = '%s'" % (label, video_name))
+    result = c.fetchall()
+    return result
+
+def query_everything(conn, video_name):
+    c = conn.cursor()
+    c.execute("SELECT * FROM label WHERE video_name = '%s'" % video_name)
     result = c.fetchall()
     return result
 

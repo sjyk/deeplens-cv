@@ -322,7 +322,7 @@ def write_video_parrallel(db_path, \
                         target,
                         dir, \
                         splitter, \
-                        map = None, \
+                        mapper, \
                         scratch = DEFAULT_TEMP, \
                         args={}):
     '''
@@ -347,10 +347,6 @@ def write_video_parrallel(db_path, \
         vid_path = temp_path %i
         if not os.path.exists(vid_path):
             break
-        if map == None:
-            mapper = video_file
-        else:
-            mapper = map
         single_args = (db_path, vid_path, target, dir, splitter, mapper, start_time, False, args)
         duration = get_duration(vid_path)
         duration = int(duration*fps)

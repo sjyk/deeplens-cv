@@ -99,13 +99,17 @@ class FullStorageManager(StorageManager):
             stream = True
         else:
             stream = False
+        if self.content_tagger == None:
+                tagger = filename
+        else:
+            tagger = self.content_tagger
         
         if parallel and not stream:
             db_path = os.path.join(self.basedir, self.db_name)
-            write_video_parrallel(db_path, filename, target, physical_dir, self.content_splitter, self.content_tagger, args=args)
+            write_video_parrallel(db_path, filename, target, physical_dir, self.content_splitter, tagger, args=args)
         
         else:
-            write_video_single(self.conn, filename, target, physical_dir, self.content_splitter, self.content_tagger, stream = stream, args=args)
+            write_video_single(self.conn, filename, target, physical_dir, self.content_splitter, tagger, stream = stream, args=args)
         
         self.videos.add(target)
     

@@ -6,7 +6,7 @@ condition.py defines a implemented Condition class and related functions
 
 """
 
-from deeplens.full_manager.full_videoio import query_label, query_clip
+from deeplens.full_manager.full_videoio import query_label, query_clip, query_everything
 from deeplens.struct import Box
 
 #condition is a predicate push down condition
@@ -14,8 +14,8 @@ from deeplens.struct import Box
 class Condition():
 
 	def __init__(self,
-				 label,      # label is a string
-				 crop=None,  # crop is a Box object
+				 label=None,       # label is a string
+				 crop=None,        # crop is a Box object
 				 resolution=1.0,
 				 sampling=1.0,
 				 custom_filter=None):
@@ -26,7 +26,18 @@ class Condition():
 		self.sampling = sampling
 		self.custom_filter = custom_filter
 
+	def query_everything(self, conn, video_name, backgorund = False):
+		if backgorund:
+			raise NotImplementedError("Not supported yet. Please set background = True!")
+		clips = query_everything(conn, video_name)
+		clip_ids = [label[1] for label in clips]
+		return clip_ids
+
+
 	def query(self, conn, video_name):
+		if self.label == None:
+			return self.query_everything(conn, video_name)
+
 		clips = query_label(conn, self.label, video_name)
 		clip_ids = [label[1] for label in clips]
 

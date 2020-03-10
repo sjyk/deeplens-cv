@@ -523,7 +523,11 @@ def query_label(conn, label, video_name):
     result = c.fetchall()
     return result
 
-# def query_
+def query_everything(conn, video_name):
+    c = conn.cursor()
+    c.execute("SELECT * FROM label WHERE video_name = '%s'" % video_name)
+    result = c.fetchall()
+    return result
 
 def query(conn, video_name, clip_condition):
     """

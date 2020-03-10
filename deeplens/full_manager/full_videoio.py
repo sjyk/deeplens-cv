@@ -304,6 +304,7 @@ def write_video_single(conn, \
     end = time.time()
     log_info = {}
     log_info['video_id'] = target
+    log_info['video_file'] = video_file
     log_info['duration'] = end - start
     log_info['end_time'] = end
     logging.info(json.dumps(log_info))
@@ -311,7 +312,7 @@ def write_video_single(conn, \
         log_file = get_rnd_strng() + '.txt'
         log_file = os.path.join(dir, log_file)
         with open(log_file, 'w') as f:
-            json.dump(log_file, f)
+            json.dump(log_info, f)
         return vid_files, log_file
     # conn.close()  # don't close the database before we finish get()!
     return vid_files

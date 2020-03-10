@@ -20,7 +20,7 @@ import sqlite3
 import logging
 from multiprocessing import Pool
 import time
-from deeplens.utils.parallel_log_reduce import paralleL_log_reduce
+from deeplens.utils.parallel_log_reduce import *
 
 DEFAULT_ARGS = {'encoding': MP4V, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 20, 'num_processes': 4}
 
@@ -109,7 +109,7 @@ class FullStorageManager(StorageManager):
         
         self.videos.add(target)
     
-    def put_many(self, filenames, targets, args=DEFAULT_ARGS, in_extern_storage = False):
+    def put_many(self, filenames, targets, args=DEFAULT_ARGS, in_extern_storage = False, log = False):
         start_time = time.time()
         put_args = []
         db_path = os.path.join(self.basedir, self.db_name)
@@ -122,7 +122,7 @@ class FullStorageManager(StorageManager):
                 tagger = name
             else:
                 tagger = self.content_tagger
-            put_arg = (db_path, name, targets[i], physical_dir, self.content_splitter, tagger, 0, False, args, True)
+            put_arg = (db_path, name, targets[i], physical_dir, self.content_splitter, tagger, 0, False, args, log)
             put_args.append(put_arg)
             self.delete(targets[i])
         
@@ -135,6 +135,7 @@ class FullStorageManager(StorageManager):
             self.videos.add(target)
 
         times = paralleL_log_reduce(logs, start_time)
+        #paralleL_log_delete(logs) -> currently not deleting logs for safety
         return times
         
 

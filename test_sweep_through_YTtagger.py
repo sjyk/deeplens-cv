@@ -75,6 +75,13 @@ def runFullSequential(src, cleanUp = False):
     put_time = timer() - now
     logrecord('full', ({'file': src}), 'put', str({'elapsed': put_time}), 's')
 
+    clips = manager.get(os.path.basename(src), Condition())
+    pipelines = []
+    for c in clips:
+        pipelines.append(c[KeyPoints()])
+    result = counts(pipelines, ['one'], stats=True)
+    logrecord('full', ({'file': src}), 'get', str(result), 's')
+
 def runFullPutMany(src_list, cleanUp = False):
     if cleanUp:
         if os.path.exists('./videos_full'):

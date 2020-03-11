@@ -232,6 +232,9 @@ def write_video_single(conn, \
     if type(conn) == str:
         conn = sqlite3.Connection(conn)
     batch_size = args['batch_size']
+    if not os.path.isfile(video_file):
+        print("missing file", video_file)
+        return None
     v = VideoStream(video_file, args['limit'])
     v = iter(v[map])
     if stream:

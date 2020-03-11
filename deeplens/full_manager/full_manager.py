@@ -130,10 +130,13 @@ class FullStorageManager(StorageManager):
             put_args.append(put_arg)
             self.delete(targets[i])
         
-        logs = None
+        logs = []
         with Pool(processes = args['num_processes']) as pool:
             results = pool.starmap(write_video_single, put_args)
-            logs = [result[1] for result in results]
+            for result in results:
+                if result == None:
+                    continue
+                logs.append(result[1])
 
         for target in targets:
             self.videos.add(target)

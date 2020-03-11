@@ -57,12 +57,13 @@ def runFull(src, cleanUp = False):
     put_time = timer() - now
     logrecord('full', ({'file': src}), 'put', str({'elapsed': put_time}), 's')
 
-    clips = manager.get(os.path.basename(src), Condition())
-    pipelines = []
-    for c in clips:
-        pipelines.append(c[KeyPoints()])
-    result = counts(pipelines, ['one'], stats=True)
-    logrecord('full', ({'file': src}), 'get', str(result), 's')
+    # Don't call get() for now
+    # clips = manager.get(os.path.basename(src), Condition())
+    # pipelines = []
+    # for c in clips:
+    #     pipelines.append(c[KeyPoints()])
+    # result = counts(pipelines, ['one'], stats=True)
+    # logrecord('full', ({'file': src}), 'get', str(result), 's')
 
 def runFullSequential(src, cleanUp = False):
     if cleanUp:
@@ -96,13 +97,14 @@ def runFullPutMany(src_list, cleanUp = False):
     for i, log in enumerate(logs):
         logrecord('fullMany', i, 'put', str({'elapsed': log}), 's')
 
-    for src in src_list:
-        clips = manager.get(os.path.basename(src), Condition())
-        pipelines = []
-        for c in clips:
-            pipelines.append(c[KeyPoints()])
-        result = counts(pipelines, ['one'], stats=True)
-        logrecord('full', ({'file': src}), 'get', str(result), 's')
+    # Don't call get() for now
+    # for src in src_list:
+    #     clips = manager.get(os.path.basename(src), Condition())
+    #     pipelines = []
+    #     for c in clips:
+    #         pipelines.append(c[KeyPoints()])
+    #     result = counts(pipelines, ['one'], stats=True)
+    #     logrecord('full', ({'file': src}), 'get', str(result), 's')
 
 
 df = pd.read_csv('./deeplens/media/train/processed_yt_bb_detection_train.csv', sep=',',
@@ -143,46 +145,19 @@ youtube_ids2=list(dict.fromkeys(youtube_ids))
 # for item in youtube_ids2:
 #     try:
 #         video_path="./deeplens/media/train/"+item+".mp4"
-#         runFull(video_path, cleanUp=False)
+#         runFullSequential(video_path, cleanUp=False)
 #     except:
 #         print("missing file for full", item)
-# print("Total time for full with parallelism within a video (cleanUp = False):", timer() - total_start)
+# print("Total time for full without parallelism within a video (cleanUp = False):", timer() - total_start)
 #
 # total_start = timer()
 # for item in youtube_ids2:
 #     try:
 #         video_path="./deeplens/media/train/"+item+".mp4"
-#         runFull(video_path, cleanUp=True)
+#         runFullSequential(video_path, cleanUp=True)
 #     except:
 #         print("missing file for full", item)
-# print("Total time for full with parallelism within a video (cleanUp = True):", timer() - total_start)
-
-# total_start = timer()
-# runFullPutMany(["./deeplens/media/train/"+item+".mp4" for item in youtube_ids2], cleanUp=False)
-# print("Total time for full with parallelism across videos (cleanUp = False):", timer() - total_start)
-#
-#
-# total_start = timer()
-# runFullPutMany(["./deeplens/media/train/"+item+".mp4" for item in youtube_ids2], cleanUp=True)
-# print("Total time for full with parallelism across videos (cleanUp = True):", timer() - total_start)
-
-total_start = timer()
-for item in youtube_ids2:
-    try:
-        video_path="./deeplens/media/train/"+item+".mp4"
-        runFullSequential(video_path, cleanUp=False)
-    except:
-        print("missing file for full", item)
-print("Total time for full without parallelism within a video (cleanUp = False):", timer() - total_start)
-
-total_start = timer()
-for item in youtube_ids2:
-    try:
-        video_path="./deeplens/media/train/"+item+".mp4"
-        runFullSequential(video_path, cleanUp=True)
-    except:
-        print("missing file for full", item)
-print("Total time for full without parallelism within a video (cleanUp = True):", timer() - total_start)
+# print("Total time for full without parallelism within a video (cleanUp = True):", timer() - total_start)
 
 total_start = timer()
 runFullPutMany(["./deeplens/media/train/"+item+".mp4" for item in youtube_ids2], cleanUp=False)
@@ -192,3 +167,21 @@ print("Total time for full with parallelism across videos (cleanUp = False):", t
 total_start = timer()
 runFullPutMany(["./deeplens/media/train/"+item+".mp4" for item in youtube_ids2], cleanUp=True)
 print("Total time for full with parallelism across videos (cleanUp = True):", timer() - total_start)
+
+total_start = timer()
+for item in youtube_ids2:
+    try:
+        video_path="./deeplens/media/train/"+item+".mp4"
+        runFull(video_path, cleanUp=False)
+    except:
+        print("missing file for full", item)
+print("Total time for full with parallelism within a video (cleanUp = False):", timer() - total_start)
+
+total_start = timer()
+for item in youtube_ids2:
+    try:
+        video_path="./deeplens/media/train/"+item+".mp4"
+        runFull(video_path, cleanUp=True)
+    except:
+        print("missing file for full", item)
+print("Total time for full with parallelism within a video (cleanUp = True):", timer() - total_start)

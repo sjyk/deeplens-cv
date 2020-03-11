@@ -132,23 +132,23 @@ youtube_ids2=list(dict.fromkeys(youtube_ids))
 #         print("missing file for simple", item)
 # print("Total time for simple (cleanUp = True):", timer() - total_start)
 #
-total_start = timer()
-for item in youtube_ids2:
-    try:
-        video_path="./deeplens/media/train/"+item+".mp4"
-        runFull(video_path, cleanUp=False)
-    except:
-        print("missing file for full", item)
-print("Total time for full with parallelism within a video (cleanUp = False):", timer() - total_start)
-
-total_start = timer()
-for item in youtube_ids2:
-    try:
-        video_path="./deeplens/media/train/"+item+".mp4"
-        runFull(video_path, cleanUp=True)
-    except:
-        print("missing file for full", item)
-print("Total time for full with parallelism within a video (cleanUp = True):", timer() - total_start)
+# total_start = timer()
+# for item in youtube_ids2:
+#     try:
+#         video_path="./deeplens/media/train/"+item+".mp4"
+#         runFull(video_path, cleanUp=False)
+#     except:
+#         print("missing file for full", item)
+# print("Total time for full with parallelism within a video (cleanUp = False):", timer() - total_start)
+#
+# total_start = timer()
+# for item in youtube_ids2:
+#     try:
+#         video_path="./deeplens/media/train/"+item+".mp4"
+#         runFull(video_path, cleanUp=True)
+#     except:
+#         print("missing file for full", item)
+# print("Total time for full with parallelism within a video (cleanUp = True):", timer() - total_start)
 
 # total_start = timer()
 # runFullPutMany(["./deeplens/media/train/"+item+".mp4" for item in youtube_ids2], cleanUp=False)

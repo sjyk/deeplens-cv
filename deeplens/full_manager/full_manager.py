@@ -109,7 +109,7 @@ class FullStorageManager(StorageManager):
             write_video_parrallel(db_path, filename, target, physical_dir, self.content_splitter, tagger, args=args)
         
         else:
-            write_video_single(self.conn, filename, target, physical_dir, self.content_splitter, tagger, stream = stream, args=args)
+            write_video_single(self.conn, filename, target, physical_dir, self.content_splitter, tagger, stream = stream, args=args, writeDB=True)
         
         self.videos.add(target)
     
@@ -126,7 +126,7 @@ class FullStorageManager(StorageManager):
                 tagger = name
             else:
                 tagger = self.content_tagger
-            put_arg = (db_path, name, targets[i], physical_dir, self.content_splitter, tagger, 0, False, args, log)
+            put_arg = (db_path, name, targets[i], physical_dir, self.content_splitter, tagger, 0, False, args, log, False)
             put_args.append(put_arg)
             self.delete(targets[i])
         

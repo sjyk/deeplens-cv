@@ -225,7 +225,8 @@ def write_video_single(conn, \
                         start_time = 0, \
                         stream = False, \
                         args={}, 
-                        log = False):
+                        log = False,
+                        writeDB = True):
     start = time.time()
     if type(map) == str:
         map = YoutubeTagger(map, './deeplens/media/train/processed_yt_bb_detection_train.csv')
@@ -293,15 +294,17 @@ def write_video_single(conn, \
             _, file_names, time_block = _write_video_batch(v_behind, target, all_crops, args['encoding'], batch_size, dir, release = True)           
             if time_block == 0:
                 break
-            ids = _new_headers_batch(conn, all_crops, target, file_names,
-                            full_width, full_height, start_time, start_time + time_block)
+            if writeDB:
+                ids = _new_headers_batch(conn, all_crops, target, file_names,
+                                full_width, full_height, start_time, start_time + time_block)
             start_time = start_time + time_block
             vid_files.extend(file_names)
             all_crops =[]
         all_crops.append(crops)
         i +=1
-    _, file_names, time_block = _write_video_batch(v_behind, target, all_crops, args['encoding'], batch_size, dir, release = True)           
-    ids = _new_headers_batch(conn, all_crops, target, file_names,
+    _, file_names, time_block = _write_video_batch(v_behind, target, all_crops, args['encoding'], batch_size, dir, release = True)
+    if writeDB:
+        ids = _new_headers_batch(conn, all_crops, target, file_names,
                     full_width, full_height, start_time, start_time + time_block)
     vid_files.extend(file_names)
     end = time.time()
@@ -350,7 +353,7 @@ def write_video_parrallel(db_path, \
         vid_path = temp_path %i
         if not os.path.exists(vid_path):
             break
-        single_args = (db_path, vid_path, target, dir, splitter, mapper, start_time, False, args)
+        single_args = (db_path, vid_path, target, dir, splitter, mapper, start_time, False, args, False)
         duration = get_duration(vid_path)
         duration = int(duration*fps)
         start_time += duration

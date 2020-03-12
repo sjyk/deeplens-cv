@@ -107,7 +107,7 @@ def runFullPutMany(src_list, cleanUp = False):
     #     logrecord('full', ({'file': src}), 'get', str(result), 's')
 
 
-df = pd.read_csv('./deeplens/media/train/bbox_sizes.csv', sep=',',
+df = pd.read_csv('./deeplens/media/train/processed_yt_bb_detection_train.csv', sep=',',
                  dtype={'youtube_id': str})
 youtube_ids=df['youtube_id']
 youtube_ids2=list(dict.fromkeys(youtube_ids))

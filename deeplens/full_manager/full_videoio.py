@@ -223,8 +223,7 @@ def write_video_single(conn, \
                         start_time = 0, \
                         stream = False, \
                         args={}, 
-                        log = False,
-                        writeDB = True):
+                        log = False):
     start = time.time()
     if not os.path.isfile(video_file):
         print("missing file", video_file)
@@ -292,18 +291,16 @@ def write_video_single(conn, \
             _, file_names, time_block = _write_video_batch(v_behind, target, all_crops, args['encoding'], batch_size, dir, release = True)           
             if time_block == 0:
                 break
-            if writeDB:
-                ids = _new_headers_batch(conn, all_crops, target, file_names,
-                                full_width, full_height, start_time, start_time + time_block)
+            ids = _new_headers_batch(conn, all_crops, target, file_names,
+                            full_width, full_height, start_time, start_time + time_block)
             start_time = start_time + time_block
             vid_files.extend(file_names)
             all_crops =[]
         all_crops.append(crops)
         i +=1
     _, file_names, time_block = _write_video_batch(v_behind, target, all_crops, args['encoding'], batch_size, dir, release = True)
-    if writeDB:
-        ids = _new_headers_batch(conn, all_crops, target, file_names,
-                    full_width, full_height, start_time, start_time + time_block)
+    ids = _new_headers_batch(conn, all_crops, target, file_names,
+                full_width, full_height, start_time, start_time + time_block)
     vid_files.extend(file_names)
     end = time.time()
     log_info = {}
@@ -351,7 +348,7 @@ def write_video_parrallel(db_path, \
         vid_path = temp_path %i
         if not os.path.exists(vid_path):
             break
-        single_args = (db_path, vid_path, target, dir, splitter, mapper, start_time, False, args, False)
+        single_args = (db_path, vid_path, target, dir, splitter, mapper, start_time, False, args)
         duration = get_duration(vid_path)
         duration = int(duration*fps)
         start_time += duration

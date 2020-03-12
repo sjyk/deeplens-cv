@@ -166,17 +166,15 @@ def _write_video_batch(vstream, \
         i = 1
         for cr in crops:
             fr = crop_box(frame, cr['bb'])
-            #print(fr.shape)
-            #print(i)
             out_vids[i].write(fr)
             i +=1
         index += 1
-        if index >= num_batch*batch_size:
+        if index >= num_batch*batch_size :
             break
-        if index >= batch_size:
+        if index % batch_size == 0:
             j += 1
             crops = all_crops[j]
-            break
+
     if not release:
         if len(file_names) != 0:
             return (out_vids, file_names, index)

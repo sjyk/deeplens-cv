@@ -230,7 +230,10 @@ class CropUnionSplitter(MapJoin):
         # Check for interaction between boxes of the same label
         intersect = float(bb1.intersect_area(bb2))
         union = float(bb1.union_area(bb2))
-        iou = intersect/union
+        if union != 0:
+            iou = intersect/union
+        else:
+            iou = 0
         # Check that the boxes are very close to the same size
         x_diff = abs(bb1.x1 - bb1.x0 - (bb2.x1 - bb2.x0))
         x_diff = x_diff/float(bb1.x1 - bb1.x0)

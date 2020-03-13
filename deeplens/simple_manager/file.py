@@ -169,7 +169,7 @@ def build_fmt_file(header_data, \
 		header_name = get_rnd_strng()
 
 	header = stack_block([file],
-						 add_ext(os.path.join(path, header_name), '.head'), 
+						 add_ext(header_name, '.head'),
 						 compression=header_cmp)	
 
 	return ncpy_stack_block([video, header], output)

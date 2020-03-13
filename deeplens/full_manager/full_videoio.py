@@ -166,17 +166,15 @@ def _write_video_batch(vstream, \
         i = 1
         for cr in crops:
             fr = crop_box(frame, cr['bb'])
-            #print(fr.shape)
-            #print(i)
             out_vids[i].write(fr)
             i +=1
         index += 1
-        if index >= num_batch*batch_size:
+        if index >= num_batch*batch_size :
             break
-        if index >= batch_size:
+        if index % batch_size == 0:
             j += 1
             crops = all_crops[j]
-            break
+
     if not release:
         if len(file_names) != 0:
             return (out_vids, file_names, index)
@@ -227,6 +225,9 @@ def write_video_single(conn, \
                         args={}, 
                         log = False):
     start = time.time()
+    if not os.path.isfile(video_file):
+        print("missing file", video_file)
+        return None
     if type(map) == str:
         map = YoutubeTagger(map, './deeplens/media/train/processed_yt_bb_detection_train.csv')
     if type(conn) == str:
@@ -297,13 +298,14 @@ def write_video_single(conn, \
             all_crops =[]
         all_crops.append(crops)
         i +=1
-    _, file_names, time_block = _write_video_batch(v_behind, target, all_crops, args['encoding'], batch_size, dir, release = True)           
+    _, file_names, time_block = _write_video_batch(v_behind, target, all_crops, args['encoding'], batch_size, dir, release = True)
     ids = _new_headers_batch(conn, all_crops, target, file_names,
-                    full_width, full_height, start_time, start_time + time_block)
+                full_width, full_height, start_time, start_time + time_block)
     vid_files.extend(file_names)
     end = time.time()
     log_info = {}
     log_info['video_id'] = target
+    log_info['video_file'] = video_file
     log_info['duration'] = end - start
     log_info['end_time'] = end
     logging.info(json.dumps(log_info))
@@ -311,7 +313,7 @@ def write_video_single(conn, \
         log_file = get_rnd_strng() + '.txt'
         log_file = os.path.join(dir, log_file)
         with open(log_file, 'w') as f:
-            json.dump(log_file, f)
+            json.dump(log_info, f)
         return vid_files, log_file
     # conn.close()  # don't close the database before we finish get()!
     return vid_files
@@ -321,7 +323,7 @@ def write_video_parrallel(db_path, \
                         target,
                         dir, \
                         splitter, \
-                        map = None, \
+                        mapper, \
                         scratch = DEFAULT_TEMP, \
                         args={}):
     '''
@@ -346,10 +348,6 @@ def write_video_parrallel(db_path, \
         vid_path = temp_path %i
         if not os.path.exists(vid_path):
             break
-        if map == None:
-            mapper = video_file
-        else:
-            mapper = map
         single_args = (db_path, vid_path, target, dir, splitter, mapper, start_time, False, args)
         duration = get_duration(vid_path)
         duration = int(duration*fps)

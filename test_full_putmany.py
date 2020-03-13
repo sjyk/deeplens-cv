@@ -34,7 +34,7 @@ def runSimple(src, cleanUp = False):
 
     manager = SimpleStorageManager('videos_simple')
     now = timer()
-    manager.put(src, os.path.basename(src), args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': -1, 'batch_size': 50})
+    manager.put(src, os.path.basename(src), args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': -1, 'batch_size': 30})
     put_time = timer() - now
     logrecord('simple', ({'file': src}), 'put', str({'elapsed': put_time}), 's')
 
@@ -53,7 +53,7 @@ def runFull(src, cleanUp = False):
 
     manager = FullStorageManager(None, CropSplitter(), 'videos_full')
     now = timer()
-    manager.put(src, os.path.basename(src), parallel = True, args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': -1, 'batch_size': 50, 'num_processes': os.cpu_count()})
+    manager.put(src, os.path.basename(src), parallel = True, args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': -1, 'batch_size': 30, 'num_processes': os.cpu_count()})
     put_time = timer() - now
     logrecord('full', ({'file': src}), 'put', str({'elapsed': put_time}), 's')
 
@@ -72,7 +72,7 @@ def runFullSequential(src, cleanUp = False):
 
     manager = FullStorageManager(None, CropSplitter(), 'videos_full')
     now = timer()
-    manager.put(src, os.path.basename(src), parallel = False, args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': -1, 'batch_size': 50, 'num_processes': os.cpu_count()})
+    manager.put(src, os.path.basename(src), parallel = False, args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': -1, 'batch_size': 30, 'num_processes': os.cpu_count()})
     put_time = timer() - now
     logrecord('full', ({'file': src}), 'put', str({'elapsed': put_time}), 's')
 
@@ -91,7 +91,7 @@ def runFullPutMany(src_list, cleanUp = False):
     manager = FullStorageManager(None, CropSplitter(), 'videos_full')
     now = timer()
     targets = [os.path.basename(src) for src in src_list]
-    logs = manager.put_many(src_list, targets, log = True, args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': -1, 'batch_size': 50, 'num_processes': os.cpu_count()})
+    logs = manager.put_many(src_list, targets, log = True, args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': -1, 'batch_size': 30, 'num_processes': os.cpu_count()})
     put_time = timer() - now
     logrecord('full', ({'file': src_list}), 'put', str({'elapsed': put_time}), 's')
     for i, log in enumerate(logs):
@@ -113,75 +113,7 @@ youtube_ids=df['youtube_id']
 youtube_ids2=list(dict.fromkeys(youtube_ids))
 
 
-# print("Number of CPUs: ", os.cpu_count())
-# total_start = timer()
-# for item in youtube_ids2:
-#     try:
-#         video_path="./deeplens/media/train/"+item+".mp4"
-#         runNaive(video_path)
-#     except:
-#         print("missing file for naive", item)
-# print("Total time for naive:", timer() - total_start)
-#
-# total_start = timer()
-# for item in youtube_ids2:
-#     try:
-#         video_path="./deeplens/media/train/"+item+".mp4"
-#         runSimple(video_path, cleanUp=False)
-#     except:
-#         print("missing file for simple", item)
-# print("Total time for simple (cleanUp = False):", timer() - total_start)
-#
-# total_start = timer()
-# for item in youtube_ids2:
-#     try:
-#         video_path="./deeplens/media/train/"+item+".mp4"
-#         runSimple(video_path, cleanUp=True)
-#     except:
-#         print("missing file for simple", item)
-# print("Total time for simple (cleanUp = True):", timer() - total_start)
-#
-# total_start = timer()
-# for item in youtube_ids2:
-#     try:
-#         video_path="./deeplens/media/train/"+item+".mp4"
-#         runFullSequential(video_path, cleanUp=False)
-#     except:
-#         print("missing file for full", item)
-# print("Total time for full without parallelism within a video (cleanUp = False):", timer() - total_start)
-#
-# total_start = timer()
-# for item in youtube_ids2:
-#     try:
-#         video_path="./deeplens/media/train/"+item+".mp4"
-#         runFullSequential(video_path, cleanUp=True)
-#     except:
-#         print("missing file for full", item)
-# print("Total time for full without parallelism within a video (cleanUp = True):", timer() - total_start)
 
 total_start = timer()
 runFullPutMany(["./deeplens/media/train/"+item+".mp4" for item in youtube_ids2], cleanUp=False)
 print("Total time for full with parallelism across videos (cleanUp = False):", timer() - total_start)
-
-
-total_start = timer()
-runFullPutMany(["./deeplens/media/train/"+item+".mp4" for item in youtube_ids2], cleanUp=True)
-print("Total time for full with parallelism across videos (cleanUp = True):", timer() - total_start)
-
-total_start = timer()
-for item in youtube_ids2:
-    try:
-        video_path="./deeplens/media/train/"+item+".mp4"
-        runFull(video_path, cleanUp=False)
-    except:
-        print("missing file for full", item)
-print("Total time for full with parallelism within a video (cleanUp = False):", timer() - total_start)
-
-total_start = timer()
-for item in youtube_ids2:
-    try:
-        video_path="./deeplens/media/train/"+item+".mp4"
-        runFull(video_path, cleanUp=True)
-    except:
-        print("missing file for full", item)
-print("Total time for full with parallelism within a video (cleanUp = True):", timer() - total_start)

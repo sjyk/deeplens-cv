@@ -20,7 +20,7 @@ import sqlite3
 import logging
 from multiprocessing import Pool
 import time
-from deeplens.utils.parallel_log_reduce import paralleL_log_reduce
+from deeplens.utils.parallel_log_reduce import *
 
 DEFAULT_ARGS = {'encoding': MP4V, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 20, 'num_processes': 4}
 
@@ -99,17 +99,21 @@ class FullStorageManager(StorageManager):
             stream = True
         else:
             stream = False
+        if self.content_tagger == None:
+                tagger = filename
+        else:
+            tagger = self.content_tagger
         
         if parallel and not stream:
             db_path = os.path.join(self.basedir, self.db_name)
-            write_video_parrallel(db_path, filename, target, physical_dir, self.content_splitter, self.content_tagger, args=args)
+            write_video_parrallel(db_path, filename, target, physical_dir, self.content_splitter, tagger, args=args)
         
         else:
-            write_video_single(self.conn, filename, target, physical_dir, self.content_splitter, self.content_tagger, stream = stream, args=args)
+            write_video_single(self.conn, filename, target, physical_dir, self.content_splitter, tagger, stream = stream, args=args)
         
         self.videos.add(target)
     
-    def put_many(self, filenames, targets, args=DEFAULT_ARGS, in_extern_storage = False):
+    def put_many(self, filenames, targets, args=DEFAULT_ARGS, in_extern_storage = False, log = False):
         start_time = time.time()
         put_args = []
         db_path = os.path.join(self.basedir, self.db_name)
@@ -122,19 +126,23 @@ class FullStorageManager(StorageManager):
                 tagger = name
             else:
                 tagger = self.content_tagger
-            put_arg = (db_path, name, targets[i], physical_dir, self.content_splitter, tagger, 0, False, args, True)
+            put_arg = (db_path, name, targets[i], physical_dir, self.content_splitter, tagger, 0, False, args, log)
             put_args.append(put_arg)
             self.delete(targets[i])
         
-        logs = None
+        logs = []
         with Pool(processes = args['num_processes']) as pool:
             results = pool.starmap(write_video_single, put_args)
-            logs = [result[1] for result in results]
+            for result in results:
+                if result == None:
+                    continue
+                logs.append(result[1])
 
         for target in targets:
             self.videos.add(target)
 
         times = paralleL_log_reduce(logs, start_time)
+        #paralleL_log_delete(logs) -> currently not deleting logs for safety
         return times
         
 

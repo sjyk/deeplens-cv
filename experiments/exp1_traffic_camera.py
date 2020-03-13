@@ -30,7 +30,7 @@ def runNaive(src, tot=1000, sel=0.1):
 	sel = sel/2
 	region = Box(200,550,350,750)
 	pipelines = c[Cut(tot//2-int(tot*sel),tot//2+int(tot*sel))][KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)]
-	result = count(pipelines, ['one'], stats=True)[1]['elapsed']
+	result = count(pipelines, ['one'], stats=True)
 
 	logrecord('naive',({'size': tot, 'sel': sel, 'file': src}), 'get', str(result), 's')
 
@@ -40,7 +40,10 @@ def runSimple(src, tot=1000, sel=0.1):
 	cleanUp()
 
 	manager = SimpleStorageManager('videos')
-	manager.put(src, 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': 20})
+	now = timer()
+	manager.put(src, 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': 20, 'num_processes': 4})
+	put_time = timer() - now
+	print("Put time for simple:", put_time)
 
 	region = Box(200,550,350,750)
 
@@ -51,7 +54,7 @@ def runSimple(src, tot=1000, sel=0.1):
 	for c in clips:
 		pipelines.append(c[KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)])
 
-	result = counts(pipelines, ['one'], stats=True)[1]['elapsed']
+	result = counts(pipelines, ['one'], stats=True)
 
 	logrecord('simple',({'size': tot, 'sel': sel, 'file': src}), 'get', str(result), 's')
 
@@ -60,8 +63,11 @@ def runSimple(src, tot=1000, sel=0.1):
 def runFull(src, tot=1000, sel=0.1):
 	cleanUp()
 
-	manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=100), CropSplitter(), 'videos')
-	manager.put(src, 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': 100})
+	manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=20), CropSplitter(), 'videos')
+	now = timer()
+	manager.put(src, 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': 20, 'num_processes': 4})
+	put_time = timer() - now
+	print("Put time for simple:", put_time)
 
 	region = Box(200, 550, 350, 750)
 	sel = sel/2
@@ -72,7 +78,7 @@ def runFull(src, tot=1000, sel=0.1):
 	for c in clips:
 		pipelines.append(c[KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)])
 
-	result = counts(pipelines, ['one'], stats=True)[1]['elapsed']
+	result = counts(pipelines, ['one'], stats=True)
 
 	logrecord('full',({'size': tot, 'sel': sel, 'file': src}), 'get', str(result), 's')
 
@@ -82,8 +88,11 @@ def runFull(src, tot=1000, sel=0.1):
 def runFullOpt(src, tot=1000, sel=0.1):
 	cleanUp()
 
-	manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=100), CropSplitter(), 'videos')
-	manager.put(src, 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': 100})
+	manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=20), CropSplitter(), 'videos')
+	now = timer()
+	manager.put(src, 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': 20, 'num_processes': 4})
+	put_time = timer() - now
+	print("Put time for simple:", put_time)
 
 	region = Box(200, 550, 350, 750)
 	sel = sel/2
@@ -97,10 +106,10 @@ def runFullOpt(src, tot=1000, sel=0.1):
 		pipeline = d.optimize(pipeline)
 		pipelines.append(pipeline)
 
-	result = counts(pipelines, ['one'], stats=True)[1]['elapsed']
+	result = counts(pipelines, ['one'], stats=True)
 
 	logrecord('fullopt',({'size': tot, 'sel': sel, 'file': src}), 'get', str(result), 's')
 
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(message)s')
 do_experiments(sys.argv[1], [runNaive, runSimple, runFull, runFullOpt], 1000, range(2,10))

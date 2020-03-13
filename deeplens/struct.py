@@ -95,7 +95,7 @@ class VideoStream():
 
 			
 		else:
-			self.cap.release()
+			# self.cap.release()  # commented out due to CorruptedOrMissingVideo error
 			self.cap = None
 			raise StopIteration("Iterator is closed")
 
@@ -116,6 +116,9 @@ class VideoStream():
 		else:
 			return None
 
+	def lineage(self):
+		return [self]
+
 
 class IteratorVideoStream(VideoStream):
 	"""The video stream class opens a stream of video
@@ -131,6 +134,7 @@ class IteratorVideoStream(VideoStream):
 		"""
 		self.src = src
 		self.limit = limit
+		self.global_lineage = []
 
 	def __getitem__(self, xform):
 		"""Applies a transformation to the video stream
@@ -150,11 +154,12 @@ class IteratorVideoStream(VideoStream):
 		try:
 			self.next_frame = next(self.frame_iter)
 			# set sizes after the video is opened
-			self.width = int(self.next_frame['data'].shape[0])  # float
-			self.height = int(self.next_frame['data'].shape[1])  # float
+			if 'data' in self.next_frame:
+				self.width = int(self.next_frame['data'].shape[0])  # float
+				self.height = int(self.next_frame['data'].shape[1])  # float
 
 			self.frame_count = 1
-		except:
+		except StopIteration:
 			self.next_frame = None
 
 		return self
@@ -171,6 +176,9 @@ class IteratorVideoStream(VideoStream):
 			return ret
 		else:
 			raise StopIteration("Iterator is closed")
+
+	def lineage(self):
+		return self.global_lineage
 
 
 #helper methods
@@ -382,7 +390,8 @@ class CustomTagger(Operator):
 					tag = self.tagger(self.input_iter, self.batch_size)
 			except StopIteration:
 				raise StopIteration("Iterator is closed")
-			self.tags.append(tag)
+			if tag:
+				self.tags.append(tag)
 
 		self.next_count += 1
 		return self.tags

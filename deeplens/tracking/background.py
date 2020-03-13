@@ -63,10 +63,12 @@ class FixedCameraBGFGSegmenter(object):
 		#print(np.max(dynamic_mask))
 
 		try:
-			y0 =  np.min(np.argwhere(dynamic_mask > cthresh), axis=0)[0]
-			x0 =  np.min(np.argwhere(dynamic_mask > cthresh), axis=0)[1]
-			y1 =  np.max(np.argwhere(dynamic_mask > cthresh), axis=0)[0]
-			x1 =  np.max(np.argwhere(dynamic_mask > cthresh), axis=0)[1]
+			y0 =  np.min(np.argwhere(dynamic_mask >= cthresh), axis=0)[0]
+			x0 =  np.min(np.argwhere(dynamic_mask >= cthresh), axis=0)[1]
+			y1 =  np.max(np.argwhere(dynamic_mask >= cthresh), axis=0)[0]
+			x1 =  np.max(np.argwhere(dynamic_mask >= cthresh), axis=0)[1]
+
+			#print(x0, y0, x1, y1, cthresh)
 
 			if np.abs(x0-x1) <= 0 or np.abs(y0-y1) <= 0:
 				return {}
@@ -74,6 +76,7 @@ class FixedCameraBGFGSegmenter(object):
 			#flipped axis in crop
 			if video:
 				return {'label': 'foreground', 'bb': Box(x0, y0, x1, y1)}, frames
+
 			return {'label': 'foreground', 'bb': Box(x0, y0, x1, y1)}
 
 		except:

@@ -9,7 +9,7 @@ def time_filter(start, end):
 
 	def do_filter(conn, video_name):
 		c = conn.cursor()
-		c.execute("SELECT clip_id FROM clip WHERE ((start_time >= %s AND start_time <= %s) OR (end_time >= %s AND end_time <= %s) ) AND video_name = '%s'" % (str(start),str(end), str(start),str(end), video_name))
+		c.execute("SELECT clip_id FROM clip WHERE ((start_time > %s AND start_time < %s) OR (end_time > %s AND end_time < %s) ) AND video_name = '%s'" % (str(start),str(end), str(start),str(end), video_name))
 		return [cl[0] for cl in c.fetchall()]
 
 	return do_filter
@@ -17,7 +17,7 @@ def time_filter(start, end):
 def overlap(s1,e1, s2, e2):
 	r1 = set(range(s1,e1+1))
 	r2 = set(range(s2,e2+1))
-	return (len(r1.intersection(r2)) > 0)
+	return (len(r1.intersection(r2)) > 1)
 
 
 def cleanUp():

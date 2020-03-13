@@ -86,7 +86,8 @@ class CropSplitter(MapJoin):
 
                 if 'label' not in object:
                     continue
-
+                if object['bb'].x1 - object['bb'].x0 < 10 or object['bb'].y1 - object['bb'].y0 < 10:
+                    break
                 if object['label'] in labels:
                     for i in labels[object['label']]:
                         intersect = float(object['bb'].intersect_area(crops[i]['bb']))
@@ -171,3 +172,80 @@ class CropSplitter(MapJoin):
 
                 del temp1[remove]
         return crops, (crops, labels1), True
+
+""" Creates a crop across different frames
+    data: bounding boxes across different frames
+"""
+class CropUnionSplitter(MapJoin):
+    def __init__(self):
+        super().__init__()
+        self.map_to_video = True
+
+    def initialize(self, data):
+        """
+        returns (crops, temp_data)
+        """
+        crops = self.map(data)
+        return crops, crops, False
+
+    def map(self, data):
+        """
+        Union bounding boxes to form crops for a batch of frames
+        data: bounding boxes per frame
+
+        returns temp_data
+        """ 
+        crops = []
+        index = 0
+        frame = 0
+        num_match = 0
+        for objects in data:
+            all = []
+            for object in objects:
+                if len(crops) == 0:
+                    crops.append({'bb': object['bb'], 'label': 'foreground', 'all': {}})
+                crops[0]['bb'] = crops[0]['bb'].union_box(object['bb'])
+                all.append(object)
+            if crops:
+                crops[0]['all'][frame] = all
+            frame += 1
+        return crops
+
+    def join(self, crop1, crop2):
+        """
+        Join the second map to the first if it has the objects, and almost
+        the same crop sizes.
+        Returns: (crop, temp_data, join_prev)
+        """
+        # If the two batches have different number of crops or labels
+        # we don't join the crops
+        if len(crop1) == 0 and len(crop2) == 0:
+            return (crop2, crop2, True)
+        if len(crop1) != len(crop2):
+            return (crop2, crop2, False)
+        crops = [None] * len(crop2)
+        remove = False
+        bb1 = crop1[0]['bb']
+        bb2 = crop2[0]['bb']
+        # Check for interaction between boxes of the same label
+        intersect = float(bb1.intersect_area(bb2))
+        union = float(bb1.union_area(bb2))
+        if union != 0:
+            iou = intersect/union
+        else:
+            iou = 0
+        # Check that the boxes are very close to the same size
+        x_diff = abs(bb1.x1 - bb1.x0 - (bb2.x1 - bb2.x0))
+        x_diff = x_diff/float(bb1.x1 - bb1.x0)
+        y_diff = abs(bb1.y1 - bb1.y0 - (bb2.y1 - bb2.y0))
+        y_diff = y_diff/float(bb1.y1 - bb1.y0)
+        # If all conditions are met, the boxes are joined (with translation)
+        if iou > IOU_THRESHOLD and x_diff < TRANSLATION_ERROR and y_diff < TRANSLATION_ERROR:
+            bb =  bb1.x_translate(bb2.x0 - bb1.x0)
+            bb = bb.y_translate(bb2.y0 - bb1.y0)
+            crop1[0]['all'].update(crop2[0]['all'])
+            crops[0] = {'bb':bb, 'label': 'background', 'all': crop1[0]['all']}
+            remove = True
+        if not remove:
+            return (crop2, crop2, False) # we couldn't find a matching box with the above condition
+        return crops, crops, True

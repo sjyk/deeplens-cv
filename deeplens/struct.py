@@ -181,6 +181,66 @@ class IteratorVideoStream(VideoStream):
 		return self.global_lineage
 
 
+class RawVideoStream(VideoStream):
+	"""The video stream class opens a stream of video
+	   from an iterator over frames (e.g., a sequence
+	   of png files). Compatible with opencv streams.
+	"""
+
+	def __init__(self, src, limit=-1, origin=np.array((0,0))):
+		"""Constructs a videostream object
+
+		   Input: src- iterator over frames
+				  limit- Number of frames to pull
+		"""
+		self.src = src
+		self.limit = limit
+		self.global_lineage = []
+		self.origin = origin
+
+	def __getitem__(self, xform):
+		"""Applies a transformation to the video stream
+		"""
+		return xform.apply(self)
+
+	def __iter__(self):
+		"""Constructs the iterator object and initializes
+		   the iteration state
+		"""
+
+		try:
+			self.frame_iter = iter(self.src)
+		except:
+			raise CorruptedOrMissingVideo(str(self.src) + " is corrupted or missing.")
+
+		try:
+			self.next_frame = next(self.frame_iter)
+			# set sizes after the video is opened
+			self.width = int(self.next_frame.shape[0])  # float
+			self.height = int(self.next_frame.shape[1])  # float
+
+			self.frame_count = 1
+		except StopIteration:
+			self.next_frame = None
+
+		return self
+
+	def __next__(self):
+		if self.next_frame is None:
+			raise StopIteration("Iterator is closed")
+
+		if (self.limit < 0 or self.frame_count <= self.limit):
+			ret = self.next_frame
+			self.next_frame = next(self.frame_iter)
+			self.frame_count += 1
+			return {'frame': (self.frame_count - 1), 'data': ret, 'origin': self.origin}
+		else:
+			raise StopIteration("Iterator is closed")
+
+	def lineage(self):
+		return self.global_lineage
+
+
 #helper methods
 def getFrameData(frame):
 	return frame['data']

@@ -85,7 +85,7 @@ class FullStorageManager(StorageManager):
         self.cursor.execute(sql_create_background_table)
         self.cursor.execute(sql_create_clip_table)
 
-    def put(self, filename, target, args=DEFAULT_ARGS, in_extern_storage = False, parallel = True):
+    def put(self, filename, target, args=DEFAULT_ARGS, in_extern_storage = False, parallel = False):
         """put adds a video to the storage manager from a file. It should either add
             the video to disk, or a reference in disk to deep storage.
         """
@@ -103,6 +103,10 @@ class FullStorageManager(StorageManager):
                 tagger = filename
         else:
             tagger = self.content_tagger
+
+
+        if tagger.batch_size < args['batch_size']:
+            raise ValueError("This setting may currently lead to bugs")
         
         if parallel and not stream:
             db_path = os.path.join(self.basedir, self.db_name)

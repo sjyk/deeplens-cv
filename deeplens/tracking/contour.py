@@ -33,7 +33,12 @@ class KeyPoints(Map):
 	"""
 	def map(self, data):
 		ff = data
-		gray = cv2.cvtColor(ff['data'], cv2.COLOR_BGR2GRAY)
+
+		if len(ff['data'].shape) < 3:
+			gray = ff['data']
+		else:
+			gray = cv2.cvtColor(ff['data'], cv2.COLOR_BGR2GRAY)
+
 		blurred = cv2.GaussianBlur(gray, (self.blur, self.blur), 0)
 		tight = cv2.Canny(blurred, self.edge_low, self.edge_high)
 		contours, _ = cv2.findContours(tight.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)

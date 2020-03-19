@@ -8,10 +8,13 @@ storage system.
 """
 
 from deeplens.header import *
+from deeplens.dataflow.map import Resize
 from deeplens.simple_manager.file import *
 from deeplens.utils.frame_xform import *
 from deeplens.extern.ffmpeg import *
 from deeplens.media.youtube_tagger import *
+from deeplens.struct import *
+
 import sqlite3
 import random
 
@@ -22,6 +25,7 @@ import time
 import shutil
 import logging
 import json
+import itertools
 #import threading
 #import queue
 from multiprocessing import Pool
@@ -127,6 +131,7 @@ def _write_video_batch(vstream, \
     out_vids = []
     num_batch = len(all_crops)
     crops = all_crops[0]
+
     if writers == None:
         r_name = vid_name + get_rnd_strng(64)
         for i in range(len(crops) + 1):
@@ -233,7 +238,8 @@ def write_video_single(conn, \
     if type(conn) == str:
         conn = sqlite3.Connection(conn)
     batch_size = args['batch_size']
-    v = VideoStream(video_file, args['limit'])
+
+    v = VideoStream(video_file, args['limit'])#[Resize(0.99)]
     v = iter(v[map])
     if stream:
         try:
@@ -248,7 +254,7 @@ def write_video_single(conn, \
     if stream:
         v_behind = [] # if it's a stream, we cache the buffered video instead of having a slow pointer
     else:
-        v_behind = VideoStream(video_file, args['limit'])
+        v_behind = VideoStream(video_file, args['limit'])#[Resize(0.99)]
         v_behind = iter(v_behind)
     labels = []
     vid_files = []
@@ -355,8 +361,9 @@ def write_video_parrallel(db_path, \
         single_argss.append(single_args)
         i += 1
     
-    with Pool(processes = num_processes) as pool:
-        pool.starmap(write_video_single, single_argss)
+    pool = Pool(processes=num_processes)
+    pool.starmap(write_video_single, single_argss)
+    pool.close()
     
 def write_video_fixed(conn, \
                     video_file, \
@@ -554,13 +561,37 @@ def query(conn, video_name, clip_condition):
     clip_ids = clip_condition.query(conn, video_name)
 
     video_refs = []
+    boundaries = []
     for id in clip_ids:
         clip = query_clip(conn, id, video_name)
         clip_ref = clip[0][8]
         origin = np.array((clip[0][4],clip[0][5]))
-        #print(clip[0])
-        video_refs.append(VideoStream(clip_ref,origin=origin))
+        #print(clip[0][2], clip[0][3], clip[0])
+        video_refs.append(((clip[0][2], clip[0][3]),VideoStream(clip_ref,origin=origin, offset=clip[0][2])))
 
-    return video_refs
+    video_refs.sort() #sort by clip start
+
+    if _is_contiguous(video_refs):
+        return _chain_contiguous(video_refs)
+    else:
+        return [v for _, v in video_refs]
+
+def _is_contiguous(videos, thresh=5):
+    prev = None
+    for bounds, _ in videos:
+
+        if prev is None or abs(prev - bounds[0]) < thresh:
+            prev = bounds[1]
+        else:
+            return False
+
+    return True
+
+def _chain_contiguous(videos):
+    vrefs = [v for _, v in videos]
+    return [IteratorVideoStream(itertools.chain(*vrefs))]
+
+
+
 
 

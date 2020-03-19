@@ -28,7 +28,7 @@ class VideoStream():
 	(label, box).
 	"""
 
-	def __init__(self, src, limit=-1, origin=np.array((0,0))):
+	def __init__(self, src, limit=-1, origin=np.array((0,0)), offset=0):
 		"""Constructs a videostream object
 
 		   Input: src- Source camera or file or url
@@ -43,7 +43,8 @@ class VideoStream():
 		self.time_elapsed = 0
 
 		# moved from __iter__ to __init__ due to continuous iterating
-		self.frame_count = 0
+		self.offset = offset
+		self.frame_count = offset
 		self.cap = cv2.VideoCapture(self.src)
 
 	def __getitem__(self, xform):
@@ -58,7 +59,7 @@ class VideoStream():
 		"""
 		if self.cap == None:
 			# iterate the same videostream again after the previous run has finished
-			self.frame_count = 0
+			self.frame_count = self.offset
 			self.cap = cv2.VideoCapture(self.src)
 
 		if self.propIds:
@@ -171,9 +172,13 @@ class IteratorVideoStream(VideoStream):
 		if (self.limit < 0 or self.frame_count <= self.limit):
 			ret = self.next_frame
 			self.next_frame = next(self.frame_iter)
-			self.frame_count += 1
-			ret.update({'frame': (self.frame_count - 1)})
-			return ret
+
+			if 'frame' in ret:
+				return ret
+			else:
+				self.frame_count += 1
+				ret.update({'frame': (self.frame_count - 1)})
+				return ret
 		else:
 			raise StopIteration("Iterator is closed")
 

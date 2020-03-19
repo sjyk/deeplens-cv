@@ -100,8 +100,10 @@ class Filter(Operator):
 		if None in self.buffer:
 			return False
 		elif np.array(self.kernel).dot(np.array(self.buffer)) > self.threshold:
+			#print('T',np.array(self.kernel).dot(np.array(self.buffer)))
 			return True
 		else:
+			#print('F',np.array(self.kernel).dot(np.array(self.buffer)))
 			return False
 
 	def __next__(self):
@@ -113,6 +115,7 @@ class Filter(Operator):
 
 		if self.frame_count > self.last_event + self.delay:
 			if self._dot():
+				#print('frame hit',out['frame'])
 				out[self.name] = True
 				self.last_event = self.frame_count
 			else:

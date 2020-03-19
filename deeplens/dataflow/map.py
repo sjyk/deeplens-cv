@@ -114,8 +114,8 @@ class Resize(Map):
 
 	def map(self, data):
 		ff = data
-		newX,newY = ff['data'].shape[1]*self.scale, ff['data'].shape[0]*self.scale
-		ff['data'] = cv2.resize(ff['data'],(int(newX),int(newY))) 
+		#newX,newY = ff['data'].shape[1]*self.scale, ff['data'].shape[0]*self.scale
+		ff['data'] = cv2.resize(ff['data'],(0,0), fx = self.scale, fy = self.scale) 
 		return ff
 
 	def _serialize(self):

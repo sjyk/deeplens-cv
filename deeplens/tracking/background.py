@@ -32,9 +32,15 @@ class FixedCameraBGFGSegmenter(object):
 		frames = []
 		for frame in vstream:
 			img = frame['data']
+			#print(frame['frame'])
 			if video:
 				frames.append(img)
-			gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+			if len(img.shape) < 3:
+				gray = img
+			else:
+				gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
 			blurred = cv2.GaussianBlur(gray, (self.blur, self.blur), 0)
 
 			if not (prev is None):
@@ -74,6 +80,7 @@ class FixedCameraBGFGSegmenter(object):
 				return {}
 
 			#flipped axis in crop
+			#print('box',x0, y0, x1, y1)
 			if video:
 				return {'label': 'foreground', 'bb': Box(x0, y0, x1, y1)}, frames
 

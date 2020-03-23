@@ -59,3 +59,9 @@ def counts(streams, keys, stats=False):
 
 	return count(stream, keys, stats)
 
+
+def get(stream, key, frame_rate=-1):
+	if frame_rate == -1:
+		return [(v['frame'], v['data']) for v in stream if v[key]]
+	else:
+		return [( int(v['frame']/frame_rate) , v['data']) for v in stream if v[key]]

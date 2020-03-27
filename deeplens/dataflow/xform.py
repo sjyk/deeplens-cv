@@ -36,7 +36,7 @@ class Expand(Map):
 
 	def map(self, data):
 		ff = data
-		ff['data'] = cv2.cvtColor(gray,cv2.COLOR_GRAY2RGB)
+		ff['data'] = cv2.cvtColor(ff['data'],cv2.COLOR_GRAY2RGB)
 		return ff
 
 

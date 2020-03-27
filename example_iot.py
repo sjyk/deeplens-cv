@@ -7,8 +7,8 @@ from deeplens.dataflow.agg import get
 from deeplens.utils.ui import play, overlay
 
 #VIDEO File Name
-FILE_NAME = 'iot_videos/khnl6v2j10017mv_1582586053225_fridge_idle1.mp4'
-#FILE_NAME = 'iot_videos/khnl6v2j10017mv_1582586199865_fridge_door3.mp4'
+#FILE_NAME = 'iot_videos/khnl6v2j10017mv_1582586053225_fridge_idle1.mp4'
+FILE_NAME = 'iot_videos/khnl6v2j10017mv_1582586199865_fridge_door3.mp4'
 
 FRAME_RATE = 24
 

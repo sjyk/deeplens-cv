@@ -41,6 +41,7 @@ class KeyPoints(Map):
 
 		blurred = cv2.GaussianBlur(gray, (self.blur, self.blur), 0)
 		tight = cv2.Canny(blurred, self.edge_low, self.edge_high)
+
 		contours, _ = cv2.findContours(tight.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 		
 		rtn = []

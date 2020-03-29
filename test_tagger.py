@@ -9,13 +9,19 @@ import os
 import shutil
 import time
 
-print('test')
-if os.path.exists('./videos'):
-    shutil.rmtree('./videos')
-manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=5), CropSplitter(), 'videos')
+# logging.basicConfig(level=logging.DEBUG)
+if os.path.exists('/tmp/videos'):
+    shutil.rmtree('/tmp/videos')
+manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=20), CropSplitter(), '/tmp/videos')
 start = time.time()
-output = manager.put_many(['./cut2.mp4','./cut3.mp4'] , ['test', 'test1'], log = True, args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': -1, 'batch_size': 20, 'num_processes': 8})
-print(output)
-print('test2')
+output = manager.put('./tcam.mp4' , 'test', parallel = False, args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': 1000, 'batch_size': 20, 'num_processes': 8, 'background_scale': 1})
 end = time.time()
-print(end - start)
+print("Without background resizing:", end - start)
+
+if os.path.exists('/tmp/videos'):
+    shutil.rmtree('/tmp/videos')
+manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=20), CropSplitter(), '/tmp/videos')
+start = time.time()
+output = manager.put('./tcam.mp4' , 'test', parallel = False, args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': 1000, 'batch_size': 20, 'num_processes': 8, 'background_scale': 0.2})
+end = time.time()
+print("With background resizing:", end - start)

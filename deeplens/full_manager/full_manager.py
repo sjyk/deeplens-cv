@@ -22,7 +22,7 @@ from multiprocessing import Pool
 import time
 from deeplens.utils.parallel_log_reduce import *
 
-DEFAULT_ARGS = {'encoding': MP4V, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 20, 'num_processes': 4}
+DEFAULT_ARGS = {'encoding': MP4V, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 20, 'num_processes': 4, 'background_scale': 1}
 
 # NOTE: bounding boxes are at a clip level
 
@@ -85,7 +85,7 @@ class FullStorageManager(StorageManager):
         self.cursor.execute(sql_create_background_table)
         self.cursor.execute(sql_create_clip_table)
 
-    def put(self, filename, target, args=DEFAULT_ARGS, in_extern_storage = False, parallel = False):
+    def put(self, filename, target, args=DEFAULT_ARGS, in_extern_storage=False, parallel=False):
         """put adds a video to the storage manager from a file. It should either add
             the video to disk, or a reference in disk to deep storage.
         """
@@ -113,11 +113,11 @@ class FullStorageManager(StorageManager):
             write_video_parrallel(db_path, filename, target, physical_dir, self.content_splitter, tagger, args=args)
         
         else:
-            write_video_single(self.conn, filename, target, physical_dir, self.content_splitter, tagger, stream = stream, args=args)
+            write_video_single(self.conn, filename, target, physical_dir, self.content_splitter, tagger, stream=stream, args=args, background_scale=args['background_scale'])
         
         self.videos.add(target)
     
-    def put_many(self, filenames, targets, args=DEFAULT_ARGS, in_extern_storage = False, log = False):
+    def put_many(self, filenames, targets, args=DEFAULT_ARGS, in_extern_storage=False, log=False, background_scale=1):
         start_time = time.time()
         put_args = []
         db_path = os.path.join(self.basedir, self.db_name)
@@ -130,7 +130,7 @@ class FullStorageManager(StorageManager):
                 tagger = name
             else:
                 tagger = self.content_tagger
-            put_arg = (db_path, name, targets[i], physical_dir, self.content_splitter, tagger, 0, False, args, log)
+            put_arg = (db_path, name, targets[i], physical_dir, self.content_splitter, tagger, 0, False, args, log, background_scale)
             put_args.append(put_arg)
             self.delete(targets[i])
         

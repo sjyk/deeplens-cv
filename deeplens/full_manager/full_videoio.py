@@ -69,7 +69,7 @@ def _update_headers_batch(conn, crops, name, start_time, end_time, ids):
 
 
 def _new_headers_batch(conn, all_crops, name, video_refs,
-                            full_width, full_height, start_time, end_time, ids = None):
+                            full_width, full_height, start_time, end_time, ids = None, background_scale = 1):
     """
     Create new headers all headers for one batch. In terms of updates, we assume certain
     constraints on the system, and only update possible changes.
@@ -81,11 +81,16 @@ def _new_headers_batch(conn, all_crops, name, video_refs,
     for i in range(0, len(crops) + 1):
         if i == 0:
             if len(crops):
-                insert_clip_header(conn, ids[0], name, start_time, end_time, 0, 0,
-                                full_width, full_height, video_refs[i], is_background = True)
+                if background_scale == 1:
+                    insert_clip_header(conn, ids[0], name, start_time, end_time, 0, 0,
+                                full_width, full_height, video_refs[i], is_background=True)
+                else:
+                    insert_clip_header(conn, ids[0], name, start_time, end_time, 0, 0,
+                                       full_width * background_scale, full_height * background_scale,
+                                       video_refs[i], is_background=True)
             else:
                 insert_clip_header(conn, ids[0], name, start_time, end_time, 0, 0,
-                                full_width, full_height, video_refs[i], is_background = False)
+                                full_width, full_height, video_refs[i], is_background=False)
         else:
             origin_x = crops[i - 1]['bb'].x0
             origin_y = crops[i - 1]['bb'].y0
@@ -113,10 +118,11 @@ def _write_video_batch(vstream, \
                         all_crops, \
                         encoding,
                         batch_size,
-                        dir = DEFAULT_TEMP, \
-                        frame_rate = 1,
-                        release = True,
-                        writers = None):
+                        dir=DEFAULT_TEMP, \
+                        frame_rate=1,
+                        release=True,
+                        writers=None,
+                        background_scale=1):
     '''
     Private function which processes and stores a batch of video frames
     Arguments:
@@ -147,14 +153,19 @@ def _write_video_batch(vstream, \
                 except AttributeError:
                     width = vstream[0].shape[1]
                     height = vstream[0].shape[0]
+                out_vid = cv2.VideoWriter(file_name,
+                                          fourcc,
+                                          frame_rate,
+                                          (int(width * background_scale), int(height * background_scale)),
+                                          True)
             else:
                 width = abs(crops[i - 1]['bb'].x1 - crops[i - 1]['bb'].x0)
                 height = abs(crops[i - 1]['bb'].y1 - crops[i - 1]['bb'].y0)
-            out_vid = cv2.VideoWriter(file_name,
-                                    fourcc,
-                                    frame_rate,
-                                    (width, height),
-                                    True)
+                out_vid = cv2.VideoWriter(file_name,
+                                          fourcc,
+                                          frame_rate,
+                                          (width, height),
+                                          True)
             out_vids.append(out_vid)
     else:
         out_vids = writers
@@ -163,10 +174,11 @@ def _write_video_batch(vstream, \
     for frame in vstream:
         if type(frame) == dict:
             frame = frame['data']
+        newX, newY = frame.shape[1] * background_scale, frame.shape[0] * background_scale
         if len(crops) == 0:
-            out_vids[0].write(frame)
+            out_vids[0].write(cv2.resize(frame, (int(newX), int(newY))))
         else:
-            out_vids[0].write(reverse_crop(frame, crops))
+            out_vids[0].write(cv2.resize(reverse_crop(frame, crops), (int(newX), int(newY))))
 
         i = 1
         for cr in crops:
@@ -225,16 +237,17 @@ def write_video_single(conn, \
                         dir, \
                         splitter, \
                         map, \
-                        start_time = 0, \
-                        stream = False, \
+                        start_time=0, \
+                        stream=False, \
                         args={}, 
-                        log = False):
+                        log=False,
+                        background_scale=1):
     start = time.time()
     if not os.path.isfile(video_file):
         print("missing file", video_file)
         return None
     if type(map) == str:
-        map = YoutubeTagger(map, './deeplens/media/train/processed_yt_bb_detection_train.csv')
+        map = YoutubeTagger(map, './deeplens/media/train/processed1.csv')
     if type(conn) == str:
         conn = sqlite3.Connection(conn)
     batch_size = args['batch_size']
@@ -294,19 +307,19 @@ def write_video_single(conn, \
             #all_crops.append(crops)
         if not do_join:
             #print('hello' + str(i))
-            _, file_names, time_block = _write_video_batch(v_behind, target, all_crops, args['encoding'], batch_size, dir, release = True)           
+            _, file_names, time_block = _write_video_batch(v_behind, target, all_crops, args['encoding'], batch_size, dir, release=True, background_scale=background_scale)
             if time_block == 0:
                 break
             ids = _new_headers_batch(conn, all_crops, target, file_names,
-                            full_width, full_height, start_time, start_time + time_block)
+                            full_width, full_height, start_time, start_time + time_block, background_scale = background_scale)
             start_time = start_time + time_block
             vid_files.extend(file_names)
             all_crops =[]
         all_crops.append(crops)
         i +=1
-    _, file_names, time_block = _write_video_batch(v_behind, target, all_crops, args['encoding'], batch_size, dir, release = True)
+    _, file_names, time_block = _write_video_batch(v_behind, target, all_crops, args['encoding'], batch_size, dir, release=True, background_scale=background_scale)
     ids = _new_headers_batch(conn, all_crops, target, file_names,
-                full_width, full_height, start_time, start_time + time_block)
+                full_width, full_height, start_time, start_time + time_block, background_scale=background_scale)
     vid_files.extend(file_names)
     end = time.time()
     log_info = {}

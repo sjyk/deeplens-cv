@@ -32,13 +32,14 @@ class FullStorageManager(StorageManager):
     is in the same location as disk, and external storage is another
     directory
     """
-    def __init__(self, content_tagger, content_splitter, basedir, db_name='header.db'):
+    def __init__(self, content_tagger, content_splitter, basedir, db_name='header.db', reuse_conn = True):
         self.content_tagger = content_tagger
         self.content_splitter = content_splitter
         self.basedir = basedir
         self.videos = set()
         self.threads = None
         self.db_name =  db_name
+        self.reuse_conn = reuse_conn
 
         if not os.path.exists(basedir):
             try:
@@ -47,7 +48,7 @@ class FullStorageManager(StorageManager):
                 raise ManagerIOError("Cannot create the directory: " + str(basedir))
 
 
-        self.conn = sqlite3.connect(os.path.join(basedir, db_name))
+        self.conn = self.create_conn()
         self.cursor = self.conn.cursor()
         sql_create_background_table = """CREATE TABLE IF NOT EXISTS background (
                                              background_id integer NOT NULL,
@@ -84,12 +85,27 @@ class FullStorageManager(StorageManager):
         self.cursor.execute(sql_create_label_table)
         self.cursor.execute(sql_create_background_table)
         self.cursor.execute(sql_create_clip_table)
+    
+    def create_conn(self):
+        return sqlite3.connect(os.path.join(self.basedir, self.db_name))
+    
+    def get_conn(self):
+        conn = self.conn
+        if not self.reuse_conn:
+            conn = self.create_conn()
+        return conn
+
+    def remove_conn(self, conn):
+        if not self.reuse_conn:
+            conn.commit()
+            conn.close()
 
     def put(self, filename, target, args=DEFAULT_ARGS, in_extern_storage = False, parallel = True):
         """put adds a video to the storage manager from a file. It should either add
             the video to disk, or a reference in disk to deep storage.
         """
-        self.delete(target)
+        conn = self.get_conn()
+        self.delete(target, conn)
         if in_extern_storage: 
             physical_dir = self.externdir
         else:
@@ -106,14 +122,17 @@ class FullStorageManager(StorageManager):
         
         if parallel and not stream:
             db_path = os.path.join(self.basedir, self.db_name)
-            write_video_parrallel(db_path, filename, target, physical_dir, self.content_splitter, tagger, args=args)
+            write_video_parallel(db_path, filename, target, physical_dir, self.content_splitter, tagger, args=args)
         
         else:
-            write_video_single(self.conn, filename, target, physical_dir, self.content_splitter, tagger, stream = stream, args=args)
+            write_video_single(conn, filename, target, physical_dir, self.content_splitter, tagger, stream = stream, args=args)
         
         self.videos.add(target)
+
+        self.remove_conn(conn)
     
     def put_many(self, filenames, targets, args=DEFAULT_ARGS, in_extern_storage = False, log = False):
+        conn = self.get_conn()
         start_time = time.time()
         put_args = []
         db_path = os.path.join(self.basedir, self.db_name)
@@ -128,7 +147,7 @@ class FullStorageManager(StorageManager):
                 tagger = self.content_tagger
             put_arg = (db_path, name, targets[i], physical_dir, self.content_splitter, tagger, 0, False, args, log)
             put_args.append(put_arg)
-            self.delete(targets[i])
+            self.delete(targets[i], conn)
         
         logs = []
         with Pool(processes = args['num_processes']) as pool:
@@ -141,33 +160,45 @@ class FullStorageManager(StorageManager):
         for target in targets:
             self.videos.add(target)
 
-        times = paralleL_log_reduce(logs, start_time)
+        times = parallel_log_reduce(logs, start_time)
         #paralleL_log_delete(logs) -> currently not deleting logs for safety
+        self.remove_conn(conn)
         return times
         
 
     def put_fixed(self, filename, target, crops, batch = False, args=DEFAULT_ARGS, in_extern_storage = False):
-        self.delete(target)
+        conn = self.get_conn()
+        self.delete(target, conn)
         if in_extern_storage: 
             physical_dir = self.externdir
         else:
             physical_dir = self.basedir
-        write_video_fixed(self.conn, filename, target, physical_dir, crops, batch = batch, args=args)
+        write_video_fixed(conn, filename, target, physical_dir, crops, batch = batch, args=args)
         self.videos.add(target)
+        self.remove_conn(conn)
 
-    def get(self, name, condition):
+    def get(self, name, condition, new_conn = False):
         """retrievies a clip of satisfying the condition.
         If the clip was in external storage, get moves it to disk. TODO: Figure out if I should implement this feature or not
         """
         # TODO: This should be done by looking up SQLite database
         # if name not in self.videos:
         #     raise VideoNotFound(name + " not found in " + str(self.videos))
+        conn = self.get_conn()
         logging.info("Calling get()")
-        return query(self.conn, name, clip_condition = condition)
+        result = query(conn, name, clip_condition = condition)
+        self.remove_conn(conn)
+        return result
     
-    def delete(self, name):
-        delete_video(self.conn, name)
+    def delete(self, name, conn = None):
+        conn_not_provided = conn == None
+        if conn_not_provided:
+            conn = self.get_conn()
+        
+        delete_video(conn, name)
 
+        if conn_not_provided:
+            self.remove_conn(conn)
 
     def list(self):
         return list(self.videos)
@@ -175,14 +206,16 @@ class FullStorageManager(StorageManager):
     def size(self, name):
         """ Return the total amount of space a deeplens video takes up
         """
+        conn = self.get_conn()
+        cursor = conn.cursor()
 
-        self.cursor.execute("SELECT background_id, clip_id FROM background WHERE video_name = '%s'" % name)
-        clips = self.cursor.fetchall()
+        cursor.execute("SELECT background_id, clip_id FROM background WHERE video_name = '%s'" % name)
+        clips = cursor.fetchall()
         clips = set().union(*map(set, clips))
         size = 0
         for clip in clips:
-            self.cursor.execute("SELECT video_ref FROM clip WHERE clip_id = '%d'" % clip)
-            video_ref = self.cursor.fetchone()[0]
+            cursor.execute("SELECT video_ref FROM clip WHERE clip_id = '%d'" % clip)
+            video_ref = cursor.fetchone()[0]
             try:
                 size += os.path.getsize(video_ref)
             except FileNotFoundError:

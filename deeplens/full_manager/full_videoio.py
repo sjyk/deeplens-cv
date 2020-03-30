@@ -318,7 +318,7 @@ def write_video_single(conn, \
     # conn.close()  # don't close the database before we finish get()!
     return vid_files
     
-def write_video_parrallel(db_path, \
+def write_video_parallel(db_path, \
                         video_file, \
                         target,
                         dir, \

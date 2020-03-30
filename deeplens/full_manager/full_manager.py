@@ -117,7 +117,7 @@ class FullStorageManager(StorageManager):
         
         self.videos.add(target)
     
-    def put_many(self, filenames, targets, args=DEFAULT_ARGS, in_extern_storage=False, log=False, background_scale=1):
+    def put_many(self, filenames, targets, args=DEFAULT_ARGS, in_extern_storage=False, log=False):
         start_time = time.time()
         put_args = []
         db_path = os.path.join(self.basedir, self.db_name)
@@ -130,7 +130,7 @@ class FullStorageManager(StorageManager):
                 tagger = name
             else:
                 tagger = self.content_tagger
-            put_arg = (db_path, name, targets[i], physical_dir, self.content_splitter, tagger, 0, False, args, log, background_scale)
+            put_arg = (db_path, name, targets[i], physical_dir, self.content_splitter, tagger, 0, False, args, log, args['background_scale'])
             put_args.append(put_arg)
             self.delete(targets[i])
         

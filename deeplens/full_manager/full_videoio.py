@@ -12,6 +12,7 @@ from deeplens.dataflow.map import Resize
 from deeplens.simple_manager.file import *
 from deeplens.utils.frame_xform import *
 from deeplens.extern.ffmpeg import *
+from deeplens.extern.cache import *
 from deeplens.media.youtube_tagger import *
 from deeplens.struct import *
 
@@ -547,6 +548,42 @@ def query_everything(conn, video_name):
     c.execute("SELECT * FROM label WHERE video_name = '%s'" % video_name)
     result = c.fetchall()
     return result
+
+def cache(conn, video_name, clip_condition):
+    clip_ids = clip_condition.query(conn, video_name)
+    for id in clip_ids:
+        clip = query_clip(conn, id, video_name)
+        videoref = clip[0][8]
+        
+        if not is_cache_file(videoref):
+            cacheref = videoref_2_cache(videoref)
+
+            vstream = VideoStream(videoref)
+            persist(vstream, cacheref)
+
+            update = "UPDATE clip SET video_ref = '%s' WHERE clip_id = '%d' AND video_name = '%s'" % (cacheref,id, video_name)
+            c = conn.cursor()
+            c.execute(update)
+
+            #print(update)
+
+def uncache(conn, video_name, clip_condition):
+    clip_ids = clip_condition.query(conn, video_name)
+    for id in clip_ids:
+        clip = query_clip(conn, id, video_name)
+        cacheref = clip[0][8]
+        
+        if is_cache_file(cacheref):
+            videoref = cache_2_videoref(cacheref)
+
+            delete_cache(cacheref)
+
+            update = "UPDATE clip SET video_ref = '%s' WHERE clip_id = '%d' AND video_name = '%s'" % (videoref,id, video_name)
+            c = conn.cursor()
+            c.execute(update)
+
+            #print(update)
+
 
 def query(conn, video_name, clip_condition):
     """

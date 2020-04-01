@@ -5,7 +5,7 @@ from deeplens.struct import build, RawVideoStream, IteratorVideoStream
 class DeepLensOptimizer():
 
 	def __init__(self,
-				 crop_pd=False,
+				 crop_pd=True,
 				 crop_pd_ratio=1.1,
 				 raw_vid_opt = True,
 				 skip_empty=True,
@@ -45,20 +45,17 @@ class DeepLensOptimizer():
 				if self.skip_empty:
 					pipeline.insert(2,SkipEmpty())
 
+		"""
 		if self.raw_vid_opt:
 
-			region = self.get_metric_region(pipeline)
-			if not (region is None):
-				region = region * self.crop_pd_ratio
-
-			#print(pipeline[0])
 			if isinstance(pipeline[0],RawVideoStream):
-				pipeline[0].set_crop(region)
+				pipeline[0].set_channels(0)
 
 			if isinstance(pipeline[0],IteratorVideoStream):
 				for stream in pipeline[0].sources:
 					if isinstance(stream,RawVideoStream):
-						stream.set_crop(region)
+						stream.set_channels(0)
+		"""
 
 
 		if self.gc:

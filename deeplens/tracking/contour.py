@@ -6,6 +6,7 @@ contour.py defines geometric vision primitives.
 """
 
 from deeplens.dataflow.map import Map
+from timeit import default_timer as timer
 import cv2
 
 class KeyPoints(Map):
@@ -34,10 +35,17 @@ class KeyPoints(Map):
 	def map(self, data):
 		ff = data
 
+		#print(ff['data'].shape)
+
+		#now = timer()
+
 		if len(ff['data'].shape) < 3:
 			gray = ff['data']
 		else:
-			gray = cv2.cvtColor(ff['data'], cv2.COLOR_BGR2GRAY)
+			gray = ff['data'][:,:,0]
+
+
+		#print('Copy Elapsed: ', timer() - now)
 
 		blurred = cv2.GaussianBlur(gray, (self.blur, self.blur), 0)
 		tight = cv2.Canny(blurred, self.edge_low, self.edge_high)

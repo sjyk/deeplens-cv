@@ -38,7 +38,7 @@ def delete_cache(file):
 def persist(vstream, file):
     shape = _array_shape(vstream)
 
-    fp = np.memmap(file, dtype='uint8', mode='w+', shape=shape,order='C')
+    fp = np.memmap(file, dtype='uint8', mode='w+', shape=shape,order='F')
 
     #only works for files, not derived stuff
     vstream.cap = None

@@ -193,7 +193,8 @@ class RawVideoStream(VideoStream):
 	   from an iterator over decoded, serialized frames
 	"""
 
-	def __init__(self, src, shape, limit=-1, origin=np.array((0,0)), offset=0):
+	def __init__(self, src, shape, limit=-1, \
+				 origin=np.array((0,0)), offset=0, buffer_size=10):
 		"""Constructs a videostream object
 
 		   Input: src- iterator over frames
@@ -207,7 +208,8 @@ class RawVideoStream(VideoStream):
 		self.origin = origin
 		self.offset = offset
 
-		self.mmap_crop = None
+		self.mmap_colors = None
+		self.buffer_size = buffer_size
 
 
 	def __getitem__(self, xform):
@@ -221,15 +223,14 @@ class RawVideoStream(VideoStream):
 		"""
 		#np.memmap(self.src, dtype='uint8', mode='r', shape=self.shape)
 
-
 		try:
-			now = timer()
 			self.frame_iter = np.memmap(self.src, 
 										dtype='uint8', \
 										mode='r', \
-										shape=self.shape)
-			put_time = timer() - now
-			print("Create:", put_time)
+										shape=self.shape,
+										order='F')
+
+			self.buffer = None
 		except:
 			raise CorruptedOrMissingVideo(str(self.src) + " is corrupted or missing.")
 
@@ -246,36 +247,23 @@ class RawVideoStream(VideoStream):
 	def __next__(self):
 
 		index = self.frame_count-self.offset
+		buffer_index = (index % self.buffer_size)
 
 		if index >= self.shape[0]:
 			raise StopIteration("Iterator is closed")
-		else:
-			
-			if self.mmap_crop is None:
-				ret = self.frame_iter[index,:,:,:]
-			else:
-				#print('here!')
-				now = timer()
-				ret = self.frame_iter[index:index+10,\
-									  self.mmap_crop.y0:self.mmap_crop.y1,\
-									  self.mmap_crop.x0:self.mmap_crop.x1,\
-									  :][0,:,:,:]
+		elif buffer_index >= self.frame_iter.shape[0]:
+			raise StopIteration("Iterator is closed")
+		elif buffer_index == 0:
+			self.buffer = self.frame_iter[index:index+self.buffer_size,:,:,:]
 
-				put_time = timer() - now
-				print("Load:", put_time)
-				#print(ret.shape)
+		self.frame_count += 1
+		#ret = .copy()
 
-			self.frame_count += 1
-			return {'frame': (self.frame_count - 1), 'data': ret, 'origin': self.origin}
+		return {'frame': (self.frame_count - 1), 'data': self.buffer[buffer_index,:,:,:], 'origin': self.origin}
 
 	def lineage(self):
 		return self.global_lineage
 
-	#needs to be fixed
-	def set_crop(self, box):
-		#pass
-		self.origin = np.array((box.x0, box.y0)) #fix
-		self.mmap_crop = box
 
 
 #helper methods

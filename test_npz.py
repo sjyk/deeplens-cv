@@ -17,6 +17,8 @@ from deeplens.tracking.event import *
 from deeplens.core import *
 from deeplens.simple_manager.manager import *
 
+from deeplens.utils.ui import play
+
 import cv2
 import numpy as np
 
@@ -55,15 +57,18 @@ print(result)
 #for v in vstream:
 #    pass
 
-manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=20), CropSplitter(), 'videos')
-manager.put('tcam.mp4', 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': 100, 'batch_size': 20, 'num_processes': 4})
+manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=100), CropSplitter(), 'videos')
+manager.put('tcam.mp4', 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': 300, 'batch_size': 20, 'num_processes': 4})
 manager.cache('test', Condition(label='foreground'))
+clips = manager.get('test', Condition(label='foreground'))
+#play(clips[0])
 
-manager.uncache('test', Condition(label='foreground'))
-"""
+#
+
+
 region = Box(200, 550, 350, 750)
 	
-clips = manager.get('test', Condition(label='foreground'))
+#clips = manager.get('test', Condition(label='foreground'))
 
 pipelines = []
 #d = DeepLensOptimizer()
@@ -74,4 +79,6 @@ for c in clips:
 
 result = counts(pipelines, ['one'], stats=True)
 print(result)
-"""
+
+manager.uncache('test', Condition(label='foreground'))
+

@@ -215,6 +215,8 @@ class RawVideoStream(VideoStream):
 		"""Constructs the iterator object and initializes
 		   the iteration state
 		"""
+		#np.memmap(self.src, dtype='uint8', mode='r', shape=self.shape)
+
 
 		try:
 			self.frame_iter = np.memmap(self.src, 
@@ -340,6 +342,7 @@ class Box():
 		"""The constructor for a box, all of the inputs have to be castable to 
 		integers. By convention x0 <= x1 and y0 <= y1
 		"""
+
 		self.x0 = int(x0)
 		self.y0 = int(y0)
 		self.x1 = int(x1)
@@ -420,6 +423,7 @@ class Box():
 		return self.area() + other.area() - ia
 	
 	def union_box(self, other):
+		#print('union',self, other)
 		return Box(min(self.x0, other.x0), \
 				min(self.y0, other.y0), \
 				max(self.x1, other.x1), \
@@ -428,6 +432,12 @@ class Box():
 	"""
 	def serialize(self):
 		return int(self.x0),int(self.y0),int(self.x1),int(self.y1)
+
+
+	def __str__(self):
+		return str(self.serialize())
+
+	__repr__ = __str__
 
 
 class CustomTagger(Operator):

@@ -9,6 +9,8 @@ def _array_shape(vstream):
         cnt += 1
         width, height, channels = frame['data'].shape
 
+        #print(frame['data'])
+
     return (cnt, width, height, channels)
 
 def is_cache_file(filename):
@@ -38,11 +40,16 @@ def persist(vstream, file):
 
     fp = np.memmap(file, dtype='uint8', mode='w+', shape=shape)
 
+    #only works for files, not derived stuff
+    vstream.cap = None
+    vstream = iter(vstream)#reset
+
     for i,frame in enumerate(vstream):
-        fp[i,:,:,:] = frame['data']
+        fp[i,:,:,:] = frame['data'].astype('uint8')
 
     del fp
 
+    #print('Persisted',shape)
     return shape
 
         

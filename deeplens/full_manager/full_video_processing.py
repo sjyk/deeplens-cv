@@ -109,6 +109,7 @@ class CropSplitter(MapJoin):
                         labels[object['label']] = [index]
                     all = {}
                     all[frame] = object
+
                     crops.append({'bb': object['bb'], 'label': object['label'], 'all': all})
                     index += 1
             frame += 1
@@ -161,8 +162,8 @@ class CropSplitter(MapJoin):
                     y_diff = y_diff/float(bb1.y1 - bb1.y0)
                     # If all conditions are met, the boxes are joined (with translation)
                     if iou > IOU_THRESHOLD and x_diff < TRANSLATION_ERROR and y_diff < TRANSLATION_ERROR:
-                        bb =  bb1.x_translate(bb2.x0 - bb1.x0)
-                        bb = bb.y_translate(bb2.y0 - bb1.y0)
+                        bb =  bb1.union_box(bb2)
+
                         crop1[i]['all'].update(crop2[j]['all'])
                         crops[i] = {'bb':bb, 'label': label, 'all': crop1[i]['all']}
                         remove = k
@@ -171,6 +172,8 @@ class CropSplitter(MapJoin):
                     return (crop2, map2, False) # we couldn't find a matching box with the above condition
 
                 del temp1[remove]
+
+        #print(crops, 'here')
         return crops, (crops, labels1), True
 
 """ Creates a crop across different frames
@@ -248,4 +251,5 @@ class CropUnionSplitter(MapJoin):
             remove = True
         if not remove:
             return (crop2, crop2, False) # we couldn't find a matching box with the above condition
+
         return crops, crops, True

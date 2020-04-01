@@ -10,6 +10,7 @@ from deeplens.error import *
 import numpy as np
 import json
 from timeit import default_timer as timer
+import itertools
 
 #sources video from the default camera
 DEFAULT_CAMERA = 0
@@ -127,12 +128,13 @@ class IteratorVideoStream(VideoStream):
 	   of png files). Compatible with opencv streams.
 	"""
 
-	def __init__(self, src, limit=-1):
+	def __init__(self, src, refs, limit=-1):
 		"""Constructs a videostream object
 
-		   Input: src- iterator over frames
+		   Input: src- list of vstreams
 				  limit- Number of frames to pull
 		"""
+		self.sources = refs
 		self.src = src
 		self.limit = limit
 		self.global_lineage = []
@@ -205,6 +207,8 @@ class RawVideoStream(VideoStream):
 		self.origin = origin
 		self.offset = offset
 
+		self.mmap_crop = None
+
 
 	def __getitem__(self, xform):
 		"""Applies a transformation to the video stream
@@ -219,10 +223,13 @@ class RawVideoStream(VideoStream):
 
 
 		try:
+			now = timer()
 			self.frame_iter = np.memmap(self.src, 
 										dtype='uint8', \
 										mode='r', \
 										shape=self.shape)
+			put_time = timer() - now
+			print("Create:", put_time)
 		except:
 			raise CorruptedOrMissingVideo(str(self.src) + " is corrupted or missing.")
 
@@ -243,12 +250,32 @@ class RawVideoStream(VideoStream):
 		if index >= self.shape[0]:
 			raise StopIteration("Iterator is closed")
 		else:
-			ret = self.frame_iter[index,:,:,:]
+			
+			if self.mmap_crop is None:
+				ret = self.frame_iter[index,:,:,:]
+			else:
+				#print('here!')
+				now = timer()
+				ret = self.frame_iter[index:index+10,\
+									  self.mmap_crop.y0:self.mmap_crop.y1,\
+									  self.mmap_crop.x0:self.mmap_crop.x1,\
+									  :][0,:,:,:]
+
+				put_time = timer() - now
+				print("Load:", put_time)
+				#print(ret.shape)
+
 			self.frame_count += 1
 			return {'frame': (self.frame_count - 1), 'data': ret, 'origin': self.origin}
 
 	def lineage(self):
 		return self.global_lineage
+
+	#needs to be fixed
+	def set_crop(self, box):
+		#pass
+		self.origin = np.array((box.x0, box.y0)) #fix
+		self.mmap_crop = box
 
 
 #helper methods

@@ -691,7 +691,7 @@ def _is_contiguous(videos, thresh=5):
 
 def _chain_contiguous(videos):
     vrefs = [v for _, v in videos]
-    return [IteratorVideoStream(itertools.chain(*vrefs))]
+    return [IteratorVideoStream(itertools.chain(*vrefs), vrefs)]
 
 
 

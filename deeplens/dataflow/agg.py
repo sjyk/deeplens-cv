@@ -49,7 +49,7 @@ def count(stream, keys, stats=False):
 def counts(streams, keys, stats=False):
 	"""Count counts the true hits of a defined event.
 	"""
-	stream = IteratorVideoStream(itertools.chain(*streams))
+	stream = IteratorVideoStream(itertools.chain(*streams), streams)
 
 	lineage = []
 	for s in streams:

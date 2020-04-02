@@ -22,8 +22,9 @@ from multiprocessing import Pool
 import time
 from deeplens.utils.parallel_log_reduce import *
 
-DEFAULT_ARGS = {'encoding': MP4V, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 20, 'num_processes': 4, 'background_scale': 1}
+DEFAULT_ARGS = {'frame_rate': 30, 'encoding': MP4V, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 20, 'num_processes': 4, 'background_scale': 1}
 
+# NOTE: Frame rate SHOULD be an argument -> need to update
 # NOTE: bounding boxes are at a clip level
 
 class FullStorageManager(StorageManager):

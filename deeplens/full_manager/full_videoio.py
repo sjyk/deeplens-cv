@@ -31,6 +31,7 @@ import itertools
 from multiprocessing import Pool
 #import glob
 
+
 def _update_headers_batch(conn, crops, name, start_time, end_time, ids):
 
     for i, id in enumerate(ids):

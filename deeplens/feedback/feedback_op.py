@@ -10,6 +10,7 @@ pipeline.
 import cv2
 import json
 
+## TODO: add a stream to a previous VideoStream??
 
 class Materialize(Operator):
     """Filter() defines cross-correlation kernel and a threshold. It
@@ -18,9 +19,7 @@ class Materialize(Operator):
     """
 
     def __init__(self, storage_manager, video_stream = True, streams = 'all', batch_size = None, args = None):
-        """Name is the metric, kernel is a list of numbers defining a 
-        cross-correlation kernel, threshold is a threshold on the value,
-        and the delay is the minimum time between events.
+        """Streams -> {'name': is_constant}
         """
         self.name = name
         self.streams = streams
@@ -48,8 +47,11 @@ class Materialize(Operator):
                     streams.remove('data')
             self.storage = self.sm.put_opt(name, self.mat_vs, args = self.args)
 
+        frame = {}
         for stream in self.streams:
-            self.storage.add_frame(stream, out[stream])
+            frame[stream] = out[stream]
+        
+        self.storage.add_frame(frame)
         
         if self.mat_vs:
             self.storage.add_frame('video', out['data'])

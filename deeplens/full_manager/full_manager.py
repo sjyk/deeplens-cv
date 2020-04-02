@@ -76,9 +76,11 @@ class FullStorageManager(StorageManager):
         """
         sql_create_label_table = """CREATE TABLE IF NOT EXISTS label (
                                        label text NOT NULL,
+                                       value text NOT NULL,
+                                       label_id text NOT NULL,
                                        clip_id integer NOT NULL,
                                        video_name text NOT NULL,
-                                       PRIMARY KEY (label, clip_id, video_name)
+                                       PRIMARY KEY (label_id, clip_id, video_name)
                                        FOREIGN KEY (clip_id, video_name) REFERENCES clip(clip_id, video_name)
                                    );
         """
@@ -153,13 +155,10 @@ class FullStorageManager(StorageManager):
             put_args.append(put_arg)
             self.delete(targets[i], conn)
         
-        logs = []
+        logs = None
         with Pool(processes = args['num_processes']) as pool:
             results = pool.starmap(write_video_single, put_args)
-            for result in results:
-                if result == None:
-                    continue
-                logs.append(result[1])
+            logs = [result[1] for result in results]
 
         for target in targets:
             self.videos.add(target)
@@ -180,6 +179,10 @@ class FullStorageManager(StorageManager):
         write_video_fixed(conn, filename, target, physical_dir, crops, batch = batch, args=args)
         self.videos.add(target)
         self.remove_conn(conn)
+
+    def put_op(self, name, streams, materialize = True, args=None):
+        if args == None:
+            args = DEFAULT_ARGS
 
     def get(self, name, condition):
         """retrievies a clip of satisfying the condition.

@@ -28,7 +28,7 @@ class VideoStream():
 	(label, box).
 	"""
 
-	def __init__(self, src, limit=-1, origin=np.array((0,0)), offset=0):
+	def __init__(self, src, limit=-1, origin=np.array((0,0)), offset=0, rows=[], hwang=False):
 		"""Constructs a videostream object
 
 		   Input: src- Source camera or file or url
@@ -41,11 +41,18 @@ class VideoStream():
 		self.propIds = None
 		self.cap = None
 		self.time_elapsed = 0
+		self.hwang = hwang
 
 		# moved from __iter__ to __init__ due to continuous iterating
-		self.offset = offset
-		self.frame_count = offset
-		self.cap = cv2.VideoCapture(self.src)
+		if not hwang:
+			self.offset = offset
+			self.frame_count = offset
+			self.cap = cv2.VideoCapture(self.src)
+		else:
+			import hwang
+			self.rows = rows
+			self.frame_count = 0
+			self.decoder = hwang.Decoder(self.src)
 
 	def __getitem__(self, xform):
 		"""Applies a transformation to the video stream
@@ -57,48 +64,55 @@ class VideoStream():
 		"""Constructs the iterator object and initializes
 		   the iteration state
 		"""
-		if self.cap == None:
-			# iterate the same videostream again after the previous run has finished
-			self.frame_count = self.offset
-			self.cap = cv2.VideoCapture(self.src)
+		if not self.hwang:
+			if self.cap == None:
+				# iterate the same videostream again after the previous run has finished
+				self.frame_count = self.offset
+				self.cap = cv2.VideoCapture(self.src)
 
-		if self.propIds:
-			for propId in self.propIds:
-				self.cap.set(propId, self.propIds[propId])
+			if self.propIds:
+				for propId in self.propIds:
+					self.cap.set(propId, self.propIds[propId])
 
-		if not self.cap.isOpened():
-			raise CorruptedOrMissingVideo(str(self.src) + " is corrupted or missing.")
+			if not self.cap.isOpened():
+				raise CorruptedOrMissingVideo(str(self.src) + " is corrupted or missing.")
 
-
-		#set sizes after the video is opened
-		self.width = int(self.cap.get(3))   # float
-		self.height = int(self.cap.get(4)) # float
+			#set sizes after the video is opened
+			self.width = int(self.cap.get(3))   # float
+			self.height = int(self.cap.get(4)) # float
+		else:
+			self.width = self.decoder.video_index.frame_width()
+			self.height = self.decoder.video_index.frame_height()
+			self.frames = iter(self.decoder.retrieve(self.rows))
 
 		return self
 
 
 	def __next__(self):
-		if self.cap.isOpened() and \
-		   (self.limit < 0 or self.frame_count < self.limit):
+		if not self.hwang:
+			if self.cap.isOpened() and \
+			   (self.limit < 0 or self.frame_count < self.limit):
 
-			time_start = timer()
-			ret, frame = self.cap.read()
-			self.time_elapsed += timer() - time_start
+				time_start = timer()
+				ret, frame = self.cap.read()
+				self.time_elapsed += timer() - time_start
 
-			if ret:
-				self.frame_count += 1
-				return {'data': frame, \
-						'frame': (self.frame_count - 1),\
-						'origin': self.origin}
-
+				if ret:
+					self.frame_count += 1
+					return {'data': frame, \
+							'frame': (self.frame_count - 1),\
+							'origin': self.origin}
+				else:
+					raise StopIteration("Iterator is closed")
 			else:
+				# self.cap.release()  # commented out due to CorruptedOrMissingVideo error
+				self.cap = None
 				raise StopIteration("Iterator is closed")
-
-			
 		else:
-			# self.cap.release()  # commented out due to CorruptedOrMissingVideo error
-			self.cap = None
-			raise StopIteration("Iterator is closed")
+			self.frame_count += 1
+			return {'data': next(self.frames),
+					'frame': (self.frame_count - 1),
+					'origin': self.origin}
 
 	def __call__(self, propIds = None):
 		""" Sets the propId argument so that we can

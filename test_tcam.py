@@ -139,7 +139,7 @@ def runFullOpt(src, tot=-1, sel=0.1):
     cleanUp()
 
     manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=100), CropSplitter(),
-                                 'vi deos')
+                                 'videos')
     now = timer()
     manager.put(src, 'test',
                 args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': 100,
@@ -166,4 +166,4 @@ def runFullOpt(src, tot=-1, sel=0.1):
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(message)s')
-do_experiments(sys.argv[1], [runSimpleOpt], -1, [1])
+do_experiments(sys.argv[1], [runNaive, runNaiveOpt, runSimple, runSimpleOpt, runFull, runFullOpt], -1, [1])

@@ -85,9 +85,18 @@ class FullStorageManager(StorageManager):
                                        FOREIGN KEY (clip_id, video_name) REFERENCES clip(clip_id, video_name)
                                    );
         """
+        sql_create_lineage_table = """CREATE TABLE IF NOT EXISTS lineage (
+                                       video_name text NOT NULL,
+                                       lineage text NOT NULL,
+                                       parent text NOT NULL,
+                                       PRIMARY KEY (video_name)
+                                       FOREIGN KEY (video_name) REFERENCES clip(video_name)
+                                   );
+        """
         self.cursor.execute(sql_create_label_table)
         self.cursor.execute(sql_create_background_table)
         self.cursor.execute(sql_create_clip_table)
+        self.cursor.execute(sql_create_lineage_table)
 
     def create_conn(self):
         return sqlite3.connect(os.path.join(self.basedir, self.db_name))

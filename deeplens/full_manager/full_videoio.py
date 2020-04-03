@@ -104,9 +104,9 @@ def _new_headers_batch(conn, all_crops, name, video_refs,
     for i in range(0, len(crops)):
         if type(crops[i]['label']) is list: # TODO: deal with crop all later
             for j in range(len(crops[i]['label'])):
-                insert_label_header(conn, crops[i]['label'][j], ids[i + 1], name)
+                insert_label_header(conn, crops[i]['label'][j], 'storage', get_rnd_strng(64), ids[i + 1], name)
         else:
-            insert_label_header(conn, crops[i]['label'], ids[i + 1], name)
+            insert_label_header(conn, crops[i]['label'], 'storage', get_rnd_strng(64), ids[i + 1], name)
 
     for i in range(1, len(all_crops)):
         _update_headers_batch(conn, all_crops[i], name, start_time, end_time, ids)
@@ -433,6 +433,7 @@ def delete_video_if_exists(conn, video_name):
     c.execute("DELETE FROM clip WHERE video_name = '%s'" % (video_name))
     c.execute("DELETE FROM label WHERE video_name = '%s'" % (video_name))
     c.execute("DELETE FROM background WHERE video_name = '%s'" % video_name)
+    c.execute("DELETE FROM lineage WHERE video_name = '%s'" % (video_name))
     conn.commit()
 
 
@@ -457,14 +458,22 @@ def insert_background_header(conn, background_id, clip_id, video_name):
     c.execute("INSERT INTO background VALUES (?, ?, ?)", (background_id, clip_id, video_name))
     conn.commit()
 
-def insert_label_header(conn, label, clip_id, video_name):
+def insert_label_header(conn, label, value, label_id, clip_id, video_name):
     c = conn.cursor()
-    c.execute("INSERT INTO label VALUES (?, ?, ?)", (label, clip_id, video_name))
+    c.execute("INSERT INTO label VALUES (?, ?, ?, ?, ?)", (label, value, label_id, clip_id, video_name))
     conn.commit()
 
-def delete_label_header(conn, video_name, label = None, clip_id = None):
+def insert_lineage_header(conn, video_name, lineage, parent):
     c = conn.cursor()
-    if label and clip_id:
+    c.execute("INSERT INTO lineage VALUES (?, ?, ?)", (video_name, lineage, parent))
+    conn.commit()
+
+
+def delete_label_header(conn, video_name, label = None, clip_id = None, label_id = None): # TODO
+    c = conn.cursor()
+    if label_id:
+        c.execute("DELETE FROM label WHERE label_id = '%s' AND video_name = '%s' " % (label, clip_id, video_name))
+    elif label and clip_id:
         c.execute("DELETE FROM label WHERE label = '%s' AND clip_id = '%d' AND video_name = '%s' " % (label, clip_id, video_name))
     elif label:
         c.execute("DELETE FROM label WHERE label = '%s' AND video_name = '%s' " % (label, video_name))
@@ -499,6 +508,7 @@ def delete_video(conn, video_name):
     c.execute("DELETE FROM clip WHERE video_name = '%s' " % video_name)
     c.execute("DELETE FROM label WHERE video_name = '%s' " % video_name)
     c.execute("DELETE FROM background WHERE video_name = '%s' " % video_name)
+    c.execute("DELETE FROM lineage WHERE video_name = '%s'" % (video_name))
     conn.commit()
 
 def delete_background(conn, background_id, video_name):
@@ -537,6 +547,7 @@ def query_clip(conn, clip_id, video_name):
     result = c.fetchall()
     return result
 
+# update queries later
 def query_background(conn, video_name, background_id=None, clip_id=None):
     c = conn.cursor()
     if background_id == None and clip_id == None:

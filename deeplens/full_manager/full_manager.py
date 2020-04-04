@@ -78,10 +78,9 @@ class FullStorageManager(StorageManager):
         sql_create_label_table = """CREATE TABLE IF NOT EXISTS label (
                                        label text NOT NULL,
                                        value text NOT NULL,
-                                       label_id text NOT NULL,
                                        clip_id integer NOT NULL,
                                        video_name text NOT NULL,
-                                       PRIMARY KEY (label_id, clip_id, video_name)
+                                       PRIMARY KEY (label, clip_id, video_name)
                                        FOREIGN KEY (clip_id, video_name) REFERENCES clip(clip_id, video_name)
                                    );
         """
@@ -206,7 +205,27 @@ class FullStorageManager(StorageManager):
         result = query(conn, name, clip_condition = condition)
         self.remove_conn(conn)
         return result
-    
+
+    def get_clip_file(self, clip_id, name):
+        results = query_clip(self.conn, clip_id, name)
+        return result[0][8]
+
+    def get_clip_label(self, label, clip_id, name):
+        
+        results = query_label_clip(self.conn, name, clip_id, label = label)
+        if label == None:
+            values = []
+            for result in results:
+                values.append(result[1])
+        else:
+            values = {}
+            for result in results:
+                if result[0] not in values:
+                    values[result[0]] = [result[1]]
+                else:
+                    values[result[0]].append(result[1])
+        return values
+
     def delete(self, name, conn = None):
         conn_not_provided = conn == None
         if conn_not_provided:

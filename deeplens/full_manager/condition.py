@@ -26,7 +26,7 @@ class Condition():
 		self.sampling = sampling
 		self.custom_filter = custom_filter
 
-	def query_everything(self, conn, video_name, backgorund = False):
+	def query_everything(self, conn, video_name, background = False):
 		if backgorund:
 			raise NotImplementedError("Not supported yet. Please set background = True!")
 		clips = query_everything(conn, video_name)

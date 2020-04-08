@@ -55,7 +55,7 @@ class VideoStream():
 		return [self]
 
 
-class CVVideoStream():
+class OpenCVVideoStream():
 	"""The video stream class opens a stream of video
 	   from a source.
 

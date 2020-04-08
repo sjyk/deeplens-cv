@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import csv
-from deeplens.struct import Box, Operator
+from deeplens.struct import Box, VideoStreamOperator
 from deeplens.struct import VideoStream
 import os
 
@@ -46,7 +46,7 @@ class FrameInfo(object):
     def getBox(self):
         return Box(self.xmin, self.ymin, self.xmax, self.ymax)
 
-class YoutubeTagger(Operator):
+class YoutubeTagger(VideoStreamOperator):
     def __init__(self, video_url, labelsPath):
         #super(YoutubeTagger, self).__init__()
         self.video_url = video_url

@@ -4,15 +4,11 @@ the database group (chidata).
 
 pipeline.py defines the main data structures used in deeplens's pipeline. It defines a
 video input stream as well as operators that can transform this stream.
-
-Note this differs form struct.py because it separates the videostream from
-the pipeline?
 """
-import cv2
+import logging
+
 from deeplens.error import *
-import numpy as np
-import json
-from timeit import default_timer as timer
+from queue import Queue, Empty
 
 #sources video from the default camera
 DEFAULT_CAMERA = 0
@@ -30,103 +26,17 @@ class Pipeline():
     (label, box).
     """
 
-    def __init__(self, video_stream, query):
-        """Constructs a videostream object
-
-           Input: src- Source camera or file or url
-                  limit- Number of frames to pull
-                  origin- Set coordinate origin
-        """
-        self.vs = video_stream
-        self.dss = []
-        self.queries = query
-        self.ds_queries = []
-
-    def __iter__(self):
-        """Constructs the iterator object and initializes
-           the iteration state
-        """
-        if type(query) == list:
-            self.vs.initialize(self.query[0])
-            self.video_index = 0
-            for i in range(len(self.dss)):
-                self.dss[i].initialize(self.ds_queries[i][0])
-        else:
-            self.vs.initialize(self.query)
-            for i in range(len(self.dss)):
-                self.dss[i].initialize(self.ds_queries[i])
-        return self
-
-    def __getitem__(self, xform):
-        """Applies a transformation to the pipeline
-        """
-        return xform.apply(self)
-
-    def __next__(self):
-        frame =  self.vs.next()
-        if frame == None:
-            if type(self.query) != list:
-                return None
-            elif self.video_index == len(self.query) - 1:
-                return None
-            else:
-                video_index += 1
-                self.vs.initialize(self.query[video_index])
-                frame = self.vs.next()
-                for i in range(len(self.dss)):
-                    self.dss[i].initialize(self.ds_queries[i][video_index])              
-        
-        for ds in self.dss:
-            frame.update(ds.next())
-        return frame
-
-    def lineage(self):
-        return [self]
-
-    def add_datastream(self, data_stream, query):
-        """ Add an auxillary datastream. Note that the number of queries
-        must be equal to tne number of video queries, and each query return
-        the same number of frames of the matching video query. 
-        """
-        self.ds_queries.append(query)
-        self.dss.append(data_stream)
-
-class StoragePipeline():
-    """The video stream class opens a stream of video
-       from a source.
-
-    Frames are structured in the following way: (1) each frame 
-    is a dictionary where frame['data'] is a numpy array representing
-    the image content, (2) all the other keys represent derived data.
-
-    All geometric information (detections, countours) go into a list called
-    frame['bounding_boxes'] each element of the list is structured as:
-    (label, box).
-    """
-
-    def __init__(self, stmanager, video_stream, video_name, clips_ids, materialize = True):
+    def __init__(self):
         """Constructs a pipeline object linked with a FullManager
         """
-        self.stmanager = stmanager
-        self.vs = video_stream
-        self.video_name = video_name
-        self.clip_ids = clips_ids
-        self.dss = {}
-        self.ds_files = {}
-        self.files = []
+        self.video_stream = Queue()
+        self.data_streams = {}
         self.labels = []
-        for id in clip_ids:
-            file = stmanager.get_clip_file(id)
-            self.files.append(file)
     
     def __iter__(self):
         """Constructs the iterator object and initializes
            the iteration state
         """
-        self.vs.initialize(self.files[0])
-        self.video_index = 0
-        for label in range(len(self.dss)):
-            self.dss[label].initialize(self.ds_files[label][0])
         return self
 
     def __getitem__(self, xform):
@@ -135,52 +45,51 @@ class StoragePipeline():
         return xform.apply(self)
 
     def __next__(self):
-        frame =  self.vs.next()
-        if frame == None:
-            if self.video_index == len(self.clip_ids) - 1:
-                return None
-            else:
-                video_index += 1
-                self.vs.initialize(self.files[video_index])
-                frame = self.vs.next()
-                for label in self.labels:
-                    self.dss[label].initialize(self.ds_files[label][video_index])              
-        
-        for ds in self.dss:
-            frame[label] = ds.next()
-        
-        return frame
+        # Get VideoStream from queue
+        try:
+            current_videostream = self.dequeue_videostream()
+        except Empty():
+            logging.debug("self.video_stream queue is empty!")
+            raise StopIteration("Iterator is closed")
+
+        # Get DataStream from queue
+        try:
+            current_datastreams = [self.dequeue_datastream(label) for label in self.labels]
+        except Empty():
+            logging.debug("self.data_streams queue is empty!")
+            raise StopIteration("Iterator is closed")
+
+        return (current_videostream, current_datastreams)
+
+    def add_datastream(self, label, data_stream):
+        if label in self.labels:
+            raise KeyError("Label '%s' already in pipeline!" % label)
+
+        self.labels.append(label)
+
+        self.data_streams[label] = Queue()
+        self.data_streams[label].put(data_stream)
+
+    def enqueue_datastream(self, label, data_stream):
+        if label not in self.labels:
+            raise KeyError("Label '%s' does not exist in pipeline!" % label)
+
+        self.data_streams[label].put(data_stream)
+
+    def dequeue_datastream(self, label):
+        return self.data_streams[label].get_nowait()
+
+    def enqueue_videostream(self, video_stream):
+        self.video_stream.put(video_stream)
+
+    def dequeue_videostream(self):
+        return self.video_stream.get_nowait()
 
     def lineage(self):
         return [self]
 
-    def add_datastream(self, label,  data_stream):
-        if label not in labels:
-            self.labels.append(label)
-            self.ds_files[label] = []
-            for id in self.clip_ids:
-                file = self.stmanager.get_clip_label(label, clip_id, name)
-                self.ds_files[label].append(file)
-            self.dss[label] = data_stream
 
-#given a list of pipeline methods, it reconstucts it into a stream
-def build(lineage):
-    """build(lineage) takes as input the lineage of a stream and
-    constructs the stream.
-    """
-    plan = lineage
-    if len(plan) == 0:
-        raise ValueError("Plan is empty")
-    elif len(plan) == 1:
-        return plan[0]
-    else:
-        v = plan[0]
-        for op in plan[1:]:
-            v = v[op]
-        return v
-
-
-class Operator():
+class PipelineOperator():
     """An operator defines consumes an iterator over frames
     and produces and iterator over frames. The Operator class
     is the abstract class of all pipeline components in dlcv.

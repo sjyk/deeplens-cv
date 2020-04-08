@@ -78,6 +78,7 @@ class FullStorageManager(StorageManager):
         sql_create_label_table = """CREATE TABLE IF NOT EXISTS label (
                                        label text NOT NULL,
                                        value text NOT NULL,
+                                       type text NOT NULL,
                                        clip_id integer NOT NULL,
                                        video_name text NOT NULL,
                                        PRIMARY KEY (label, clip_id, video_name)
@@ -193,6 +194,36 @@ class FullStorageManager(StorageManager):
         if args == None:
             args = DEFAULT_ARGS
 
+    def put_videostream(self, video_stream):
+        """instead of taking a filename / URL, this function takes a VideoStream object
+           and ingests it into our database
+
+           Returns:
+               clip_ids - a list of unique identifiers of each clip stored in our DB
+        """
+        pass
+
+    def get_videostream(self, clip_id):
+        """constructs a VideoStream object from what we have in our database
+        """
+
+    def put_datastream(self, data_stream):
+        """materializes a DataStream object to header database
+        """
+        pass
+
+    def get_datastream(self, label):
+        """constructs a DataStream object from what we have in header database
+        """
+        files_list = []
+        for clip_id in self.clip_ids:
+            file = self.storage_manager.get_clip_label(label, clip_id,
+                                                       video_name)  # FIXME: Do we still need video_name?
+            files_list.append(file)
+
+        # TODO: finish the function
+        return DataStream()
+
     def get(self, name, condition):
         """retrievies a clip of satisfying the condition.
         If the clip was in external storage, get moves it to disk. TODO: Figure out if I should implement this feature or not
@@ -210,9 +241,9 @@ class FullStorageManager(StorageManager):
         results = query_clip(self.conn, clip_id, name)
         return result[0][8]
 
-    def get_clip_label(self, label, clip_id, name):
+    def get_clip_label(self, label, clip_id, video_name):
         
-        results = query_label_clip(self.conn, name, clip_id, label = label)
+        results = query_label_clip(self.conn, video_name, clip_id, label=label)
         if label == None:
             values = []
             for result in results:

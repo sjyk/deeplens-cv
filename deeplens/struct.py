@@ -5,7 +5,6 @@ the database group (chidata).
 struct.py defines the main data structures used in deeplens. It defines a
 video input stream as well as operators that can transform this stream.
 """
-import cv2
 from deeplens.error import *
 import numpy as np
 import json
@@ -15,11 +14,52 @@ from timeit import default_timer as timer
 DEFAULT_CAMERA = 0
 
 
+class DataStream():
+	def __init__(self, file):
+		raise NotImplementedError("initialize not implemented")
+
+	def __next__(self):
+		raise NotImplementedError("next not implemented")
+
+
+class JSONListDataStream(DataStream):
+	def __init__(self, files):
+		self.data = []
+		for file in files:
+			with open(file, 'r') as f:
+				self.data.append(iter(json.load(f)))
+
+	def __next__(self):
+		frame = []
+		for d in self.data:
+			frame.append(next(d))
+		return frame
+
+
+class ConstantDataStream(DataStream):
+	def __init__(self, constants):
+		self.data = constants
+
+	def __next__(self):
+		return self.data
+
+
 class VideoStream():
+	def __init__(self, src, limit=-1, origin=np.array((0, 0))):
+		self.limit = limit
+		self.src = src
+		self.limit = limit
+		self.origin = origin
+
+	def lineage(self):
+		return [self]
+
+
+class CVVideoStream():
 	"""The video stream class opens a stream of video
 	   from a source.
 
-	Frames are structured in the following way: (1) each frame 
+	Frames are structured in the following way: (1) each frame
 	is a dictionary where frame['data'] is a numpy array representing
 	the image content, (2) all the other keys represent derived data.
 
@@ -35,84 +75,65 @@ class VideoStream():
 				  limit- Number of frames to pull
 				  origin- Set coordinate origin
 		"""
-		self.src = src
-		self.limit = limit
-		self.origin = origin
+		super().__init__(src, limit, origin)
 		self.propIds = None
 		self.cap = None
 		self.time_elapsed = 0
-		self.hwang = hwang
 
 		# moved from __iter__ to __init__ due to continuous iterating
-		if not hwang:
-			self.offset = offset
-			self.frame_count = offset
-			self.cap = cv2.VideoCapture(self.src)
-		else:
-			import hwang
-			self.rows = rows
-			self.frame_count = 0
-			self.decoder = hwang.Decoder(self.src)
+		import cv2
+		self.offset = offset
+		self.frame_count = offset
+		self.cap = cv2.VideoCapture(self.src)
 
 	def __getitem__(self, xform):
 		"""Applies a transformation to the video stream
 		"""
 		return xform.apply(self)
 
-
 	def __iter__(self):
 		"""Constructs the iterator object and initializes
 		   the iteration state
 		"""
-		if not self.hwang:
-			if self.cap == None:
-				# iterate the same videostream again after the previous run has finished
-				self.frame_count = self.offset
-				self.cap = cv2.VideoCapture(self.src)
+		if self.cap == None:
+			# iterate the same videostream again after the previous run has finished
+			self.frame_count = self.offset
+			self.cap = cv2.VideoCapture(self.src)
 
-			if self.propIds:
-				for propId in self.propIds:
-					self.cap.set(propId, self.propIds[propId])
+		if self.propIds:
+			for propId in self.propIds:
+				self.cap.set(propId, self.propIds[propId])
 
-			if not self.cap.isOpened():
-				raise CorruptedOrMissingVideo(str(self.src) + " is corrupted or missing.")
+		if not self.cap.isOpened():
+			raise CorruptedOrMissingVideo(str(self.src) + " is corrupted or missing.")
 
-			#set sizes after the video is opened
-			self.width = int(self.cap.get(3))   # float
-			self.height = int(self.cap.get(4)) # float
-		else:
-			self.width = self.decoder.video_index.frame_width()
-			self.height = self.decoder.video_index.frame_height()
-			self.frames = iter(self.decoder.retrieve(self.rows))
+		#set sizes after the video is opened
+		self.width = int(self.cap.get(3))   # float
+		self.height = int(self.cap.get(4)) # float
 
 		return self
 
-
 	def __next__(self):
-		if not self.hwang:
-			if self.cap.isOpened() and \
-			   (self.limit < 0 or self.frame_count < self.limit):
+		if self.cap.isOpened() and \
+		   (self.limit < 0 or self.frame_count < self.limit):
 
-				time_start = timer()
-				ret, frame = self.cap.read()
-				self.time_elapsed += timer() - time_start
+			time_start = timer()
+			ret, frame = self.cap.read()
+			self.time_elapsed += timer() - time_start
 
-				if ret:
-					self.frame_count += 1
-					return {'data': frame, \
-							'frame': (self.frame_count - 1),\
-							'origin': self.origin}
-				else:
-					raise StopIteration("Iterator is closed")
+			if ret:
+				self.frame_count += 1
+				return {'data': frame, \
+						'frame': (self.frame_count - 1), \
+						'origin': self.origin,
+						'width': self.width,
+						'height': self.height}
 			else:
-				# self.cap.release()  # commented out due to CorruptedOrMissingVideo error
-				self.cap = None
 				raise StopIteration("Iterator is closed")
 		else:
-			self.frame_count += 1
-			return {'data': next(self.frames),
-					'frame': (self.frame_count - 1),
-					'origin': self.origin}
+			# self.cap.release()  # commented out due to CorruptedOrMissingVideo error
+			self.cap = None
+			raise StopIteration("Iterator is closed")
 
 	def __call__(self, propIds = None):
 		""" Sets the propId argument so that we can
@@ -252,12 +273,38 @@ class RawVideoStream(VideoStream):
 			ret = self.next_frame
 			self.next_frame = next(self.frame_iter)
 			self.frame_count += 1
-			return {'frame': (self.frame_count - 1), 'data': ret, 'origin': self.origin}
+			return {'frame': (self.frame_count - 1),
+					'data': ret,
+					'origin': self.origin,
+					'width': self.width,
+					'height': self.height}
 		else:
 			raise StopIteration("Iterator is closed")
 
 	def lineage(self):
 		return self.global_lineage
+
+
+class HwangVideoStream(VideoStream):
+	def __init__(self, src, limit=-1, origin=np.array((0, 0)), rows=[]):
+		super().__init__(src, limit, origin)
+		import hwang
+		self.rows = rows
+		self.frame_count = 0
+		self.decoder = hwang.Decoder(self.src)
+
+	def __iter__(self):
+		self.width = self.decoder.video_index.frame_width()
+		self.height = self.decoder.video_index.frame_height()
+
+		# TODO(swjz): fetch all rows when (limit == -1)
+		self.frames = iter(self.decoder.retrieve(self.rows))
+
+	def __next__(self):
+		self.frame_count += 1
+		return {'data': next(self.frames),
+				'frame': (self.frame_count - 1),
+				'origin': self.origin}
 
 
 #helper methods
@@ -287,13 +334,13 @@ def build(lineage):
 		return v
 
 
-class Operator():
+class VideoStreamOperator():
 	"""An operator defines consumes an iterator over frames
 	and produces and iterator over frames. The Operator class
 	is the abstract class of all pipeline components in dlcv.
-	
+
 	We overload python subscripting to construct a pipeline
-	>> stream[Transform()] 
+	>> stream[Transform()]
 	"""
 
 	#this is a function that sets some bookkeepping variables
@@ -348,7 +395,7 @@ class Box():
 	"""
 
 	def __init__(self,x0,y0,x1,y1):
-		"""The constructor for a box, all of the inputs have to be castable to 
+		"""The constructor for a box, all of the inputs have to be castable to
 		integers. By convention x0 <= x1 and y0 <= y1
 		"""
 		self.x0 = int(x0)
@@ -371,7 +418,7 @@ class Box():
 				   self.y0, \
 				   self.x1 + x, \
 				   self.y1)
-				   
+
 	def y_translate(self, y):
 		return Box(self.x0, \
 				   self.y0 + y, \
@@ -429,7 +476,7 @@ class Box():
 	def union_area(self, other):
 		ia = self.intersect_area(other)
 		return self.area() + other.area() - ia
-	
+
 	def union_box(self, other):
 		return Box(min(self.x0, other.x0), \
 				min(self.y0, other.y0), \
@@ -441,7 +488,7 @@ class Box():
 		return int(self.x0),int(self.y0),int(self.x1),int(self.y1)
 
 
-class CustomTagger(Operator):
+class CustomTagger(VideoStreamOperator):
 	def __init__(self, tagger, batch_size):
 		super(CustomTagger, self).__init__()
 		# a custom tagger function that takes video_stream and batch_size; it raises StopIteration when finishes

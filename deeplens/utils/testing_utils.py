@@ -5,7 +5,7 @@ the database group (chidata).
 testing_utils.py defines some primitives that are useful for debugging and evaluating
 performance.
 """
-from deeplens.struct import Operator
+from deeplens.struct import VideoStreamOperator
 from deeplens.simple_manager.file import add_ext
 
 import random
@@ -46,7 +46,7 @@ def timeof(vstreams):
 """Creates dummy tags without having to execute a neural
 network library.
 """
-class TestTagger(Operator):
+class TestTagger(VideoStreamOperator):
 	def __init__(self):
 		super(TestTagger, self).__init__()
 
@@ -75,7 +75,7 @@ class TestTagger(Operator):
 
 """ Creates dummy splits/crops without optimization
 """
-class TestSplitter(Operator):
+class TestSplitter(VideoStreamOperator):
 	def __init__(self):
 		super(TestSplitter, self).__init__()
 

@@ -215,7 +215,7 @@ class PipelineOperator():
             return self.pipeline.lineage() + [self]
 
     def _serialize(self):
-        return NotImplemented("This operator cannot be serialized")
+        return NotImplementedError("This operator cannot be serialized")
 
     def serialize(self):
         try:

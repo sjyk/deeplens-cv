@@ -334,6 +334,48 @@ def build(lineage):
 		return v
 
 
+class DataStreamOperator():
+	"""An operator defines consumes an iterator over DataStream
+	and produces and iterator over DataStream. The Operator class
+	is the abstract class of all pipeline components in DeepLens.
+
+	We overload python subscripting to construct a pipeline
+	>> stream[Transform()]
+	"""
+
+	#subscripting binds a transformation to the current stream
+	def apply(self, data_stream):
+		self.data_stream = data_stream
+		return self
+
+	def __getitem__(self, xform):
+		"""Applies a transformation to the video stream
+		"""
+		return xform.apply(self)
+
+	def lineage(self):
+		"""lineage() returns the sequence of transformations
+		that produces the given stream of data. It can be run
+		without materializing any of the stream.
+
+		Output: List of references to the pipeline components
+		"""
+		if isinstance(self.data_stream, DataStream):
+			return [self.data_stream, self]
+		else:
+			return self.data_stream.lineage() + [self]
+
+	def _serialize(self):
+		return NotImplementedError("This operator cannot be serialized")
+
+	def serialize(self):
+		try:
+			import json
+			return json.dumps(self._serialize())
+		except:
+			return ManagerIOError("Serialization Error")
+
+
 class VideoStreamOperator():
 	"""An operator defines consumes an iterator over frames
 	and produces and iterator over frames. The Operator class
@@ -376,7 +418,7 @@ class VideoStreamOperator():
 			return self.video_stream.lineage() + [self]
 
 	def _serialize(self):
-		return NotImplemented("This operator cannot be serialized")
+		return NotImplementedError("This operator cannot be serialized")
 
 	def serialize(self):
 		try:

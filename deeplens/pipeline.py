@@ -17,6 +17,100 @@ from timeit import default_timer as timer
 #sources video from the default camera
 DEFAULT_CAMERA = 0
 
+
+class Pipeline():
+    """The video stream class opens a stream of video
+       from a source.
+
+    Frames are structured in the following way: (1) each frame 
+    is a dictionary where frame['data'] is a numpy array representing
+    the image content, (2) all the other keys represent derived data.
+
+    All geometric information (detections, countours) go into a list called
+    frame['bounding_boxes'] each element of the list is structured as:
+    (label, box).
+    """
+
+    def __init__(self, vstream, dstreams):
+        """Constructs a videostream object
+
+           Input: src- Source camera or file or url
+                  limit- Number of frames to pull
+                  origin- Set coordinate origin
+        """
+        self.vstream = video_stream
+        self.dstreams = datastreams
+
+    def __iter__(self):
+        """Constructs the iterator object and initializes
+           the iteration state
+        """
+        self.vstream = iter(self.vstream)
+        for i in range(len(self.dstreams)):
+            self.dstreams[i] = iter(self.dstreams[i])
+        return self
+
+    def __getitem__(self, xform):
+        """Applies a transformation to the pipeline
+        """
+        return xform.apply(self)
+
+    def __next__(self):
+        frame =  next(self.vstream)
+        for ds in self.dstreams:
+            frame.update(next(ds))
+        return frame
+
+    def lineage(self):
+        return [self]
+
+
+class PipelineManager():
+    """The video stream class opens a stream of video
+       from a source.
+
+    Frames are structured in the following way: (1) each frame 
+    is a dictionary where frame['data'] is a numpy array representing
+    the image content, (2) all the other keys represent derived data.
+
+    All geometric information (detections, countours) go into a list called
+    frame['bounding_boxes'] each element of the list is structured as:
+    (label, box).
+    """
+    def __init__(self):
+        self.operators = []
+        self.vstream = None
+        self.dstreams = []
+
+    def get_operators(self):
+        return self.operators
+    
+    def update_operators(self, operators):
+        self.operators = operators
+
+    def build(self):
+        pipeline = Pipeline(self.vstream, self.dstreams)
+        for op in self.operators:
+            pipeline = pipeline[op]
+        return pipeline
+
+    def add_operator(self, operator):
+        self.operators.append(operator)
+
+    def add_videostream(self, vstream):
+        if self.vstream:
+            self.vstream = vstream
+            return (None, self.vstream)
+        else:
+            v = self.vstream
+            self.vstream = vstream
+            return (v, self.vstream)
+    
+    def add_datastream(self, datastream):
+        self.dstreams.append(datastream)
+        
+
+
 class Pipeline():
     """The video stream class opens a stream of video
        from a source.

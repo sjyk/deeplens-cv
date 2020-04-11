@@ -106,7 +106,7 @@ class PipelineManager():
     def add_operators(self, operators):
         self.operators = self.operators  + operators
 
-    def add_videostream(self, vstream):
+    def update_videostream(self, vstream):
         if self.vstream:
             self.vstream = vstream
             return (None, self.vstream)
@@ -128,7 +128,7 @@ class PipelineManager():
         self.dstreams = {}
         return(vstream, dstreams)
 
-class PipelineOperator():
+class Operator():
     """An operator defines consumes an iterator over frames
     and produces and iterator over frames. The Operator class
     is the abstract class of all pipeline components in dlcv.

@@ -38,7 +38,7 @@ class DataQueue():
 
         # Get DataStream from queue
         try:
-            current_datastreams = [self.dequeue_datastream(label) for label in self.labels]
+            current_datastreams = {label: self.dequeue_datastream(label) for label in self.labels}
         except Empty():
             logging.debug("self.data_streams queue is empty!")
             raise StopIteration("Iterator is closed")

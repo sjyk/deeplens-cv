@@ -196,9 +196,8 @@ class FullStorageManager(StorageManager):
     def put_streams(self, name, vstream, dstreams = None, materialize = True, args=None, batch_size = -1):
         if args == None:
             args = DEFAULT_ARGS
-        pipeline = PipelineManager()
+        pipeline = PipelineManager(vstream)
         pipeline.add_operator(Materialize(name, self, args, materialize, batch_size))
-        pipeline.add_videostream(vstream)
         if dstreams != None:
             pipeline.add_datastreams(dstreams)
         pipeline.run(keep_result = False)

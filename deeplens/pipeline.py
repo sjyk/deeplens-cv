@@ -71,9 +71,9 @@ class PipelineManager():
     frame['bounding_boxes'] each element of the list is structured as:
     (label, box).
     """
-    def __init__(self):
+    def __init__(self, vstream = None):
         self.operators = []
-        self.vstream = None
+        self.vstream = vstream
         self.dstreams = {}
 
     def get_operators(self):
@@ -83,6 +83,8 @@ class PipelineManager():
         self.operators = operators
 
     def build(self):
+        if self.vstream == None:
+            raise MissingVideoStream()
         streams = {'video': self.vstream}
         streams.update(self.dstreams)
         pipeline = Pipeline(streams)
@@ -100,6 +102,9 @@ class PipelineManager():
 
     def add_operator(self, operator):
         self.operators.append(operator)
+    
+    def add_operators(self, operators):
+        self.operators = self.operators  + operators
 
     def add_videostream(self, vstream):
         if self.vstream:
@@ -115,6 +120,13 @@ class PipelineManager():
 
     def add_datastreams(self, datastreams):
         self.dstreams.update(datastreams)
+    
+    def clear_streams(self):
+        vstream = self.vstream
+        dstreams = self.dstreams
+        self.vstream = None
+        self.dstreams = {}
+        return(vstream, dstreams)
 
 class PipelineOperator():
     """An operator defines consumes an iterator over frames

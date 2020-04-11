@@ -7,6 +7,10 @@ class VideoNotFound(Exception):
    """Video with the specified name not found in the manager"""
    pass
 
+class MissingVideoStream(Exception):
+   """Pipeline doesn't contain a VideoStream"""
+   pass
+
 class ManagerIOError(Exception):
    """Unspecified error with the manager"""
    pass

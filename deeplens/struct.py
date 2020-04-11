@@ -5,7 +5,6 @@ the database group (chidata).
 struct.py defines the main data structures used in deeplens. It defines a
 video input stream as well as operators that can transform this stream.
 """
-import cv2
 from deeplens.error import *
 import numpy as np
 import json
@@ -21,7 +20,7 @@ class Box():
 	"""
 
 	def __init__(self,x0,y0,x1,y1):
-		"""The constructor for a box, all of the inputs have to be castable to 
+		"""The constructor for a box, all of the inputs have to be castable to
 		integers. By convention x0 <= x1 and y0 <= y1
 		"""
 		self.x0 = int(x0)
@@ -44,7 +43,7 @@ class Box():
 				   self.y0, \
 				   self.x1 + x, \
 				   self.y1)
-				   
+
 	def y_translate(self, y):
 		return Box(self.x0, \
 				   self.y0 + y, \
@@ -102,7 +101,7 @@ class Box():
 	def union_area(self, other):
 		ia = self.intersect_area(other)
 		return self.area() + other.area() - ia
-	
+
 	def union_box(self, other):
 		return Box(min(self.x0, other.x0), \
 				min(self.y0, other.y0), \
@@ -114,7 +113,7 @@ class Box():
 		return int(self.x0),int(self.y0),int(self.x1),int(self.y1)
 
 
-class CustomTagger(Operator):
+class CustomTagger(VideoStreamOperator):
 	def __init__(self, tagger, batch_size):
 		super(CustomTagger, self).__init__()
 		# a custom tagger function that takes video_stream and batch_size; it raises StopIteration when finishes

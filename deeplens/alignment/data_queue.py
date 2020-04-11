@@ -1,3 +1,7 @@
+import logging
+from queue import Queue, Empty
+
+
 class DataQueue():
     """The video stream class opens a stream of video
        from a source.

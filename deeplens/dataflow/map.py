@@ -7,12 +7,12 @@ map.py defines the simplest dataflow component in DeepLens
 import random
 
 from deeplens.utils.utils import *
-from deeplens.struct import Operator
+from deeplens.struct import VideoStreamOperator
 
 import numpy as np
 from timeit import default_timer as timer
 
-class Map(Operator):
+class Map(VideoStreamOperator):
 	"""Map is an abstract dataflow operator that applies a transformation
 	frame by frame.
 	"""
@@ -122,7 +122,7 @@ class Resize(Map):
 		return {'scale': self.scale}
 		
 
-class Cut(Operator): 
+class Cut(VideoStreamOperator):
 	"""Cut is a video transformation that returns the clip that lies within a range 
 	"""
 
@@ -168,7 +168,7 @@ class Cut(Operator):
 
 
 
-class Sample(Operator): 
+class Sample(VideoStreamOperator):
 	"""Sample is a transform that drops frames from a video stream at a given 
 	rate. 
 	"""
@@ -207,7 +207,7 @@ class Sample(Operator):
 		return {'ratio': self.ratio}
 
 
-class SkipEmpty(Operator): 
+class SkipEmpty(VideoStreamOperator):
 
 
 	def __iter__(self):
@@ -230,7 +230,7 @@ class SkipEmpty(Operator):
 		return out
 
 
-class SampleClip(Operator):
+class SampleClip(VideoStreamOperator):
 	"""SampleClip is a transform that drops clips from a video stream at given
 	clip_size and (1-prob_keep) probability.
 	"""

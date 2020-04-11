@@ -4,15 +4,11 @@ the database group (chidata).
 
 pipeline.py defines the main data structures used in deeplens's pipeline. It defines a
 video input stream as well as operators that can transform this stream.
-
-Note this differs form struct.py because it separates the videostream from
-the pipeline?
 """
-import cv2
+import logging
+
 from deeplens.error import *
-import numpy as np
-import json
-from timeit import default_timer as timer
+from queue import Queue, Empty
 
 #sources video from the default camera
 DEFAULT_CAMERA = 0
@@ -120,7 +116,7 @@ class PipelineManager():
     def add_datastreams(self, datastreams):
         self.dstreams.update(datastreams)
 
-class Operator():
+class PipelineOperator():
     """An operator defines consumes an iterator over frames
     and produces and iterator over frames. The Operator class
     is the abstract class of all pipeline components in dlcv.
@@ -152,7 +148,7 @@ class Operator():
             return self.pipeline.lineage() + [self]
 
     def _serialize(self):
-        return NotImplemented("This operator cannot be serialized")
+        return NotImplementedError("This operator cannot be serialized")
 
     def serialize(self):
         try:

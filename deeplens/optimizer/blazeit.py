@@ -1,6 +1,6 @@
 from deeplens.tracking.event import Metric
 from deeplens.dataflow.map import Mask
-from deeplens.struct import build, Operator, Box
+from deeplens.struct import build, VideoStreamOperator, Box
 
 class BlazeItOptimizer():
 

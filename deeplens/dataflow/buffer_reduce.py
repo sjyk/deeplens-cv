@@ -2,9 +2,9 @@ import logging
 import time
 import cv2
 
-from deeplens.struct import Operator
+from deeplens.struct import VideoStreamOperator
 
-class BufferReduce(Operator):
+class BufferReduce(VideoStreamOperator):
 
     def __init__(self,
                  buffer_size=10, \

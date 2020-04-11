@@ -5,7 +5,7 @@ the database group (chidata).
 event.py defines some of the main detection primitives used in dlcv.
 """
 
-from deeplens.struct import Operator, Box
+from deeplens.struct import VideoStreamOperator, Box
 from deeplens.dataflow.map import Map
 import numpy as np
 from timeit import default_timer as timer
@@ -70,7 +70,7 @@ class ActivityMetric(Metric):
 
 
 
-class Filter(Operator):
+class Filter(VideoStreamOperator):
 	"""Filter() defines cross-correlation kernel and a threshold. It
 	slides this kernel across the metric and if this threshold is exceeded
 	it defines an event {True, False} variable.

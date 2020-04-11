@@ -80,6 +80,7 @@ class FullStorageManager(StorageManager):
         sql_create_label_table = """CREATE TABLE IF NOT EXISTS label (
                                        label text NOT NULL,
                                        value text NOT NULL,
+                                       type text NOT NULL,
                                        clip_id integer NOT NULL,
                                        video_name text NOT NULL,
                                        type text NOT NULL,

@@ -9,12 +9,12 @@ import logging
 
 import cv2
 from deeplens.utils import *
-from deeplens.struct import Operator
+from deeplens.struct import VideoStreamOperator
 
 import time
 import numpy as np
 
-class BufferMap(Operator):
+class BufferMap(VideoStreamOperator):
 	"""BufferMap is an abstract dataflow operator that buffers frames from a 
 	stream and applies a function to the buffer.
 	"""

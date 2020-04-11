@@ -458,9 +458,9 @@ def insert_background_header(conn, background_id, clip_id, video_name):
     c.execute("INSERT INTO background VALUES (?, ?, ?)", (background_id, clip_id, video_name))
     conn.commit()
 
-def insert_label_header(conn, label, value, clip_id, video_name):
+def insert_label_header(conn, label, value, clip_id, video_name, type = 'background'):
     c = conn.cursor()
-    c.execute("INSERT INTO label VALUES (?, ?, ?, ?)", (label, value, clip_id, video_name))
+    c.execute("INSERT INTO label VALUES (?, ?, ?, ?, ?)", (label, value, clip_id, video_name, type))
     conn.commit()
 
 def insert_lineage_header(conn, video_name, lineage, parent):

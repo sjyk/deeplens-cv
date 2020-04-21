@@ -1,7 +1,10 @@
 # TODO: VideoStream types: Hwang, OpenCV, Iterator
 # TODO: Add error if next is called before initialize
 import json
-import cv2
+import os
+import tempfile
+from shutil import copyfile
+from subprocess import Popen
 from timeit import default_timer as timer
 import numpy as np
 
@@ -109,6 +112,7 @@ class VideoStream(DataStream):
 class CVVideoStream(VideoStream):
     def __init__(self, src, name, limit = -1, origin = np.array((0,0)), offset = 0):
         super.__init__(name, src, limit, origin, offset)
+        import cv2
         self.propIds = None
         self.frame = None
 
@@ -129,7 +133,7 @@ class CVVideoStream(VideoStream):
         self.height = int(self.cap.get(4)) # float
         return self
 
-    def next(self):
+    def __next__(self):
         if self.cap.isOpened() and \
             (self.limit < 0 or self.frame_count < self.limit):
             time_start = timer()
@@ -227,8 +231,70 @@ class RawVideoStream(VideoStream):
 
 # TODO: Add implementation with hwang backend
 class HwangVideoStream(VideoStream):
-    def __init__(self, limit=-1):
-        super.__init__(limit)
+    def __init__(self, src, name, limit=-1, origin=np.array((0, 0)), rows=[]):
+        super().__init__(src, limit, name, origin)
+        import hwang
+        self.rows = rows
+        self.frame_count = 0
+        self.frame = None
+        self.decoder = hwang.Decoder(self.src)
 
-    def initialize(self, src, origin=np.array((0,0)), offset = 0):
-        raise NotImplemented("initialize not implemented")
+    def __iter__(self):
+        self.width = self.decoder.video_index.frame_width()
+        self.height = self.decoder.video_index.frame_height()
+
+        # TODO(swjz): fetch all rows when (limit == -1)
+        self.frames = iter(self.decoder.retrieve(self.rows))
+
+    def __next__(self):
+        self.frame_count += 1
+        self.frame = {'data': next(self.frames),
+                      'frame': (self.frame_count - 1),
+                      'origin': self.origin}
+
+    def get(self):
+        return self.frame
+
+    def init_mat(self):
+        raise NotImplemented("init_mat not implemented")
+
+    def append(self, data, prev):
+        raise NotImplemented("append not implemented")
+
+    def materialize(self, data):
+        raise NotImplemented("materialize not implemented")
+
+    def _write_mp4(self, paths, output_name, fps, scale=None):
+        # Adapted from https://github.com/scanner-research/scanner/blob/645fb2/python/scannerpy/column.py
+        temp_paths = []
+        for _ in range(len(paths)):
+            fd, p = tempfile.mkstemp()
+            os.close(fd)
+            temp_paths.append(p)
+        # Copy all files locally before calling ffmpeg
+        for in_path, temp_path in zip(paths, temp_paths):
+            copyfile(in_path, temp_path)
+        files = '|'.join(temp_paths)
+
+        args = ''
+        if scale:
+            args += '-filter:v "scale={:d}x{:d}" '.format(scale[0], scale[1])
+        encode_lib = 'libx264' # Assume the video is encoded as H264 (potentially supports H265)
+
+        cmd = (
+            'ffmpeg -y '
+            '-r {fps:f} '  # set the input fps
+            '-i "concat:{input_files:s}" '  # concatenate the h264 files
+            '-c:v {encode_lib:s} '
+            '-filter:v "setpts=N" '  # h264 does not have pts' in it
+            '-loglevel panic '
+            '{extra_args:s}'
+            '{output_name:s}.mp4'.format(
+                input_files=files,
+                fps=fps,
+                extra_args=args,
+                output_name=output_name,
+                encode_lib=encode_lib))
+        rc = Popen(cmd, shell=True).wait()
+        if rc != 0:
+            raise FFMpegError('ffmpeg failed during mp4 export!')

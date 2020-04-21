@@ -22,3 +22,7 @@ class HeaderError(Exception):
 class InvalidRegionError(Exception):
    """The box region specified is invalid"""
    pass
+
+class FFMpegError(Exception):
+   """Error occurred during ffmpeg command"""
+   pass

@@ -121,20 +121,21 @@ class FullStorageManager(StorageManager):
         """
         conn = self.get_conn()
         self.delete(target, conn)
+        
         if in_extern_storage: 
             physical_dir = self.externdir
         else:
             physical_dir = self.basedir
-        
+
         if type(filename) == int:
             stream = True
         else:
             stream = False
+        
         if self.content_tagger == None:
                 tagger = filename
         else:
             tagger = self.content_tagger
-
 
         if tagger.batch_size < args['batch_size']:
             raise ValueError("This setting may currently lead to bugs")
@@ -142,7 +143,6 @@ class FullStorageManager(StorageManager):
         if parallel and not stream:
             db_path = os.path.join(self.basedir, self.db_name)
             write_video_parallel(db_path, filename, target, physical_dir, self.content_splitter, tagger, args=args)
-        
         else:
             write_video_single(conn, filename, target, physical_dir, self.content_splitter, tagger, stream=stream, args=args, background_scale=args['background_scale'])
         
@@ -181,17 +181,17 @@ class FullStorageManager(StorageManager):
         self.remove_conn(conn)
         return times
 
-
-    def put_fixed(self, filename, target, crops, batch = False, args=DEFAULT_ARGS, in_extern_storage = False):
-        conn = self.get_conn()
-        self.delete(target, conn)
-        if in_extern_storage: 
-            physical_dir = self.externdir
-        else:
-            physical_dir = self.basedir
-        write_video_fixed(conn, filename, target, physical_dir, crops, batch = batch, args=args)
-        self.videos.add(target)
-        self.remove_conn(conn)
+    # TODO: update feature if needed
+    # def put_fixed(self, filename, target, crops, batch = False, args=DEFAULT_ARGS, in_extern_storage = False):
+    #     conn = self.get_conn()
+    #     self.delete(target, conn)
+    #     if in_extern_storage: 
+    #         physical_dir = self.externdir
+    #     else:
+    #         physical_dir = self.basedir
+    #     write_video_fixed(conn, filename, target, physical_dir, crops, batch = batch, args=args)
+    #     self.videos.add(target)
+    #     self.remove_conn(conn)
 
     def put_streams(self, name, vstream, dstreams = None, materialize = True, args=None, batch_size = -1):
         if args == None:
@@ -216,7 +216,8 @@ class FullStorageManager(StorageManager):
         return list(self.videos)
 
     def size(self, name):
-        """ Return the total amount of space a deeplens video takes up
+        """ Return the total amount of space a deeplens video takes up. Note that this doesn't include
+        auxilary streams.
         """
         conn = self.get_conn()
         cursor = conn.cursor()

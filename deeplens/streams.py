@@ -10,7 +10,6 @@ import numpy as np
 
 from deeplens.struct import *
 
-
 class DataStream():
     def __init__(self, data, name):
         self.name = name
@@ -33,7 +32,7 @@ class DataStream():
     def materialize(self, data):
         raise NotImplemented("materialize not implemented")
 
-class JSONListDataStream(DataStream):
+class JSONListStream(DataStream):
     def __init__(self, data, name):
         super.__init__(data, name)
         self.data = []
@@ -69,7 +68,7 @@ class JSONListDataStream(DataStream):
         else:
             return json.dump(data, fp)
 
-class ConstantDataStream(DataStream):
+class ConstantStream(DataStream):
     def __init__(self, data, name):
         super.__init__(name)
         self.data = data
@@ -78,7 +77,7 @@ class ConstantDataStream(DataStream):
         return self
     
     def get(self):
-        return self.constants
+        return self.data
 
     def init_mat(self):
         return None
@@ -88,6 +87,32 @@ class ConstantDataStream(DataStream):
     
     def materialize(self, data):
         return data
+
+class CacheStream(DataStream):
+    def __init__(self, name):
+        super.__init__(name)
+        self.data = None
+
+    def __next__(self):
+        return self
+    
+    def get(self):
+        return self.data
+
+    def update(self, data):
+        self.data = data
+
+    def init_mat(self):
+        return []
+    
+    def append(self, data, prev):
+        return prev.append(data)
+    
+    def materialize(self, data, fp = None):
+        if not file_name:
+            return json.dumps(data)
+        else:
+            return json.dump(data, fp)
 
 class VideoStream(DataStream):
     

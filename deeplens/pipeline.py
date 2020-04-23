@@ -70,7 +70,7 @@ class PipelineManager():
     frame['bounding_boxes'] each element of the list is structured as:
     (label, box).
     """
-    def __init__(self, data_queue):
+    def __init__(self, vstream):
         self.operators = []
         self.vstream = vstream
         self.dstreams = {}

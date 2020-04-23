@@ -50,10 +50,9 @@ class Pipeline():
         return xform.apply(self)
 
     def __next__(self):
-        frame = {}
         for stream in self.streams:
-            frame[stream] = next(self.streams[stream])
-        return frame
+            self.streams[stream] = next(self.streams[stream])
+        return self.streams
 
     def lineage(self):
         return [self]
@@ -71,7 +70,7 @@ class PipelineManager():
     frame['bounding_boxes'] each element of the list is structured as:
     (label, box).
     """
-    def __init__(self, vstream = None):
+    def __init__(self, data_queue):
         self.operators = []
         self.vstream = vstream
         self.dstreams = {}

@@ -33,7 +33,7 @@ class Map(VideoStreamOperator):
 		return self
 
 	def __next__(self):
-		frame = next(self.frame_iter)
+		frame = next(self.frame_iter).f
 		self.super_next()
 
 		time_start = timer()

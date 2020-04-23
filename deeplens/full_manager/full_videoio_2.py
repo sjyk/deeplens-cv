@@ -253,7 +253,7 @@ def write_video_single(conn, \
         conn = sqlite3.Connection(conn)
     batch_size = args['batch_size']
 
-    v = VideoStream(video_file, args['limit'])#[Resize(0.99)]
+    v = VideoStream(video_file, args['limit'])#[Resize(0.99)] # Need to fix
     v = iter(v[map])
     if stream:
         try:
@@ -282,11 +282,6 @@ def write_video_single(conn, \
         if i >= batch_size:
             break
     crops, batch_prev, _ = splitter.initialize(labels)
-    #(writers, file_names, time_block) = _write_video_batch(v_behind, target, crops, args['encoding'], batch_size, dir = dir, release = False)
-    #ids = _update_headers_batch(conn, crops, target, file_names,
-    #                        full_width, full_height, start_time, start_time + time_block, update = False)
-    #start_time = start_time + time_block
-    #vid_files.extend(file_names)
     all_crops.append(crops)
     time_block = 0
     i = 0
@@ -300,14 +295,7 @@ def write_video_single(conn, \
         if batch_crops == None:
             break
         crops, batch_prev, do_join = splitter.join(batch_prev, batch_crops)
-        #if do_join:
-            #writers, _ , time_block = _write_video_batch(v_behind, target, crops, args['encoding'], batch_size, dir, release = False, writers = writers)
-            #_update_headers_batch(conn, crops, target, file_names,
-            #                full_width, full_height, start_time, start_time + time_block, ids = ids, update = True)
-            #start_time = start_time + time_block
-            #all_crops.append(crops)
         if not do_join:
-            #print('hello' + str(i))
             _, file_names, time_block = _write_video_batch(v_behind, target, all_crops, args['encoding'], batch_size, dir, release=True, background_scale=background_scale)
             if time_block == 0:
                 break

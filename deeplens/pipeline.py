@@ -96,7 +96,7 @@ class PipelineManager():
         results = []            
         for frame in pipeline:
             if keep_result:
-                results.append(frame)
+                results.append(frame.get())
         return results
 
     def add_operator(self, operator):

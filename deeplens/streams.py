@@ -124,23 +124,30 @@ class CacheFullMetaStream(CacheStream):
     def __init__(self, name):
         super.__init__(name)
         self.data = 0
-        self.name == name
+        self.name = name
         self.vid_name = None
-        self.crops == None
+        self.crops = None
         self.video_refs = None
         self.fd = None
         self.sd = None
+        self.first_frame = None
+        self.new_batch = None
 
-    def update_all(self, vid_name, crops, video_refs, fcoor, scoor, joined):
+    def update(self, index, new_batch = False):
+        self.data = index
+        self.new_batch = new_batch
+
+    def update_all(self, index, vid_name, crops, video_refs, fcoor, scoor, joined):
         self.data = 0
         self.name == vid_name
         self.crops == crops
         self.video_refs = video_refs
         self.fd = (fw, fh)
         self.sd = (sw, sh)
-        self.joined = joined
-        self.first_frame = self.data
-    
+        self.data = index
+        if not joined:
+            self.first_frame = index
+        self.new_batch = True
     
 
 class VideoStream(DataStream):

@@ -28,7 +28,7 @@ class MapJoin():
     def initialize(self, data):
         raise NotImplemented("MapJoin must implement an initialize function")
 
-""" Defines a video splitter operation
+""" Defines a video splitter operation - Not Used
 """
 class Splitter():
     def __init__(self):
@@ -191,7 +191,7 @@ class CropUnionSplitter(MapJoin):
     def map(self, data):
         """
         Union bounding boxes to form crops for a batch of frames
-        data: bounding boxes per frame
+        data: bounding boxes - NOT per frame
 
         returns temp_data
         """ 
@@ -199,16 +199,14 @@ class CropUnionSplitter(MapJoin):
         index = 0
         frame = 0
         num_match = 0
-        for objects in data:
-            all = []
-            for object in objects:
-                if len(crops) == 0:
-                    crops.append({'bb': object['bb'], 'label': 'foreground', 'all': {}})
-                crops[0]['bb'] = crops[0]['bb'].union_box(object['bb'])
-                all.append(object)
-            if crops:
-                crops[0]['all'][frame] = all
-            frame += 1
+        all = []
+        for object in objects:
+            if len(crops) == 0:
+                crops.append({'bb': object['bb'], 'label': 'foreground', 'all': {}})
+            crops[0]['bb'] = crops[0]['bb'].union_box(object['bb'])
+            all.append(object)
+        if crops:
+            crops[0]['all'][frame] = all
         return crops
 
     def join(self, crop1, crop2):

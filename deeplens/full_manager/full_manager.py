@@ -10,7 +10,7 @@ movement and access.
 
 
 from deeplens.core import StorageManager
-from deeplens.full_manager.full_videoio import *
+from deeplens.full_manager.full_videoput import *
 from deeplens.pipeline import *
 
 from deeplens.constants import *
@@ -141,11 +141,7 @@ class FullStorageManager(StorageManager):
         if tagger.batch_size < args['batch_size']:
             raise ValueError("This setting may currently lead to bugs")
         
-        if parallel and not stream:
-            db_path = os.path.join(self.basedir, self.db_name)
-            write_video_parallel(db_path, filename, target, physical_dir, self.content_splitter, tagger, args=args)
-        else:
-            write_video_single(conn, filename, target, physical_dir, self.content_splitter, tagger, stream=stream, args=args, background_scale=args['background_scale'])
+        write_video_single(conn, filename, target, physical_dir, self.content_splitter, tagger, args=args, background_scale=args['background_scale'])
         
         self.videos.add(target)
 
@@ -165,7 +161,7 @@ class FullStorageManager(StorageManager):
                 tagger = name
             else:
                 tagger = self.content_tagger
-            put_arg = (db_path, name, targets[i], physical_dir, self.content_splitter, tagger, 0, False, args, log, args['background_scale'])
+            put_arg = (db_path, name, targets[i], physical_dir, self.content_splitter, tagger, args, args['background_scale'])
             put_args.append(put_arg)
             self.delete(targets[i], conn)
         

@@ -7,12 +7,9 @@ primitives to encode and decode archived and regular video formats for a tiered
 storage system.
 """
 
-from deeplens.header import *
 from deeplens.dataflow.map import Resize
 from deeplens.simple_manager.file import *
 from deeplens.utils.frame_xform import *
-from deeplens.extern.ffmpeg import *
-from deeplens.media.youtube_tagger import *
 from deeplens.streams import all
 
 import sqlite3
@@ -26,10 +23,6 @@ import shutil
 import logging
 import json
 import itertools
-#import threading
-#import queue
-#from multiprocessing import Pool
-#import glob
 
 
 # need to cache to header
@@ -85,8 +78,8 @@ class PutOp(Operator):
             fr = crop_box(data, cr['bb'])
             self.writers[i].append(fr)
         
-        if index == 0:
-            self.meta.update_all(self.vid_name, crops, self.file_names, (frame.width, frame.height), scoor, do_join)
+        if index % 0:
+            self.meta.update_all(index, self.vid_name, crops, self.file_names, (frame.width, frame.height), scoor, do_join)
         else:
             self.meta.update(index + 1)
         frame['full_meta'] = self.meta
@@ -96,20 +89,82 @@ class PutOp(Operator):
 class HeaderOp(Operator):
     def __init__(self, conn):
         self.conn = conn
+        
 
     def __iter__(self):
-        self.curr_data = N*[None]
+        self.index = None
+        self.params = None
+        self.stop = False
         return self
 
     def __next__(self):
-        try:
-            frame = next(self.pipeline['full_meta'])
-        except:
-            pass # TODO
-        index = frame.get
-        
+        while True:
+            if self.stop:
+                raise StopIteration()
+            try:
+                frame = next(self.pipeline['full_meta'])
+            except StopIteration():
+                _new_headers_batch(self.conn, *self.params.get())
+                self.stop = True
+                return self.params
+            index = frame.get()
+            if frame.first_frame == index:
+                if self.params != None:
+                    _new_headers_batch(self.conn, *self.params.get())
+                old_param = self.params
+                params = [[frame.crops], frame.vid_name, frame.video_refs, frame.fd, frame.sd, index, index]
+                self.params = CacheStream('header_data')
+                self.params.update(params)
+                return old_params
+            else:
+                params = self.params.get()
+                params[0].append(frame.crops)
+                if frame.new_batch:
+                    params[0].append(frame.crops)
+                params[6] = index
+                self.params.update(params)
+            return self.params        
 
-        
+#TODO: assumes batch labels from mapOP right now -> fix if needed later
+def ConverMap(Operator):
+    def __init__(self, tagger, batch_size):
+        self.tagger = tagger
+        self.batch_size = batch_size
+
+    def __iter__(self):
+        self.labels = CacheStream('labels')
+
+    def __next__(self):
+		# we assume it iterates the entire batch size and save the results
+        try:
+            tag = self.tagger(self.pipeline.streams['video'], self.batch_size)
+        except StopIteration:
+            raise StopIteration("Iterator is closed")
+        if tag:
+            tags = [tag]
+        else:
+            tags = []
+        self.labels.update(tags)
+        return self.labels
+
+def ConverSplit(Operator):
+    def __init__(self, splitter):
+        self.splitter = splitter
+
+    def __iter__(self):
+        self.crops = CacheStream('crops')
+        self.initialized = False
+
+    def __next__(self):
+        labels = self.pipeline.next()['labels'].get()
+        if not self.initialized:
+            crops, self.batch_prev, _ = self.splitter.initilaize(labels)
+            do_join = False
+        else:
+            batch = self.splitter.map(labels)
+            crops, self.batch_prev, do_join = splitter.join(self.batch_prev, batch)
+        self.crops.update((crops, do_join))
+        return self.crops
 
 def write_video_single(conn, video_file, target, dir, splitter, map, args, background_scale=1):
     if not os.path.isfile(video_file):

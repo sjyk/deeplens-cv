@@ -9,7 +9,6 @@ storage system.
 import sqlite3
 import random
 
-import cv2
 import os
 from os import path
 import time
@@ -56,16 +55,17 @@ def _update_headers_batch(conn, crops, name, start_time, end_time, ids):
                     updates['other'] = json.dumps(other, cls=Serializer)
                 else:
                     raise ValueError('All object is wrongly formatted')
-
+        
         update_clip_header(conn, id, name, updates)
 
 
-def _new_headers_batch(conn, crops, name, video_refs,
+def _new_headers_batch(conn, all_crops, name, video_refs,
                             full_dim, scaled_dim, start_time, end_time):
     """
     Create new headers all headers for one batch. In terms of updates, we assume certain
     constraints on the system, and only update possible changes.
     """
+    crops = all_crops[0]
     ids = [random.getrandbits(63) for i in range(len(crops) + 1)]
     for i in range(1, len(crops) + 1):
         insert_background_header(conn, ids[0], ids[i], name)
@@ -87,6 +87,8 @@ def _new_headers_batch(conn, crops, name, video_refs,
                 insert_label_header(conn, crops[i]['label'][j], 'storage', ids[i + 1], name)
         else:
             insert_label_header(conn, crops[i]['label'], 'storage', ids[i + 1], name)
+    for i in range(1, len(all_crops)):
+        _update_headers_batch(conn, all_crops[i], name, start_time, end_time, ids) # TODO
     return ids
 
 def delete_video_if_exists(conn, video_name):
@@ -214,3 +216,9 @@ def update_clip_header(conn, clip_id, video_name, args={}):
     for key, value in args.items():
         c.execute("UPDATE clip SET '%s' = '%s' WHERE clip_id = '%d' AND video_name = '%s'" % (key, value, clip_id, video_name))
     conn.commit()
+
+def query_clip(conn, clip_id, video_name):
+    c = conn.cursor()
+    c.execute("SELECT * FROM clip WHERE clip_id = '%d' AND video_name = '%s'" % (clip_id, video_name))
+    result = c.fetchall()
+    return result

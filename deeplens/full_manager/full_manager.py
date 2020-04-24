@@ -68,6 +68,8 @@ class FullStorageManager(StorageManager):
                                        end_time integer NOT NULL,
                                        origin_x integer NOT NULL,
                                        origin_y integer NOT NULL,
+                                       fheight integer NOT NULL, # original hieght and width
+                                       fwidth integer NOT NULL,
                                        height integer NOT NULL,
                                        width integer NOT NULL,
                                        video_ref text NOT NULL,
@@ -80,7 +82,6 @@ class FullStorageManager(StorageManager):
         sql_create_label_table = """CREATE TABLE IF NOT EXISTS label (
                                        label text NOT NULL,
                                        value text NOT NULL,
-                                       type text NOT NULL,
                                        clip_id integer NOT NULL,
                                        video_name text NOT NULL,
                                        type text NOT NULL,

@@ -40,7 +40,8 @@ class Materialize(Operator):
             r_name = vid_name + get_rnd_strng(64)
             seg_name = os.path.join(self.dir, r_name)
             self.file_name = add_ext(seg_name, AVI)
-            self.writers['video'] = data['video'].init_mat(self.file_name, fourcc, self.args['frame_rate'])
+            self.writers['video'] = data['video'].init_mat(self.file_name, fourcc, data['video'].width, 
+                                                            data['video'].hieght, self.args['frame_rate'])
         
         for stream in self.streams:   
             self.writers[stream] = data[stream].init_mat()
@@ -75,22 +76,6 @@ class Materialize(Operator):
         except:
             self._materialize_streams()
             raise StopIteration() 
-        # time_start = timer()
-        # if self.storage == None:
-        #     if self.streams == 'all':
-        #         self.streams = out.keys()
-        #         if 'video' in streams:
-        #             streams.remove('video')
-        #     self.storage = self.sm.put_stream(name, self.mat_vs, args = self.args)
-
-        # frame = {}
-        # for stream in self.streams:
-        #     frame[stream] = out[stream]      
-        # if self.materialize:
-        #     frame['video'] = out['video']
-
-        # self.storage.add_frame(frame)
-        # self.time_elapsed += timer() - time_start
         if streams == 'all':
             streams = data.keys()
         if 'video' in streams:

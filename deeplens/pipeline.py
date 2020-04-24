@@ -114,10 +114,10 @@ class PipelineManager():
             self.vstream = vstream
             return (v, self.vstream)
     
-    def add_datastream(self, datastream, stream_name):
+    def add_stream(self, datastream, stream_name):
         self.dstreams[stream_name] = datastream
 
-    def add_datastreams(self, datastreams):
+    def add_streams(self, datastreams):
         self.dstreams.update(datastreams)
     
     def clear_streams(self):

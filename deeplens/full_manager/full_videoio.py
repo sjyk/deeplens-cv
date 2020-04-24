@@ -69,48 +69,37 @@ def _update_headers_batch(conn, crops, name, start_time, end_time, ids):
         update_clip_header(conn, id, name, updates)
 
 
-def _new_headers_batch(conn, all_crops, name, video_refs,
-                            full_width, full_height, start_time, end_time, ids = None, background_scale = 1):
+def _new_headers_batch(conn, crops, name, video_refs,
+                            full_dim, scaled_dim, start_time, end_time):
     """
     Create new headers all headers for one batch. In terms of updates, we assume certain
     constraints on the system, and only update possible changes.
     """
-    crops = all_crops[0]
     ids = [random.getrandbits(63) for i in range(len(crops) + 1)]
     for i in range(1, len(crops) + 1):
         insert_background_header(conn, ids[0], ids[i], name)
     for i in range(0, len(crops) + 1):
         if i == 0:
-            if len(crops):
-                if background_scale == 1:
-                    insert_clip_header(conn, ids[0], name, start_time, end_time, 0, 0,
-                                full_width, full_height, video_refs[i], is_background=True)
-                else:
-                    insert_clip_header(conn, ids[0], name, start_time, end_time, 0, 0,
-                                       full_width * background_scale, full_height * background_scale,
-                                       video_refs[i], is_background=True)
-            else:
-                insert_clip_header(conn, ids[0], name, start_time, end_time, 0, 0,
-                                full_width, full_height, video_refs[i], is_background=False)
+            insert_clip_header(conn, ids[0], name, start_time, end_time, 0, 0,
+                                full_dim[0], full_dim[1], scaled_dim[0], scaled_dim[1], video_refs[i], is_background=len(crops))
         else:
             origin_x = crops[i - 1]['bb'].x0
             origin_y = crops[i - 1]['bb'].y0
             width = crops[i - 1]['bb'].x1 - crops[i - 1]['bb'].x0
             height = crops[i - 1]['bb'].y1 - crops[i - 1]['bb'].y0
             insert_clip_header(conn, ids[i], name, start_time, end_time, origin_x,
-                            origin_y, width, height, video_refs[i], other = json.dumps(crops[i - 1]['all'], cls=Serializer))
-
+                                origin_y, width, height, 0, 0, video_refs[i], other = json.dumps(crops[i - 1]['all'], cls=Serializer))
 
     for i in range(0, len(crops)):
-        if type(crops[i]['label']) is list: # TODO: deal with crop all later
+        if type(crops[i]['label']) is list:
             for j in range(len(crops[i]['label'])):
                 insert_label_header(conn, crops[i]['label'][j], 'storage', ids[i + 1], name)
         else:
             insert_label_header(conn, crops[i]['label'], 'storage', ids[i + 1], name)
 
+    #TODO: Don't forget to remove
     for i in range(1, len(all_crops)):
         _update_headers_batch(conn, all_crops[i], name, start_time, end_time, ids)
-
     return ids
 
 

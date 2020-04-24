@@ -21,14 +21,17 @@ class DataStream():
         raise NotImplemented("__iter__ implemented")
     
     def __next__(self):
-        raise NotImplemented("__next__ not implemented")
-
-    def init_mat(self):
+        return self
+    
+    @staticmethod
+    def init_mat():
         raise NotImplemented("init_mat not implemented")
 
-    def append(self, data, prev):
+    @staticmethod
+    def append(data, prev):
         raise NotImplemented("append not implemented")
 
+    @staticmethod
     def materialize(self, data):
         raise NotImplemented("materialize not implemented")
 
@@ -56,13 +59,16 @@ class JSONListStream(DataStream):
     def get(self):
         return self.data[self.index - 1]
     
-    def init_mat(self):
+    @staticmethod
+    def init_mat():
         return []
 
-    def append(self, data, prev):
+    @staticmethod
+    def append(data, prev):
         return prev.append(data)
 
-    def materialize(self, data, fp = None):
+    @@staticmethod
+    def materialize(data, fp = None):
         if not file_name:
             return json.dumps(data)
         else:
@@ -72,29 +78,26 @@ class ConstantStream(DataStream):
     def __init__(self, data, name):
         super.__init__(name)
         self.data = data
-
-    def __next__(self):
-        return self
     
     def get(self):
         return self.data
 
-    def init_mat(self):
+    @staticmethod
+    def init_mat():
         return None
     
-    def append(self, data, prev):
+    @staticmethod
+    def append(data, prev):
         return data
     
-    def materialize(self, data):
+    @staticmethod
+    def materialize(data):
         return data
 
 class CacheStream(DataStream):
     def __init__(self, name):
         super.__init__(name)
         self.data = None
-
-    def __next__(self):
-        return self
     
     def get(self):
         return self.data
@@ -102,20 +105,45 @@ class CacheStream(DataStream):
     def update(self, data):
         self.data = data
 
-    def init_mat(self):
+    @staticmethod
+    def init_mat():
         return []
     
-    def append(self, data, prev):
+    @staticmethod
+    def append(data, prev):
         return prev.append(data)
     
-    def materialize(self, data, fp = None):
+    @staticmethod
+    def materialize(data, fp = None):
         if not file_name:
             return json.dumps(data)
         else:
             return json.dump(data, fp)
 
-class VideoStream(DataStream):
+class CacheFullMetaStream(CacheStream):
+    def __init__(self, name):
+        super.__init__(name)
+        self.data = 0
+        self.name == name
+        self.vid_name = None
+        self.crops == None
+        self.video_refs = None
+        self.fd = None
+        self.sd = None
+
+    def update_all(self, vid_name, crops, video_refs, fcoor, scoor, joined):
+        self.data = 0
+        self.name == vid_name
+        self.crops == crops
+        self.video_refs = video_refs
+        self.fd = (fw, fh)
+        self.sd = (sw, sh)
+        self.joined = joined
+        self.first_frame = self.data
     
+    
+
+class VideoStream(DataStream):
     def __init__(self, src, name, limit=-1, origin = np.array((0,0)), offset = 0, start_time = 0):
         super.__init__(name)
         self.src = src
@@ -124,12 +152,15 @@ class VideoStream(DataStream):
         self.offset = offset
         self.start_time = start_time
     
+    @staticmethod
     def init_mat(self, file_name, encoding, frame_rate):
         super.init_mat()
     
+    @staticmethod
     def append(self, data, prev):
         super.append(data, prev)
     
+    @staticmethod
     def materialize(self, data):
         return True
 
@@ -203,16 +234,17 @@ class CVVideoStream(VideoStream):
         """
         self.propIds = propIds
 
-    def init_mat(self, file_name, encoding, frame_rate):
+    @staticmethod
+    def init_mat(file_name, encoding, width, height, frame_rate):
         fourcc = cv2.VideoWriter_fourcc(*encoding)
         cv2.VideoWriter(file_name,
                         fourcc,
                         frame_rate,
-                        (self.width, self.height),
+                        (width, height),
                         True)
         
-    
-    def append(self, data, prev):
+    @staticmethod
+    def append(data, prev):
         prev.write(data)
         return prev
 

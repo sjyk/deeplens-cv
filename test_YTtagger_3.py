@@ -15,7 +15,7 @@ from experiments.environ import logrecord
 from timeit import default_timer as timer
 
 
-def runFull(src, cleanUp = False):
+def runFullSequential(src, cleanUp = False):
     if cleanUp:
         if os.path.exists('./videos_full'):
             shutil.rmtree('./videos_full')
@@ -52,7 +52,7 @@ total_start = timer()
 for item in youtube_ids2:
     try:
         video_path="./deeplens/media/train/"+item+".mp4"
-        runFull(video_path, cleanUp=False)
+        runFullSequential(video_path, cleanUp=False)
     except:
         print("missing file for full", item)
 print("Total time for full without parallelism within a video (cleanUp = False):", timer() - total_start)
@@ -61,7 +61,7 @@ total_start = timer()
 for item in youtube_ids2:
     try:
         video_path="./deeplens/media/train/"+item+".mp4"
-        runFull(video_path, cleanUp=True)
+        runFullSequential(video_path, cleanUp=True)
     except:
         print("missing file for full", item)
 print("Total time for full without parallelism within a video (cleanUp = True):", timer() - total_start)

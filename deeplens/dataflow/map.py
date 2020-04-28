@@ -40,6 +40,8 @@ class Map(Operator):
 		ret = self.map(frame)
 		self.time_elapsed += timer() - time_start
 
+		#print('Elapsed',str(self),timer() - time_start)
+
 		return ret
 
 # Con

@@ -165,5 +165,10 @@ def runFullOpt(src, tot=-1, sel=0.1):
     logrecord('fullopt', ({'file': src}), 'get', str(result), 's')
 
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(message)s')
-do_experiments(sys.argv[1], [runSimpleOpt], -1, [1])
+#logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(message)s')
+#do_experiments(sys.argv[1], [runSimpleOpt], -1, [1])
+
+from deeplens.dataflow.xform import *
+from deeplens.utils.ui import play
+v = VideoStream(sys.argv[1], limit=1000)
+play(v[Grayscale()][Blur()][Canny()][Expand()])

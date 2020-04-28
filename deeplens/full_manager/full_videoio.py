@@ -12,6 +12,7 @@ from deeplens.dataflow.map import Resize
 from deeplens.simple_manager.file import *
 from deeplens.utils.frame_xform import *
 from deeplens.extern.ffmpeg import *
+from deeplens.extern.cache import *
 from deeplens.media.youtube_tagger import *
 from deeplens.struct import *
 
@@ -112,6 +113,24 @@ def _new_headers_batch(conn, all_crops, name, video_refs,
 
     return ids
 
+def _normalize_crops(all_crops):
+    batches = {}
+
+    for crops in all_crops:
+        for id, cr in enumerate(crops):
+            if not id in batches:
+                batches[id] = cr['bb']
+            else:
+                batches[id] = batches[id].union_box(cr['bb'])
+
+    for crops in all_crops:
+        for id, cr in enumerate(crops):
+            cr['bb'] = batches[id]
+
+    #print(batches[id])
+
+    return all_crops
+
 
 def _write_video_batch(vstream, \
                         vid_name, \
@@ -136,7 +155,11 @@ def _write_video_batch(vstream, \
     file_names = []
     out_vids = []
     num_batch = len(all_crops)
+
+    all_crops = _normalize_crops(all_crops)
+
     crops = all_crops[0]
+    #print(crops)
 
     if writers == None:
         r_name = vid_name + get_rnd_strng(64)
@@ -171,7 +194,11 @@ def _write_video_batch(vstream, \
         out_vids = writers
     index = 0
     j = 0
+
+    vid_write_count = {k:set() for k in range(len(out_vids))}
+
     for frame in vstream:
+        cnt = frame['frame']
         if type(frame) == dict:
             frame = frame['data']
         newX, newY = frame.shape[1] * background_scale, frame.shape[0] * background_scale
@@ -180,17 +207,27 @@ def _write_video_batch(vstream, \
         else:
             out_vids[0].write(cv2.resize(reverse_crop(frame, crops), (int(newX), int(newY))))
 
+            vid_write_count[0].add(reverse_crop(frame, crops).shape)
+
         i = 1
         for cr in crops:
             fr = crop_box(frame, cr['bb'])
+            #print(cnt, fr.shape, cr['bb'])
             out_vids[i].write(fr)
+            vid_write_count[i].add(fr.shape)
             i +=1
+
         index += 1
+
         if index >= num_batch*batch_size :
+            #print('break',cnt, index)
             break
+
         if index % batch_size == 0:
             j += 1
             crops = all_crops[j]
+
+    #print(num_batch, batch_size, index, vid_write_count)
 
     if not release:
         if len(file_names) != 0:
@@ -287,6 +324,9 @@ def write_video_single(conn, \
     #start_time = start_time + time_block
     #vid_files.extend(file_names)
     all_crops.append(crops)
+
+    #print('A',[1 for c in crops if c['bb'].y1 > 1080])
+
     time_block = 0
     i = 0
     while True:
@@ -299,6 +339,9 @@ def write_video_single(conn, \
         if batch_crops == None:
             break
         crops, batch_prev, do_join = splitter.join(batch_prev, batch_crops)
+        
+        #print('B',[c['bb'] for c in crops if c['bb'].y1 > 1080])
+        #print(crops)
         #if do_join:
             #writers, _ , time_block = _write_video_batch(v_behind, target, crops, args['encoding'], batch_size, dir, release = False, writers = writers)
             #_update_headers_batch(conn, crops, target, file_names,
@@ -310,6 +353,7 @@ def write_video_single(conn, \
             _, file_names, time_block = _write_video_batch(v_behind, target, all_crops, args['encoding'], batch_size, dir, release=True, background_scale=background_scale)
             if time_block == 0:
                 break
+            #print(file_names, time_block)
             ids = _new_headers_batch(conn, all_crops, target, file_names,
                             full_width, full_height, start_time, start_time + time_block, background_scale = background_scale)
             start_time = start_time + time_block
@@ -327,6 +371,7 @@ def write_video_single(conn, \
     log_info['video_file'] = video_file
     log_info['duration'] = end - start
     log_info['end_time'] = end
+
     logging.info(json.dumps(log_info))
     if log:
         log_file = get_rnd_strng() + '.txt'
@@ -561,6 +606,47 @@ def query_everything(conn, video_name):
     result = c.fetchall()
     return result
 
+def cache(conn, video_name, clip_condition):
+    clip_ids = clip_condition.query(conn, video_name)
+    for id in clip_ids:
+        clip = query_clip(conn, id, video_name)
+        videoref = clip[0][8]
+        
+        if not is_cache_file(videoref):
+            cacheref = videoref_2_cache(videoref)
+
+            #print('Recorded Length',clip[0][2],clip[0][3])
+
+            vstream = VideoStream(videoref)
+            length, height, width, channels = persist(vstream, cacheref)
+
+            #if (clip[0][3]-clip[0][2]) != length:
+            #    print('Mismatch',clip[0][2],clip[0][3], cacheref, length)
+
+            update = "UPDATE clip SET video_ref = '%s', height=%d, width=%d WHERE clip_id = '%d' AND video_name = '%s'" % (cacheref,height, width,id, video_name)
+            c = conn.cursor()
+            c.execute(update)
+
+            #print(update)
+
+def uncache(conn, video_name, clip_condition):
+    clip_ids = clip_condition.query(conn, video_name)
+    for id in clip_ids:
+        clip = query_clip(conn, id, video_name)
+        cacheref = clip[0][8]
+        
+        if is_cache_file(cacheref):
+            videoref = cache_2_videoref(cacheref)
+
+            delete_cache(cacheref)
+
+            update = "UPDATE clip SET video_ref = '%s' WHERE clip_id = '%d' AND video_name = '%s'" % (videoref,id, video_name)
+            c = conn.cursor()
+            c.execute(update)
+
+            #print(update)
+
+
 def query(conn, video_name, clip_condition):
     """
     Args:
@@ -577,10 +663,17 @@ def query(conn, video_name, clip_condition):
     boundaries = []
     for id in clip_ids:
         clip = query_clip(conn, id, video_name)
+
         clip_ref = clip[0][8]
         origin = np.array((clip[0][4],clip[0][5]))
+        start_time, end_time = clip[0][2], clip[0][3]
+        height, width = clip[0][6], clip[0][7]
+
+        vstream = _create_vstream(clip_ref, start_time, end_time, \
+                                  height, width, origin)
+
         #print(clip[0][2], clip[0][3], clip[0])
-        video_refs.append(((clip[0][2], clip[0][3]),VideoStream(clip_ref,origin=origin, offset=clip[0][2])))
+        video_refs.append(((start_time, end_time),vstream))
 
     video_refs.sort() #sort by clip start
 
@@ -588,6 +681,15 @@ def query(conn, video_name, clip_condition):
         return _chain_contiguous(video_refs)
     else:
         return [v for _, v in video_refs]
+
+def _create_vstream(ref, start_time, end_time, \
+                    height, width, origin):
+
+    if not is_cache_file(ref):
+        return VideoStream(ref,origin=origin, offset=start_time)
+    else:
+        return RawVideoStream(ref, shape=(end_time-start_time,height,width,3), origin=origin, offset=start_time)
+
 
 def _is_contiguous(videos, thresh=5):
     prev = None
@@ -602,7 +704,7 @@ def _is_contiguous(videos, thresh=5):
 
 def _chain_contiguous(videos):
     vrefs = [v for _, v in videos]
-    return [IteratorVideoStream(itertools.chain(*vrefs))]
+    return [IteratorVideoStream(itertools.chain(*vrefs), vrefs)]
 
 
 

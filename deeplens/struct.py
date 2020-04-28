@@ -10,6 +10,7 @@ from deeplens.error import *
 import numpy as np
 import json
 from timeit import default_timer as timer
+import itertools
 
 #sources video from the default camera
 DEFAULT_CAMERA = 0
@@ -127,12 +128,13 @@ class IteratorVideoStream(VideoStream):
 	   of png files). Compatible with opencv streams.
 	"""
 
-	def __init__(self, src, limit=-1):
+	def __init__(self, src, refs, limit=-1):
 		"""Constructs a videostream object
 
-		   Input: src- iterator over frames
+		   Input: src- list of vstreams
 				  limit- Number of frames to pull
 		"""
+		self.sources = refs
 		self.src = src
 		self.limit = limit
 		self.global_lineage = []
@@ -188,20 +190,27 @@ class IteratorVideoStream(VideoStream):
 
 class RawVideoStream(VideoStream):
 	"""The video stream class opens a stream of video
-	   from an iterator over frames (e.g., a sequence
-	   of png files). Compatible with opencv streams.
+	   from an iterator over decoded, serialized frames
 	"""
 
-	def __init__(self, src, limit=-1, origin=np.array((0,0))):
+	def __init__(self, src, shape, limit=-1, \
+				 origin=np.array((0,0)), offset=0, buffer_size=10):
 		"""Constructs a videostream object
 
 		   Input: src- iterator over frames
 				  limit- Number of frames to pull
 		"""
 		self.src = src
+		self.shape = shape
 		self.limit = limit
+
 		self.global_lineage = []
 		self.origin = origin
+		self.offset = offset
+
+		self.mmap_colors = None
+		self.buffer_size = buffer_size
+
 
 	def __getitem__(self, xform):
 		"""Applies a transformation to the video stream
@@ -212,38 +221,49 @@ class RawVideoStream(VideoStream):
 		"""Constructs the iterator object and initializes
 		   the iteration state
 		"""
+		#np.memmap(self.src, dtype='uint8', mode='r', shape=self.shape)
 
 		try:
-			self.frame_iter = iter(self.src)
+			self.frame_iter = np.memmap(self.src, 
+										dtype='uint8', \
+										mode='r', \
+										shape=self.shape,
+										order='F')
+
+			self.buffer = None
 		except:
 			raise CorruptedOrMissingVideo(str(self.src) + " is corrupted or missing.")
 
 		try:
-			self.next_frame = next(self.frame_iter)
 			# set sizes after the video is opened
-			self.width = int(self.next_frame.shape[0])  # float
-			self.height = int(self.next_frame.shape[1])  # float
-
-			self.frame_count = 1
+			self.width = self.shape[1] #int(self.next_frame.shape[0])  # float
+			self.height = self.shape[2] #int(self.next_frame.shape[1])  # float
+			self.frame_count = self.offset
 		except StopIteration:
 			self.next_frame = None
 
 		return self
 
 	def __next__(self):
-		if self.next_frame is None:
-			raise StopIteration("Iterator is closed")
 
-		if (self.limit < 0 or self.frame_count <= self.limit):
-			ret = self.next_frame
-			self.next_frame = next(self.frame_iter)
-			self.frame_count += 1
-			return {'frame': (self.frame_count - 1), 'data': ret, 'origin': self.origin}
-		else:
+		index = self.frame_count-self.offset
+		buffer_index = (index % self.buffer_size)
+
+		if index >= self.shape[0]:
 			raise StopIteration("Iterator is closed")
+		elif buffer_index >= self.frame_iter.shape[0]:
+			raise StopIteration("Iterator is closed")
+		elif buffer_index == 0:
+			self.buffer = self.frame_iter[index:index+self.buffer_size,:,:,:]
+
+		self.frame_count += 1
+		#ret = .copy()
+
+		return {'frame': (self.frame_count - 1), 'data': self.buffer[buffer_index,:,:,:], 'origin': self.origin}
 
 	def lineage(self):
 		return self.global_lineage
+
 
 
 #helper methods
@@ -337,6 +357,7 @@ class Box():
 		"""The constructor for a box, all of the inputs have to be castable to 
 		integers. By convention x0 <= x1 and y0 <= y1
 		"""
+
 		self.x0 = int(x0)
 		self.y0 = int(y0)
 		self.x1 = int(x1)
@@ -417,6 +438,7 @@ class Box():
 		return self.area() + other.area() - ia
 	
 	def union_box(self, other):
+		#print('union',self, other)
 		return Box(min(self.x0, other.x0), \
 				min(self.y0, other.y0), \
 				max(self.x1, other.x1), \
@@ -425,6 +447,12 @@ class Box():
 	"""
 	def serialize(self):
 		return int(self.x0),int(self.y0),int(self.x1),int(self.y1)
+
+
+	def __str__(self):
+		return str(self.serialize())
+
+	__repr__ = __str__
 
 
 class CustomTagger(Operator):

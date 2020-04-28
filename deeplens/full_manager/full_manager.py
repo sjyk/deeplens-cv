@@ -190,16 +190,24 @@ class FullStorageManager(StorageManager):
         #     raise VideoNotFound(name + " not found in " + str(self.videos))
         conn = self.get_conn()
         logging.info("Calling get()")
-        result = query(conn, name, clip_condition = condition)
-        self.remove_conn(conn)
-        return result
-    
-    def delete(self, name, conn = None):
-        conn_not_provided = conn == None
-        if conn_not_provided:
-            conn = self.get_conn()
+        return query(self.conn, name, clip_condition = condition)
 
-        delete_video(conn, name)
+
+    def cache(self, name, condition):
+        """Caches the specified clips as pre-decoded files
+        """
+        logging.info("Calling cache()")
+        return cache(self.conn, name, clip_condition = condition)
+    
+    def uncache(self, name, condition):
+        """Removes the specified clips as pre-decoded files
+        """
+        logging.info("Calling uncache()")
+        return uncache(self.conn, name, clip_condition = condition)
+    
+
+    def delete(self, name):
+        delete_video(self.conn, name)
 
         if conn_not_provided:
             self.remove_conn(conn)

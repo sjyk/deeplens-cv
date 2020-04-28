@@ -6,6 +6,8 @@ frame_xform.py defines transformations per frame
 """
 import copy
 from deeplens.struct import Box
+import cv2
+
 def mask(frame, mask):
     """Masks the content of a frame of the video
     """
@@ -18,7 +20,12 @@ def crop_box(frame, box):
     given by the input arguments
     """
     frame = copy.deepcopy(frame)
-    frame = frame[box.y0:box.y1, box.x0:box.x1]
+    height, width, channels = frame.shape
+
+    frame = frame[ max(box.y0,0) : min(box.y1,height), \
+                   max(box.x0,0) : min(box.x1,width), :]
+
+    #print(frame.shape, box, height, width, min(box.y1,height))
     return frame
 
 

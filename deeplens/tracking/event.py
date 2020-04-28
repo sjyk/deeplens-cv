@@ -50,7 +50,8 @@ class ActivityMetric(Metric):
 		for label, pt in data['bounding_boxes']:
 			box = Box(*pt)
 
-			#print(self.region.x0, self.region.x1, box.x0, box.x1)
+			#print(cnt, data['frame'],data['origin'], box.x0, box.y1, self.region.shift(data['origin']).contains(box))
+			#print()
 
 			if label == self.filter and \
 				self.region.shift(data['origin']).contains(box):

@@ -59,7 +59,7 @@ print(result)
 
 manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=300), CropSplitter(), 'videos')
 manager.put('tcam.mp4', 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': 1000, 'batch_size': 100, 'num_processes': 4})
-manager.cache('test', Condition(label='foreground'))
+#manager.cache('test', Condition(label='foreground'))
 clips = manager.get('test', Condition(label='foreground'))
 
 region = Box(200, 550, 350, 750)

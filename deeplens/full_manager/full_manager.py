@@ -105,7 +105,8 @@ class FullStorageManager(StorageManager):
             the video to disk, or a reference in disk to deep storage.
         """
         conn = self.get_conn()
-        self.delete(target, conn)
+        self.delete(target)
+
         if in_extern_storage: 
             physical_dir = self.externdir
         else:
@@ -207,10 +208,9 @@ class FullStorageManager(StorageManager):
     
 
     def delete(self, name):
-        delete_video(self.conn, name)
+        conn = self.get_conn()
 
-        if conn_not_provided:
-            self.remove_conn(conn)
+        delete_video(conn, name)
 
     def list(self):
         return list(self.videos)

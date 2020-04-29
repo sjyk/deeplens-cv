@@ -61,6 +61,7 @@ class KeyPoints(Map):
 
 				rtn.append((self.label,(cx,cy,cx,cy)))
 
+		#print(len(rtn))
 		ff['bounding_boxes'] = rtn
 
 		return ff

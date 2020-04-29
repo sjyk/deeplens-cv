@@ -128,9 +128,8 @@ class FullStorageManager(StorageManager):
         if parallel and not stream:
             db_path = os.path.join(self.basedir, self.db_name)
             write_video_parallel(db_path, filename, target, physical_dir, self.content_splitter, tagger, args=args)
-        
         else:
-            write_video_single(conn, filename, target, physical_dir, self.content_splitter, tagger, stream=stream, args=args, background_scale=args['background_scale'])
+            write_video_single(conn, filename, target, physical_dir, self.content_splitter, tagger, stream=stream, args=args)
         
         self.videos.add(target)
 

@@ -206,8 +206,12 @@ class FullStorageManager(StorageManager):
         return uncache(self.conn, name, clip_condition = condition)
     
 
-    def delete(self, name):
-        delete_video(self.conn, name)
+    def delete(self, name, conn=None):
+        conn_not_provided = conn == None
+        if conn_not_provided:
+            conn = self.get_conn()
+
+        delete_video(conn, name)
 
         if conn_not_provided:
             self.remove_conn(conn)

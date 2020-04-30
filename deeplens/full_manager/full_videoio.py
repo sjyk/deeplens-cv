@@ -278,7 +278,9 @@ def write_video_single(conn, \
                         stream=False, \
                         args={}, 
                         log=False,
-                        background_scale=1):
+                        background_scale=1,
+                        rows=None,
+                        hwang=False):
     start = time.time()
     if not os.path.isfile(video_file):
         print("missing file", video_file)
@@ -289,7 +291,7 @@ def write_video_single(conn, \
         conn = sqlite3.Connection(conn)
     batch_size = args['batch_size']
 
-    v = VideoStream(video_file, args['limit'])#[Resize(0.99)]
+    v = VideoStream(video_file, args['limit'], rows=rows, hwang=hwang)#[Resize(0.99)]
     v = iter(v[map])
     if stream:
         try:
@@ -304,7 +306,7 @@ def write_video_single(conn, \
     if stream:
         v_behind = [] # if it's a stream, we cache the buffered video instead of having a slow pointer
     else:
-        v_behind = VideoStream(video_file, args['limit'])#[Resize(0.99)]
+        v_behind = VideoStream(video_file, args['limit'], rows=rows, hwang=hwang)#[Resize(0.99)]
         v_behind = iter(v_behind)
     labels = []
     vid_files = []
@@ -606,7 +608,7 @@ def query_everything(conn, video_name):
     result = c.fetchall()
     return result
 
-def cache(conn, video_name, clip_condition):
+def cache(conn, video_name, clip_condition, rows=None, hwang=False):
     clip_ids = clip_condition.query(conn, video_name)
     for id in clip_ids:
         clip = query_clip(conn, id, video_name)
@@ -616,8 +618,7 @@ def cache(conn, video_name, clip_condition):
             cacheref = videoref_2_cache(videoref)
 
             #print('Recorded Length',clip[0][2],clip[0][3])
-
-            vstream = VideoStream(videoref)
+            vstream = VideoStream(videoref, rows=rows, hwang=hwang)
             length, height, width, channels = persist(vstream, cacheref)
 
             #if (clip[0][3]-clip[0][2]) != length:
@@ -647,7 +648,7 @@ def uncache(conn, video_name, clip_condition):
             #print(update)
 
 
-def query(conn, video_name, clip_condition):
+def query(conn, video_name, clip_condition, rows=None, hwang=False):
     """
     Args:
         conn (SQLite conn object) - please pass self.conn directly
@@ -670,7 +671,7 @@ def query(conn, video_name, clip_condition):
         height, width = clip[0][6], clip[0][7]
 
         vstream = _create_vstream(clip_ref, start_time, end_time, \
-                                  height, width, origin)
+                                  height, width, origin, rows=rows, hwang=hwang)
 
         #print(clip[0][2], clip[0][3], clip[0])
         video_refs.append(((start_time, end_time),vstream))
@@ -683,10 +684,10 @@ def query(conn, video_name, clip_condition):
         return [v for _, v in video_refs]
 
 def _create_vstream(ref, start_time, end_time, \
-                    height, width, origin):
+                    height, width, origin, rows=None, hwang=False):
 
     if not is_cache_file(ref):
-        return VideoStream(ref,origin=origin, offset=start_time)
+        return VideoStream(ref,origin=origin, offset=start_time, rows=rows, hwang=hwang)
     else:
         return RawVideoStream(ref, shape=(end_time-start_time,height,width,3), origin=origin, offset=start_time)
 

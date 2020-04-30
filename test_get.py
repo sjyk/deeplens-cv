@@ -7,6 +7,8 @@ from deeplens.full_manager.full_manager import *
 from deeplens.dataflow.agg import *
 from deeplens.tracking.contour import *
 from deeplens.tracking.event import *
+
+from deeplens.extern.ffmpeg import *
 #from deeplens
 
 
@@ -15,8 +17,16 @@ from deeplens.tracking.event import *
 #clips = manager.get('test', Condition(label='foreground'))
 
 
-c = VideoStream('tcam.mp4')
+"""
+for i in range(25,60,3):
+	new_file = set_bitrate('tcam.mp4',str(i)+'tcam.avi', i)
+	c = VideoStream(new_file, limit=1000)
+	region = Box(200,550,350,750)
+	pipelines = c[KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)]
+	result = count(pipelines, ['one'], stats=True)
+	print('Bitrate',i,result)
+"""
 region = Box(200,550,350,750)
+c = VideoStream('58tcam.avi', limit=1000)
 pipelines = c[KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)]
-result = count(pipelines, ['one'], stats=True)
-print(result)
+print(count(pipelines, ['one'], stats=True))

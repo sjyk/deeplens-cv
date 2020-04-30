@@ -123,3 +123,9 @@ def blocks(file,
 		seq +=1
 
 	return rtn
+
+def set_bitrate(file, new_file, qscale):
+	#ARGS = 'ffmpeg -i {} -c:v mpeg4 -vtag xvid -qscale:v {} {}'.format(file, str(qscale), new_file).split()
+	ARGS = 'ffmpeg -i {} -c:v libx264 -crf {} {}'.format(file, str(qscale), new_file).split()
+	result = subprocess.run(ARGS, stdout=subprocess.PIPE)
+	return new_file

@@ -63,8 +63,6 @@ class DeepLensOptimizer():
 		else:
 			rawbitrate = self._getVStreamBitRate(pipeline[0])
 
-			print(rawbitrate/baseline)
-
 			if rawbitrate/baseline < 0.1:
 				return np.sqrt(7*rawbitrate/baseline)
 			else:

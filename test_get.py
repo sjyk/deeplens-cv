@@ -8,7 +8,7 @@ from deeplens.dataflow.agg import *
 from deeplens.tracking.contour import *
 from deeplens.tracking.event import *
 
-from deeplens.extern.ffmpeg import *
+#from deeplens.extern.ffmpeg import *
 #from deeplens
 
 
@@ -27,10 +27,15 @@ for i in range(25,60,3):
 	print('Bitrate',i,result)
 """
 
-for i in range(25,60,3):
-	print(str(i)+'tcam.avi', get_bitrate(str(i)+'tcam.avi'))
+#for i in range(25,60,3):
+#	print(str(i)+'tcam.avi', get_bitrate(str(i)+'tcam.avi'))
 
 #region = Box(200,550,350,750)
-#c = VideoStream('58tcam.avi', limit=1000)
+from deeplens.optimizer.deeplens import DeepLensOptimizer
+d = DeepLensOptimizer()
+v = [VideoStream('58tcam.avi', limit=1000), VideoStream('25tcam.avi', limit=1000)] 
+c = IteratorVideoStream(itertools.chain(*v), v)
+d.optimize(c)
+
 #pipelines = c[KeyPoints(blur=1)][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)]
 #print(count(pipelines, ['one'], stats=True))

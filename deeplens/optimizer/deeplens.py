@@ -1,6 +1,7 @@
 from deeplens.tracking.event import Metric
 from deeplens.dataflow.map import Crop, GC, SkipEmpty
-from deeplens.struct import build, RawVideoStream, IteratorVideoStream
+from deeplens.struct import build, RawVideoStream, IteratorVideoStream, VideoStream
+from deeplens.extern.ffmpeg import *
 
 class DeepLensOptimizer():
 
@@ -31,8 +32,22 @@ class DeepLensOptimizer():
 				return index
 		return None
 
+	def _getVStreamBitRate(self, vstream):
+		if '.avi' in vstream.src:
+			return get_bitrate(vstream.src)
+		else:
+			return None 
+
+	def get_bitrate_scale(self, pipeline):
+		if isinstance(pipeline[0],IteratorVideoStream):
+			return min([self._getVStreamBitRate(src) for src in pipeline[0].sources])
+		else:
+			return self._getVStreamBitRate(pipeline[0]) 
+
 	def optimize(self, stream):
 		pipeline = stream.lineage()
+
+		print(self.get_bitrate_scale(pipeline))
 
 		#crop push down
 		if self.crop_pd:

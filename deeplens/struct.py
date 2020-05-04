@@ -119,7 +119,7 @@ class VideoStream():
 			return None
 
 	def lineage(self):
-		return [self]
+		return [self]	
 
 
 class IteratorVideoStream(VideoStream):
@@ -137,7 +137,7 @@ class IteratorVideoStream(VideoStream):
 		self.sources = refs
 		self.src = src
 		self.limit = limit
-		self.global_lineage = []
+		self.global_lineage = [self]
 
 	def __getitem__(self, xform):
 		"""Applies a transformation to the video stream

@@ -26,7 +26,11 @@ for i in range(25,60,3):
 	result = count(pipelines, ['one'], stats=True)
 	print('Bitrate',i,result)
 """
-region = Box(200,550,350,750)
-c = VideoStream('58tcam.avi', limit=1000)
-pipelines = c[KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)]
-print(count(pipelines, ['one'], stats=True))
+
+for i in range(25,60,3):
+	print(str(i)+'tcam.avi', get_bitrate(str(i)+'tcam.avi'))
+
+#region = Box(200,550,350,750)
+#c = VideoStream('58tcam.avi', limit=1000)
+#pipelines = c[KeyPoints(blur=1)][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)]
+#print(count(pipelines, ['one'], stats=True))

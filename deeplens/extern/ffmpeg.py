@@ -124,8 +124,23 @@ def blocks(file,
 
 	return rtn
 
-def set_bitrate(file, new_file, qscale):
-	#ARGS = 'ffmpeg -i {} -c:v mpeg4 -vtag xvid -qscale:v {} {}'.format(file, str(qscale), new_file).split()
-	ARGS = 'ffmpeg -i {} -c:v libx264 -crf {} {}'.format(file, str(qscale), new_file).split()
+def set_bitrate(file, new_file, qscale, codec = 'x264'):
+	
+	if codec == 'x264':
+		ARGS = 'ffmpeg -i {} -c:v libx264 -crf {} {}'.format(file, str(qscale), new_file).split()
+		result = subprocess.run(ARGS, stdout=subprocess.PIPE)
+		return new_file
+	elif codec == 'mpeg4':
+		ARGS = 'ffmpeg -i {} -c:v mpeg4 -vtag xvid -qscale:v {} {}'.format(file, str(qscale), new_file).split()
+		result = subprocess.run(ARGS, stdout=subprocess.PIPE)
+		return new_file
+	else:
+		raise ValueError("Unknown codec: " + codec)
+
+def get_bitrate(file):
+	ARGS = 'ffprobe -v error -select_streams v:0 -show_entries stream=bit_rate -of default=noprint_wrappers=1'.format(file).split()
+	ARGS.append(file)
 	result = subprocess.run(ARGS, stdout=subprocess.PIPE)
-	return new_file
+	resultstr = result.stdout.decode("utf-8").rstrip()
+	return float(resultstr.split('=')[1])
+	

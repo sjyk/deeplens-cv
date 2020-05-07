@@ -621,7 +621,21 @@ def cache(conn, video_name, clip_condition):
             c = conn.cursor()
             c.execute(update)
 
-            #print(update)
+def quality(conn, video_name, clip_condition, qscale, rscale, inplace):
+    clip_ids = clip_condition.query(conn, video_name)
+    for id in clip_ids:
+        clip = query_clip(conn, id, video_name)
+        videoref = clip[0][8]
+
+        new_file = set_quality(videoref,videoref+"-"+str(rscale)+".avi",qscale, rscale)
+
+
+        if inplace:
+            os.remove(videoref)
+
+        update = "UPDATE clip SET video_ref = '%s' WHERE clip_id = '%d' AND video_name = '%s'" % (new_file, id, video_name)
+        c = conn.cursor()
+        c.execute(update)
 
 def uncache(conn, video_name, clip_condition):
     clip_ids = clip_condition.query(conn, video_name)

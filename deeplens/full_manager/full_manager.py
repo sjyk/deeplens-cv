@@ -204,7 +204,14 @@ class FullStorageManager(StorageManager):
         """
         logging.info("Calling uncache()")
         return uncache(self.conn, name, clip_condition = condition)
+
     
+    def set_quality(self, name, condition, qscale, rscale, codec='x264', inplace=True):
+        """Caches the specified clips as pre-decoded files
+        """
+        logging.info("Calling cache()")
+        return quality(self.conn, name, condition, qscale, rscale, codec, inplace)    
+
 
     def delete(self, name):
         conn = self.get_conn()

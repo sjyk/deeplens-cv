@@ -79,7 +79,7 @@ class DeepLensOptimizer():
 			if not (region is None):
 				region = region * self.crop_pd_ratio
 
-				pipeline.insert(1,Crop(region.x0, region.y0, region.x1, region.y1))
+				pipeline.insert(1,Crop(region.x0*pipeline[0].scale, region.y0*pipeline[0].scale, region.x1*pipeline[0].scale, region.y1*pipeline[0].scale))
 
 				if self.skip_empty:
 					pipeline.insert(2,SkipEmpty())

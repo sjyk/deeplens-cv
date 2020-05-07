@@ -6,11 +6,13 @@ struct.py defines the main data structures used in deeplens. It defines a
 video input stream as well as operators that can transform this stream.
 """
 import cv2
+import os
 from deeplens.error import *
 import numpy as np
 import json
 from timeit import default_timer as timer
 import itertools
+
 
 #sources video from the default camera
 DEFAULT_CAMERA = 0
@@ -47,6 +49,8 @@ class VideoStream():
 		self.offset = offset
 		self.frame_count = offset
 		self.cap = cv2.VideoCapture(self.src)
+
+		self.scale = get_scale(src)
 
 	def __getitem__(self, xform):
 		"""Applies a transformation to the video stream
@@ -138,6 +142,8 @@ class IteratorVideoStream(VideoStream):
 		self.src = src
 		self.limit = limit
 		self.global_lineage = [self]
+
+		self.scale = min([get_scale(s) for s in refs])
 
 	def __getitem__(self, xform):
 		"""Applies a transformation to the video stream
@@ -502,3 +508,15 @@ class CustomTagger(Operator):
 class Serializer(json.JSONEncoder):
 	def default(self, obj):
 		return obj.serialize()
+
+def get_scale(file):
+	filename, file_extension = os.path.splitext(file)
+	prefix = filename.split('-')
+
+	if len(prefix) == 1:
+		return 1.0
+	else:
+		try:
+			return float(prefix[-1])
+		except:
+			return 1.0

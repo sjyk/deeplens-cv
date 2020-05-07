@@ -124,14 +124,28 @@ def blocks(file,
 
 	return rtn
 
-def set_bitrate(file, new_file, qscale, codec = 'x264'):
-	
+def get_width(file):
+	ARGS = 'ffprobe -v error -show_entries stream=width -of default=noprint_wrappers=1:nokey=1'.split()
+	ARGS.append(file)
+	result = subprocess.run(ARGS, stdout=subprocess.PIPE)
+	#print(result.stdout)
+	return int(float(result.stdout))
+
+def get_height(file):
+	ARGS = 'ffprobe -v error -show_entries stream=height -of default=noprint_wrappers=1:nokey=1'.split()
+	ARGS.append(file)
+	result = subprocess.run(ARGS, stdout=subprocess.PIPE)
+	return int(float(result.stdout))
+
+def set_quality(file, new_file, qscale, rscale, codec = 'x264'): 
+	width=int(get_width(file)*rscale)
+	scale_string = str(width) + ":-2"
 	if codec == 'x264':
-		ARGS = 'ffmpeg -i {} -c:v libx264 -crf {} {}'.format(file, str(qscale), new_file).split()
+		ARGS = 'ffmpeg -i {} -filter:v scale={} -c:v libx264 -crf {} {}'.format(file, scale_string, str(qscale), new_file).split()
 		result = subprocess.run(ARGS, stdout=subprocess.PIPE)
 		return new_file
 	elif codec == 'mpeg4':
-		ARGS = 'ffmpeg -i {} -c:v mpeg4 -vtag xvid -qscale:v {} {}'.format(file, str(qscale), new_file).split()
+		ARGS = 'ffmpeg -i {} -filter:v scale={} -c:v mpeg4 -vtag xvid -qscale:v {} {}'.format(file, scale_string, str(qscale), new_file).split()
 		result = subprocess.run(ARGS, stdout=subprocess.PIPE)
 		return new_file
 	else:
@@ -143,4 +157,5 @@ def get_bitrate(file):
 	result = subprocess.run(ARGS, stdout=subprocess.PIPE)
 	resultstr = result.stdout.decode("utf-8").rstrip()
 	return float(resultstr.split('=')[1])
+
 	

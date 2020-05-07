@@ -29,6 +29,7 @@ class KeyPoints(Map):
 		self.edge_high = edge_high
 		self.area_thresh = area_thresh
 		self.label = label
+		self.scale = 1.0
 
 	"""the map function creates bounding boxes of the form x,y,x,y to identify detection points
 	"""

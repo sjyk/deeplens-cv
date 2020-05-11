@@ -401,6 +401,12 @@ class Box():
 				   int(self.x1*scalar), \
 				   int(self.y1*scalar))
 
+	def __add__(self, scalar):
+		return Box(int(self.x0 - scalar), \
+				   int(self.y0 - scalar), \
+				   int(self.x1 + scalar), \
+				   int(self.y1 + scalar))
+
 	#helpher methods to test intersection and containement
 	def _zero_x_cond(self, other):
 		return (other.x0 >= self.x0 and other.x0 <= self.x1)

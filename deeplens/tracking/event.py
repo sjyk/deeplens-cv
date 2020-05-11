@@ -50,14 +50,12 @@ class ActivityMetric(Metric):
 		for label, pt in data['bounding_boxes']:
 			box = Box(*pt)
 
-			#print(cnt, data['frame'],data['origin'], box.x0, box.y1, self.region.shift(data['origin']).contains(box))
-			#print()
-
 			if label == self.filter and \
 				self.region.shift(data['origin']).contains(box):
 				cnt += 1
 
 		data[self.name] = cnt
+		#print(cnt)
 		return data
 
 	def _serialize(self):

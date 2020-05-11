@@ -77,7 +77,7 @@ class DeepLensOptimizer():
 		if self.crop_pd:
 			region = self.get_metric_region(pipeline)
 			if not (region is None):
-				region = region * self.crop_pd_ratio
+				region = region + 150 #self.crop_pd_ratio
 
 				pipeline.insert(1,Crop(region.x0*pipeline[0].scale, region.y0*pipeline[0].scale, region.x1*pipeline[0].scale, region.y1*pipeline[0].scale))
 
@@ -100,11 +100,19 @@ class DeepLensOptimizer():
 			kpopt = self.get_keypoint_op(pipeline)
 			blur = int(self.get_bitrate_scale(pipeline)*kpopt.blur)
 
+			if pipeline[0].scale < 0.8:
+				blur = min(3, blur)
+			elif pipeline[0].scale < 0.4:
+				blur = min(1, blur)
+			else:
+				blur = min(5, blur)
+
 			kernel_blurs = range(1,32,2)
 			closest = [ (abs(v-blur),i) for i, v in enumerate(kernel_blurs)]
 			closest.sort()
 
 			kpopt.blur = kernel_blurs[closest[0][1]]
+			kpopt.area_thresh = kpopt.area_thresh * pipeline[0].scale * pipeline[0].scale
 			
 		if self.gc:
 			index = self.get_metric_index(pipeline)

@@ -50,13 +50,17 @@ class Crop(Map):
 	"""
 
 	def __init__(self,x0,y0,x1,y1):
-		self.x0 = int(x0)
-		self.y0 = int(y0)
-		self.x1 = int(x1)
-		self.y1 = int(y1)
+		self.x0 = max(int(x0),0)
+		self.y0 = max(int(y0),0)
+		self.x1 = int(x1) 
+		self.y1 =int(y1)
 
 	def map(self, data):
 		ff = data
+
+		self.x1 = min(self.x1, self.width)
+		self.y1 = min(self.y1, self.height)
+
 		ff['data'] = ff['data'][self.y0:self.y1,self.x0:self.x1]
 		ff['origin'] = np.array((self.x0, self.y0))
 		return ff

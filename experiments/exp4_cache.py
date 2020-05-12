@@ -56,4 +56,4 @@ if __name__ == '__main__':
         runFull(filename, cache=False, limit=limit, optimizer=False)
         runFull(filename, cache=False, limit=limit, optimizer=True)
         runFull(filename, cache=True, limit=limit, optimizer=False)
-        runFull(filename, cache=False, limit=limit, optimizer=True)
+        runFull(filename, cache=True, limit=limit, optimizer=True)

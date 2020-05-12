@@ -5,6 +5,7 @@ from deeplens.full_manager.condition import Condition
 from deeplens.full_manager.full_video_processing import CropSplitter
 from deeplens.tracking.background import FixedCameraBGFGSegmenter
 from deeplens.optimizer.deeplens import DeepLensOptimizer
+from deeplens.utils.testing_utils import get_size
 from experiments.environ import logrecord
 
 from deeplens.full_manager.full_manager import *
@@ -41,8 +42,8 @@ def runFull(src, cache=False, cleanUp=True, limit=6000, optimizer=True):
         pipelines.append(pipeline)
 
     result = counts(pipelines, ['one'], stats=True)
-    logrecord('naive', ({'size': limit, 'cache': cache, 'optimizer': optimizer, 'file': src}), 'get', str(result), 's')
-
+    logrecord('naive', ({'size': limit, 'cache': cache, 'optimizer': optimizer, 'file': src,
+                         'folder_size': get_size('/tmp/videos')}), 'get', str(result), 's')
     if cache:
         manager.uncache('test', Condition(label='foreground'))
 

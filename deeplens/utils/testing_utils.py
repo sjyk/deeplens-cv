@@ -94,3 +94,16 @@ class TestSplitter(Operator):
 			out['crop'] = [] # denote a list of crops if present
 			out['split'] = False # split the video at this point
 		return out
+
+"""Calculates size of a directory
+Stolen from https://stackoverflow.com/questions/1392413/calculating-a-directorys-size-using-python
+"""
+def get_size(start_path = '.'):
+	total_size = 0
+	for dirpath, dirnames, filenames in os.walk(start_path):
+		for f in filenames:
+			fp = os.path.join(dirpath, f)
+			# skip if it is symbolic link
+			if not os.path.islink(fp):
+				total_size += os.path.getsize(fp)
+	return total_size

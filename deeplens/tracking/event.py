@@ -47,6 +47,8 @@ class ActivityMetric(Metric):
 	def map(self, data):
 		cnt = 0
 
+		#print(self.region)
+
 		for label, pt in data['bounding_boxes']:
 			box = Box(*pt)
 

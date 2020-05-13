@@ -76,6 +76,12 @@ class DeepLensOptimizer():
 		#crop push down
 		if self.crop_pd:
 			region = self.get_metric_region(pipeline)
+
+			region.x0 = region.x0*pipeline[0].scale
+			region.y0 = region.y0*pipeline[0].scale
+			region.x1 = region.x1*pipeline[0].scale
+			region.y1 = region.y1*pipeline[0].scale
+
 			if not (region is None):
 				region = region + 150 #self.crop_pd_ratio
 
@@ -99,6 +105,7 @@ class DeepLensOptimizer():
 		if self.adaptive_blur:
 			kpopt = self.get_keypoint_op(pipeline)
 			blur = int(self.get_bitrate_scale(pipeline)*kpopt.blur)
+
 
 			if pipeline[0].scale < 0.8:
 				blur = min(3, blur)

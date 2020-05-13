@@ -38,12 +38,12 @@ for i in range(10,1,-1):
 
 
 	#print(scale, )
-	region2 = Box(region.x0*scale, region.y0*scale, region.x1*scale, region.y1*scale)
-	region3 = Box(region.x0*scale*1.1, region.y0*scale*1.1, region.x1*scale*1.1, region.y1*scale*1.1)
+	#region2 = Box(region.x0*scale, region.y0*scale, region.x1*scale, region.y1*scale)
+	#region3 = Box(region.x0*scale*1.1, region.y0*scale*1.1, region.x1*scale*1.1, region.y1*scale*1.1)
 	#scale = get_scale('tcam-'+str(scale)+".avi")
 
 	d = DeepLensOptimizer(adaptive_blur=True)
-	pipelines = c[KeyPoints()][ActivityMetric('one', region2)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)]
+	pipelines = c[KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)]
 	d.optimize(pipelines)
 
 	result = count(pipelines, ['one'], stats=True)

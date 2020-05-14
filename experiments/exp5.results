@@ -1,10 +1,10 @@
-full;{"file": "tcam.mp4", "size": -1, "background_scale": 0.2, "folder_size": 720259330, "optimizer": false};get;({'one': 148}, {'frames': 9182, 'elapsed': 180.0400252342224});s;put;584.2064213752747;s
-full;{"file": "tcam.mp4", "size": -1, "background_scale": 0.2, "folder_size": 720258306, "optimizer": true};get;({'one': 174}, {'frames': 9092, 'elapsed': 60.92059397697449});s;put;593.6097023487091;s
-full;{"file": "tcam.mp4", "size": -1, "background_scale": 0.4, "folder_size": 768466962, "optimizer": false};get;({'one': 148}, {'frames': 9182, 'elapsed': 177.46022582054138});s;put;634.1235067844391;s
-full;{"file": "tcam.mp4", "size": -1, "background_scale": 0.4, "folder_size": 768467986, "optimizer": true};get;({'one': 174}, {'frames': 9092, 'elapsed': 60.52722454071045});s;put;633.422360420227;s
-full;{"file": "tcam.mp4", "size": -1, "background_scale": 0.6, "folder_size": 846089502, "optimizer": false};get;({'one': 148}, {'frames': 9182, 'elapsed': 176.47948956489563});s;put;667.3814861774445;s
-full;{"file": "tcam.mp4", "size": -1, "background_scale": 0.6, "folder_size": 846089502, "optimizer": true};get;({'one': 174}, {'frames': 9092, 'elapsed': 59.72344422340393});s;put;657.1374609470367;s
-full;{"file": "tcam.mp4", "size": -1, "background_scale": 0.8, "folder_size": 901519804, "optimizer": false};get;({'one': 148}, {'frames': 9182, 'elapsed': 175.42002201080322});s;put;712.587641954422;s
-full;{"file": "tcam.mp4", "size": -1, "background_scale": 0.8, "folder_size": 901520828, "optimizer": true};get;({'one': 174}, {'frames': 9092, 'elapsed': 59.42427110671997});s;put;710.4165418148041;s
-full;{"file": "tcam.mp4", "size": -1, "background_scale": 1, "folder_size": 1031730116, "optimizer": false};get;({'one': 148}, {'frames': 9182, 'elapsed': 174.58792877197266});s;put;760.234281539917;s
-full;{"file": "tcam.mp4", "size": -1, "background_scale": 1, "folder_size": 1031731140, "optimizer": true};get;({'one': 174}, {'frames': 9092, 'elapsed': 59.15055465698242});s;put;775.2943103313446;s
+full;{"file": "tcam.mp4", "size": -1, "background_scale": 0.2, "folder_size": 720259330, "optimizer": false};put;584.2064213752747;s
+fullopt;{"file": "tcam.mp4", "size": -1, "background_scale": 0.2, "folder_size": 720258306, "optimizer": true};put;593.6097023487091;s
+full;{"file": "tcam.mp4", "size": -1, "background_scale": 0.4, "folder_size": 768466962, "optimizer": false};put;634.1235067844391;s
+fullopt;{"file": "tcam.mp4", "size": -1, "background_scale": 0.4, "folder_size": 768467986, "optimizer": true};put;633.422360420227;s
+full;{"file": "tcam.mp4", "size": -1, "background_scale": 0.6, "folder_size": 846089502, "optimizer": false};put;667.3814861774445;s
+fullopt;{"file": "tcam.mp4", "size": -1, "background_scale": 0.6, "folder_size": 846089502, "optimizer": true};put;657.1374609470367;s
+full;{"file": "tcam.mp4", "size": -1, "background_scale": 0.8, "folder_size": 901519804, "optimizer": false};put;712.587641954422;s
+fullopt;{"file": "tcam.mp4", "size": -1, "background_scale": 0.8, "folder_size": 901520828, "optimizer": true};put;710.4165418148041;s
+full;{"file": "tcam.mp4", "size": -1, "background_scale": 1, "folder_size": 1031730116, "optimizer": false};put;760.234281539917;s
+fullopt;{"file": "tcam.mp4", "size": -1, "background_scale": 1, "folder_size": 1031731140, "optimizer": true};put;775.2943103313446;s

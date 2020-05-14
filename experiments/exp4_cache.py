@@ -42,7 +42,7 @@ def runFull(src, cache=False, cleanUp=True, limit=6000, optimizer=True):
         pipelines.append(pipeline)
 
     result = counts(pipelines, ['one'], stats=True)
-    logrecord('naive', ({'size': limit, 'cache': cache, 'optimizer': optimizer, 'file': src,
+    logrecord('full', ({'size': limit, 'cache': cache, 'optimizer': optimizer, 'file': src,
                          'folder_size': get_size('/tmp/videos')}), 'get', str(result), 's')
     if cache:
         manager.uncache('test', Condition(label='foreground'))

@@ -25,8 +25,8 @@ def cleanUp():
 		shutil.rmtree('./videos')
 
 
-def logrecord(baseline,settings,operation,measurement,units):
-	print(';'.join([baseline, json.dumps(settings), operation, measurement, units]))
+def logrecord(baseline,settings,operation,measurement,*args):
+	print(';'.join([baseline, json.dumps(settings), operation, measurement] + list(args)))
 
 def do_experiments(data, baseline_lst, size, sels):
 	for si in sels:

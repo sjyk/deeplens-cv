@@ -15,7 +15,7 @@ from deeplens.utils.testing_utils import get_size
 from experiments.environ import logrecord
 
 
-def runFull(src, cleanUp=True, limit=6000, background_scale=1, optimizer=False):
+def runFull(src, cleanUp=True, limit=-1, background_scale=1, optimizer=False):
     if cleanUp:
         if os.path.exists('/tmp/videos'):
             shutil.rmtree('/tmp/videos')

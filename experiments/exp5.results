@@ -1,0 +1,10 @@
+full;{"folder_size": 454296310, "optimizer": false, "file": "tcam.mp4", "size": 6000, "background_scale": 0.2};get;({'one': 104}, {'frames': 5998, 'elapsed': 114.62234234809875});s;put;384.2458710670471;s
+full;{"folder_size": 454297334, "optimizer": true, "file": "tcam.mp4", "size": 6000, "background_scale": 0.2};get;({'one': 119}, {'frames': 5908, 'elapsed': 39.494356870651245});s;put;386.78668999671936;s
+full;{"folder_size": 485103638, "optimizer": false, "file": "tcam.mp4", "size": 6000, "background_scale": 0.4};get;({'one': 104}, {'frames': 5998, 'elapsed': 112.15059876441956});s;put;404.9212749004364;s
+full;{"folder_size": 485102614, "optimizer": true, "file": "tcam.mp4", "size": 6000, "background_scale": 0.4};get;({'one': 119}, {'frames': 5908, 'elapsed': 38.129093170166016});s;put;410.21948623657227;s
+full;{"folder_size": 534286222, "optimizer": false, "file": "tcam.mp4", "size": 6000, "background_scale": 0.6};get;({'one': 104}, {'frames': 5998, 'elapsed': 111.64252924919128});s;put;422.1494650840759;s
+full;{"folder_size": 534286222, "optimizer": true, "file": "tcam.mp4", "size": 6000, "background_scale": 0.6};get;({'one': 119}, {'frames': 5908, 'elapsed': 37.727054834365845});s;put;425.47185611724854;s
+full;{"folder_size": 570573022, "optimizer": false, "file": "tcam.mp4", "size": 6000, "background_scale": 0.8};get;({'one': 104}, {'frames': 5998, 'elapsed': 111.405837059021});s;put;457.80381870269775;s
+full;{"folder_size": 570574046, "optimizer": true, "file": "tcam.mp4", "size": 6000, "background_scale": 0.8};get;({'one': 119}, {'frames': 5908, 'elapsed': 37.43346190452576});s;put;457.3568365573883;s
+full;{"folder_size": 654727566, "optimizer": false, "file": "tcam.mp4", "size": 6000, "background_scale": 1};get;({'one': 104}, {'frames': 5998, 'elapsed': 111.39359712600708});s;put;494.9341447353363;s
+full;{"folder_size": 654728590, "optimizer": true, "file": "tcam.mp4", "size": 6000, "background_scale": 1};get;({'one': 119}, {'frames': 5908, 'elapsed': 37.57231307029724});s;put;492.6271994113922;s

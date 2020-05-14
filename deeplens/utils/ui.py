@@ -19,6 +19,7 @@ def overlay(frame, bbs, labelp=True, thickness=10):
 	ff = np.copy(frame)
 
 	for label, bb in bbs:
+		#print((bb[0],bb[1]))
 		cv2.rectangle(ff, (bb[0],bb[1]), (bb[2],bb[3]),(0,255,0), thickness)
 		
 		if labelp:

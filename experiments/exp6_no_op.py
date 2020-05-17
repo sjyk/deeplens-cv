@@ -39,7 +39,7 @@ def runSimple(src, cleanUp = False):
 
     manager = SimpleStorageManager('/tmp/videos_simple')
     now = timer()
-    manager.put(src, os.path.basename(src), args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': -1, 'batch_size': 50})
+    manager.put(src, os.path.basename(src), args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': -1, 'batch_size': 30})
     put_time = timer() - now
     logrecord('simple', ({'file': src}), 'put', str({'elapsed': put_time}), 's')
 
@@ -57,7 +57,7 @@ def runFullSequential(src, cleanUp = False):
 
     manager = FullStorageManager(None, CropSplitter(), '/tmp/videos_full')
     now = timer()
-    manager.put(src, os.path.basename(src), parallel = False, args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': -1, 'batch_size': 50, 'num_processes': os.cpu_count()})
+    manager.put(src, os.path.basename(src), parallel = False, args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': -1, 'batch_size': 30, 'num_processes': os.cpu_count(), 'background_scale': 1})
     put_time = timer() - now
     logrecord('full', ({'file': src}), 'put', str({'elapsed': put_time}), 's')
 
@@ -76,7 +76,7 @@ def runFullPutMany(src_list, cleanUp = False):
     manager = FullStorageManager(None, CropSplitter(), '/tmp/videos_full')
     now = timer()
     targets = [os.path.basename(src) for src in src_list]
-    logs = manager.put_many(src_list, targets, log = True, args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': -1, 'batch_size': 50, 'num_processes': os.cpu_count()})
+    logs = manager.put_many(src_list, targets, log = True, args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': -1, 'batch_size': 30, 'num_processes': os.cpu_count(), 'background_scale': 1})
     put_time = timer() - now
     logrecord('full', ({'file': src_list}), 'put', str({'elapsed': put_time}), 's')
     for i, log in enumerate(logs):

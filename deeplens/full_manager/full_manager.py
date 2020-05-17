@@ -116,14 +116,12 @@ class FullStorageManager(StorageManager):
         else:
             stream = False
         if self.content_tagger == None:
-                tagger = filename
+            tagger = filename
         else:
             tagger = self.content_tagger
+            if tagger.batch_size < args['batch_size']:
+                raise ValueError("This setting may currently lead to bugs")
 
-
-        if tagger.batch_size < args['batch_size']:
-            raise ValueError("This setting may currently lead to bugs")
-        
         if parallel and not stream:
             db_path = os.path.join(self.basedir, self.db_name)
             write_video_parallel(db_path, filename, target, physical_dir, self.content_splitter, tagger, args=args)

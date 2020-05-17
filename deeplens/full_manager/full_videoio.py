@@ -613,7 +613,7 @@ def cache(conn, video_name, clip_condition, rows=None, hwang=False):
     for id in clip_ids:
         clip = query_clip(conn, id, video_name)
         videoref = clip[0][8]
-        
+
         if not is_cache_file(videoref):
             cacheref = videoref_2_cache(videoref)
 
@@ -676,7 +676,7 @@ def query(conn, video_name, clip_condition, rows=None, hwang=False):
         #print(clip[0][2], clip[0][3], clip[0])
         video_refs.append(((start_time, end_time),vstream))
 
-    video_refs.sort() #sort by clip start
+    video_refs.sort(key=lambda tup: tup[0][0]) #sort by clip start
 
     if _is_contiguous(video_refs):
         return _chain_contiguous(video_refs)

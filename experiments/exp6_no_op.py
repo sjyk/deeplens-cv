@@ -15,7 +15,7 @@ from deeplens.tracking.contour import KeyPoints
 from experiments.environ import logrecord
 from timeit import default_timer as timer
 
-df = pd.read_csv('./deeplens/media/train/processed_yt_bb_detection_train.csv', sep=',',
+df = pd.read_csv('./deeplens/media/train/processed1.csv', sep=',',
                  dtype={'youtube_id': str})
 youtube_ids=df['youtube_id']
 youtube_ids2=list(dict.fromkeys(youtube_ids))

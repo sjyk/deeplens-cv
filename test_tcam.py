@@ -169,6 +169,32 @@ def runFullOpt(src, tot=-1, sel=0.1):
 #do_experiments(sys.argv[1], [runSimpleOpt], -1, [1])
 
 from deeplens.dataflow.xform import *
-from deeplens.utils.ui import play
-v = VideoStream(sys.argv[1], limit=1000)
-play(v[Grayscale()][Blur()][Canny()][Expand()])
+from deeplens.utils.ui import play, overlay
+from deeplens.extern.vehicle import VehicleType
+
+v = VideoStream('/Users/sanjayk/Dropbox/tcam.mp4')
+
+region = Box(475, 500, 700, 700)
+pipeline = v[KeyPoints()]\
+            [ActivityMetric('one', region)]\
+            [Filter('one', [-0.25, -0.25, 1, -0.25, -0.25], 1.5, delay=5)]\
+            [VehicleType('one','type', region)]
+
+
+prev = "None"
+for p in pipeline:
+
+    img = p['data']
+
+    if p['type']:
+        prev = p['type']
+
+    cv2.rectangle(img, (region.x0,region.y0), (region.x1,region.y1),(0,255,0), 4)
+    cv2.putText(img, str(prev), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 4) 
+
+    cv2.imshow('Player',img)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        continue
+
+
+

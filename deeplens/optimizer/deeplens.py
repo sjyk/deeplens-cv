@@ -9,7 +9,7 @@ class DeepLensOptimizer():
 				 crop_pd_ratio=1.1,
 				 raw_vid_opt = True,
 				 skip_empty=True,
-				 gc=True):
+				 gc=False):
 
 		self.crop_pd = crop_pd
 		self.crop_pd_ratio = crop_pd_ratio

@@ -196,7 +196,7 @@ class FullStorageManager(StorageManager):
         pipeline = PipelineManager(vstream)
         pipeline.add_operator(Materialize(name, self, args, materialize, batch_size))
         if dstreams != None:
-            pipeline.add_datastreams(dstreams)
+            pipeline.add_streams(dstreams)
         pipeline.run(keep_result = False)
 
     def delete(self, name, conn = None):

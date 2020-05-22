@@ -52,7 +52,7 @@ class Materialize(Operator):
             video_ref = self.file_name
         else:
             video_ref = None
-        clip_id = random.getrandbits(63)
+        clip_id = random.getrandbits(63) #update
         insert_clip_header(self.conn, self.name, 
                             self.start_time, self.end_time, self.origin[0], self.origin[1], 
                             self.height, self.width, video_ref)

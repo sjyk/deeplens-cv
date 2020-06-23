@@ -24,7 +24,7 @@ class SimpleStorageManager(StorageManager):
 	   into equiwidth segments.
 	"""
 
-	DEFAULT_ARGS = {'encoding': GSC, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 20}
+	DEFAULT_ARGS = {'encoding': MP4V, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 1440}
 
 
 	def __init__(self, basedir):
@@ -92,13 +92,15 @@ class SimpleStorageManager(StorageManager):
 		return size
 
 
-	
-
 	def doPut(self, filename, target, args=DEFAULT_ARGS):
 		"""putFromFile adds a video to the storage manager from a file
 		"""
-		v = VideoStream(filename, args['limit'])
-		v = v[Sample(args['sample'])]
+
+		if isinstance(filename, VideoStream):
+			v = filename
+		else:
+			v = VideoStream(filename, args['limit'])
+			v = v[Sample(args['sample'])]
 
 		physical_clip = os.path.join(self.basedir, target)
 		delete_video_if_exists(physical_clip)

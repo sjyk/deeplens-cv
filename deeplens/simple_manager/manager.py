@@ -24,7 +24,7 @@ class SimpleStorageManager(StorageManager):
 	   into equiwidth segments.
 	"""
 
-	DEFAULT_ARGS = {'encoding': MP4V, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 1440}
+	DEFAULT_ARGS = {'encoding': MP4V, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 120}
 
 
 	def __init__(self, basedir):

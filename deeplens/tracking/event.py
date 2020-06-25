@@ -135,3 +135,40 @@ class Filter(Operator):
 		        'name':self.name,
 		         'delay': self.delay}
 
+
+##applies classifier to region if true
+class ActivityClassifier(Map):
+
+	def __init__(self, trigger, name, region, delay=0):
+		self.trigger = trigger
+		self.name = name
+		self.region = region
+		self.last_event = None
+		self.delay = delay
+
+		super(ActivityClassifier, self).__init__()
+
+	def classify(self, img):
+		raise ValueError('Not Implemented')
+
+	def map(self, data):
+		if data[self.trigger]:
+			self.last_event = data['frame']
+
+		#not (self.last_event is None) and (data['frame'] == self.last_event + self.delay)
+		if not (self.last_event is None) and (data['frame'] == self.last_event + self.delay):
+			ff = data
+
+			region_s = self.region.shift(data['origin'])
+			x0, y0, x1, y1 = region_s.x0,region_s.y0,region_s.x1,region_s.y1
+
+			cropped_image = ff['data'][y0:y1,x0:x1]
+			ff[self.name] = self.classify(cropped_image)
+			return ff
+		else:
+			ff = data
+			ff[self.name] = False
+			return ff
+
+
+

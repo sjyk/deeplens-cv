@@ -16,6 +16,7 @@ class DeepLensOptimizer():
 				 adaptive_blur=True,
 				 gc=True):
 
+
 		self.crop_pd = crop_pd
 		self.crop_pd_ratio = crop_pd_ratio
 		self.raw_vid_opt = raw_vid_opt

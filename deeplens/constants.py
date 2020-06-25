@@ -22,7 +22,7 @@ AVI = '.avi'
 DEFAULT_FRAME_RATE = 30.0
 
 #temp files
-DEFAULT_TEMP = './tmp'
+DEFAULT_TEMP = '/tmp'
 
 #language constructs
 def TRUE(x):

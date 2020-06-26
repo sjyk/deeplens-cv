@@ -105,6 +105,7 @@ class KeyPointFilter(Map):
 
 					if dist < self.distance: 
 						rtn.append((label, bbi))
+						break
 
 			self.prev = ff['bounding_boxes']
 
@@ -112,6 +113,84 @@ class KeyPointFilter(Map):
 
 			return ff
 
+
+class MotionVectors(Map):
+	#removes transient keypoints
+
+	def __init__(self,distance=10):
+		self.distance = distance
+
+	def __iter__(self):
+		self.prev = None
+		return super().__iter__()
+
+
+	def map(self, data):
+
+		ff = data
+
+		feature_params = dict( maxCorners = 100,
+                               qualityLevel = 0.3,
+                               minDistance = 7,
+                               blockSize = 7 )
+
+		lk_params = dict( winSize  = (25,25),
+                          maxLevel = 3,
+                          criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
+
+
+		if self.prev is None:
+			self.prev = ff['data']
+			ff['motion_vectors'] = []
+			return ff
+		else:		
+			old_gray = cv2.cvtColor(self.prev, cv2.COLOR_BGR2GRAY)
+			frame_gray = cv2.cvtColor(ff['data'], cv2.COLOR_BGR2GRAY)
+			p0 = cv2.goodFeaturesToTrack(old_gray, mask = None, **feature_params)
+			p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray, frame_gray, p0, None, **lk_params)
+			
+			p0p1 = np.hstack((np.squeeze(p0), np.squeeze(p1)))
+
+			ff['motion_vectors'] = []
+			for i in range(p0p1.shape[0]):
+				ff['motion_vectors'].append(tuple(p0p1[i,:]))
+
+			self.prev = ff['data']
+			return ff
+
+
+class Direction(Map):
+
+	def quadrant(self, vec):
+		dx = vec[2]-vec[0]
+		dy = vec[3]-vec[1]
+		distance = np.sqrt(dx**2 + dy**2)
+
+		if distance == 0:
+			return 0
+
+		return np.arccos(dx/distance)
+		
+
+	def map(self, data):
+		ff = data
+		ff['motion_vectors'] = list(map(self.quadrant, ff['motion_vectors']))
+		return ff
+
+class Speed(Map):
+
+	def quadrant(self, vec):
+		dx = vec[2]-vec[0]
+		dy = vec[3]-vec[1]
+		distance = np.sqrt(dx**2 + dy**2)
+
+		return distance
+		
+
+	def map(self, data):
+		ff = data
+		ff['motion_vectors'] = list(map(self.quadrant, ff['motion_vectors']))
+		return ff
 
 
 

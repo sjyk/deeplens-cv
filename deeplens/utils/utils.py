@@ -9,6 +9,8 @@ image streams.
 import cv2
 import numpy as np
 import itertools
+import copy
+from deeplens.struct import Box
 
 #plays video stream through the system player
 def play(vstream):
@@ -43,6 +45,32 @@ def bb_replace(frame1, box, frame2):
 	ff = np.copy(frame1)
 	ff[box.y0:box.y1,box.x0:box.x1] = frame2
 	return ff
+
+def mask(frame, mask):
+    """Masks the content of a frame of the video
+    """
+    frame = copy.deepcopy(frame)
+    frame = frame[mask]
+    return frame
+
+def crop_box(frame, box):
+    """ Crops a frame of the video to a box 
+    given by the input arguments
+    """
+    frame = copy.deepcopy(frame)
+    frame = frame[box.y0:box.y1, box.x0:box.x1]
+    return frame
+
+
+def reverse_crop(frame, crops):
+    """Masks the content of a frame of the video
+    to remove all crops
+    """
+    frame = copy.deepcopy(frame)
+    for crop in crops:
+        box = crop['bb']
+        frame[box.y0:box.y1, box.x0:box.x1] = 0
+    return frame
 
 #matches frames against each other
 def image_match(im1, im2, hess_thresh=150, dist_threshold=1000, accept=0.75):

@@ -113,7 +113,7 @@ class Box():
 		return int(self.x0),int(self.y0),int(self.x1),int(self.y1)
 
 
-class CustomTagger(VideoStreamOperator):
+class CustomTagger(Operator):
 	def __init__(self, tagger, batch_size):
 		super(CustomTagger, self).__init__()
 		# a custom tagger function that takes video_stream and batch_size; it raises StopIteration when finishes

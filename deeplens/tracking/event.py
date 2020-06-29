@@ -70,7 +70,7 @@ class ActivityMetric(Metric):
 
 
 
-class Filter(VideoStreamOperator):
+class Filter(Operator):
 	"""Filter() defines cross-correlation kernel and a threshold. It
 	slides this kernel across the metric and if this threshold is exceeded
 	it defines an event {True, False} variable.

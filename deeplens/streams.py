@@ -67,9 +67,9 @@ class JSONListStream(DataStream):
     def append(data, prev):
         return prev.append(data)
 
-    @@staticmethod
+    @staticmethod
     def materialize(data, fp = None):
-        if not file_name:
+        if not fp:
             return json.dumps(data)
         else:
             return json.dump(data, fp)
@@ -115,7 +115,7 @@ class CacheStream(DataStream):
     
     @staticmethod
     def materialize(data, fp = None):
-        if not file_name:
+        if not fp:
             return json.dumps(data)
         else:
             return json.dump(data, fp)

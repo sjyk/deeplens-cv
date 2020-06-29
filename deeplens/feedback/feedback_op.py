@@ -9,7 +9,12 @@ pipeline.
 
 import cv2
 import json
-
+import os
+import random
+from deeplens.constants import *
+from deeplens.simple_manager.file import add_ext, get_rnd_strng
+from deeplens.full_manager.full_header_helper import insert_clip_header, insert_label_header
+from deeplens.streams import *
 ## TODO: add a stream to a previous VideoStream??
 
 class Materialize(Operator):
@@ -20,6 +25,7 @@ class Materialize(Operator):
 
     def __init__(self, name, storage_manager, args = None, materialize = True, streams = 'all', batch_size = -1):
         self.streams = streams
+        self.name = name
         self.materialize = materialize
         self.sm = storage_manager
         self.args = args
@@ -37,7 +43,7 @@ class Materialize(Operator):
 
     def _create_writers(self, data):
         if self.materialize:
-            r_name = vid_name + get_rnd_strng(64)
+            r_name = self.name + get_rnd_strng(64)
             seg_name = os.path.join(self.dir, r_name)
             self.file_name = add_ext(seg_name, AVI)
             self.writers['video'] = data['video'].init_mat(self.file_name, fourcc, data['video'].width, 
@@ -57,17 +63,17 @@ class Materialize(Operator):
                             self.start_time, self.end_time, self.origin[0], self.origin[1], 
                             self.height, self.width, video_ref)
         for stream in self.streams:
-            if type(data[stream]) == JSONListDataStream:
-                r_name = vid_name + get_rnd_strng(64)
+            if type(self.writers[stream]) == JSONListStream:
+                r_name = self.name + get_rnd_strng(64)
                 seg_name = os.path.join(self.dir, r_name)
                 file_name = add_ext(seg_name, AVI)
                 with open(file_name, 'w') as f:
-                    data[stream].materialize(self.writers[stream], f)
+                    self.writers[stream].materialize(self.writers[stream], f)
                 info = file_name
             else:
-                info = data[stream].materialize(self.writers[stream])
+                info = self.writers[stream].materialize(self.writers[stream])
             # update label with header
-            stream_type = type(data[stream]).__name__
+            stream_type = type(self.writers[stream]).__name__
             insert_label_header(self.conn, stream, info, clip_id, self.name, stream_type)
             
     def __next__(self):
@@ -76,7 +82,7 @@ class Materialize(Operator):
         except:
             self._materialize_streams()
             raise StopIteration() 
-        if streams == 'all':
+        if self.streams == 'all':
             streams = data.keys()
         if 'video' in streams:
             streams.remove('video')

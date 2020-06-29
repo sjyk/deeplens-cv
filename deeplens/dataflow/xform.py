@@ -131,15 +131,15 @@ class MotionVectors(Map):
 
 		feature_params = dict( maxCorners = 100,
                                qualityLevel = 0.3,
-                               minDistance = 7,
-                               blockSize = 7 )
+                               minDistance = 3,
+                               blockSize = 3 )
 
-		lk_params = dict( winSize  = (25,25),
+		lk_params = dict( winSize  = (15,15),
                           maxLevel = 3,
                           criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
 
-		if self.prev is None:
+		if self.prev is None or self.prev.shape != ff['data'].shape:
 			self.prev = ff['data']
 			ff['motion_vectors'] = []
 			return ff
@@ -147,13 +147,20 @@ class MotionVectors(Map):
 			old_gray = cv2.cvtColor(self.prev, cv2.COLOR_BGR2GRAY)
 			frame_gray = cv2.cvtColor(ff['data'], cv2.COLOR_BGR2GRAY)
 			p0 = cv2.goodFeaturesToTrack(old_gray, mask = None, **feature_params)
+
+			if p0 is None:
+				ff['motion_vectors'] = []
+				return ff
+
 			p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray, frame_gray, p0, None, **lk_params)
-			
-			p0p1 = np.hstack((np.squeeze(p0), np.squeeze(p1)))
+
+			p0p1 = np.hstack((np.squeeze(p0), np.squeeze(p1))).reshape(-1, 4)
 
 			ff['motion_vectors'] = []
 			for i in range(p0p1.shape[0]):
-				ff['motion_vectors'].append(tuple(p0p1[i,:]))
+				dist = np.sqrt((p0p1[i,0] - p0p1[i,2])**2 + (p0p1[i,1] - p0p1[i,3])**2)
+				if dist > 0.1:
+					ff['motion_vectors'].append(tuple(p0p1[i,:]))
 
 			self.prev = ff['data']
 			return ff

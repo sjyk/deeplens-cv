@@ -30,7 +30,7 @@ import matplotlib.pyplot as plt
 
 #v = VideoStream('/Users/sanjayk/Downloads/traffic-001.mp4', limit=2000)
 
-FILE = 'crash0.mp4'
+FILE = 'crash1.mp4'
 GT = '/Users/sanjaykrishnan/Downloads/LV_v1/VIDS/GT/g' + FILE
 VID = '/Users/sanjaykrishnan/Downloads/LV_v1/VIDS/Test/' + FILE
 
@@ -50,7 +50,7 @@ for p in pipeline:
     #    exit()
 
 v = VideoStream(VID)
-pipeline = v[MotionVectors()][Direction()]
+pipeline = v[MotionVectors()][Speed()]
 
 kps1 = []
 tindex = []
@@ -76,5 +76,13 @@ for p in pipeline:
 
 from deeplens.tracking.ts import *
 
-print(change_finder(kps1,100,20))
-print(change_finder(kps,100,20))
+import matplotlib.pyplot as plt
+
+plt.subplot(2,1,1)
+plt.plot(moving_average(kps1,100))
+plt.subplot(2,1,2)
+plt.plot(kps)
+plt.show()
+
+print(thresh_finder(kps1,100,100))
+#print(change_finder(kps,100,20))

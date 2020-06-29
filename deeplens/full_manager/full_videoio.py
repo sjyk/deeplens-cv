@@ -696,6 +696,7 @@ def _create_vstream(ref, start_time, end_time, \
                     height, width, origin, rows=None, hwang=False):
 
     if not is_cache_file(ref):
+        #print(ref)
         return VideoStream(ref,origin=origin, offset=start_time, rows=rows, hwang=hwang)
     else:
         return RawVideoStream(ref, shape=(end_time-start_time,height,width,3), origin=origin, offset=start_time)
@@ -714,7 +715,8 @@ def _is_contiguous(videos, thresh=5):
 
 def _chain_contiguous(videos):
     vrefs = [v for _, v in videos]
-    return [IteratorVideoStream(itertools.chain(*vrefs), vrefs)]
+    srcs = [v.src for _, v in videos]
+    return [IteratorVideoStream(itertools.chain(*vrefs), srcs)]
 
 
 

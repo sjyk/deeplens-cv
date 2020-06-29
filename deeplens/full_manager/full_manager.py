@@ -208,7 +208,7 @@ class FullStorageManager(StorageManager):
         """Caches the specified clips as pre-decoded files
         """
         logging.info("Calling cache()")
-        return quality(self.conn, name, condition, qscale, rscale, codec, inplace)    
+        return quality(self.conn, name, condition, qscale, rscale, inplace)    
 
     def delete(self, name, conn=None):
         conn_not_provided = conn == None

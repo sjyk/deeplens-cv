@@ -8,11 +8,9 @@ event.py defines some of the main detection primitives used in dlcv.
 import numpy as np
 
 def moving_average(stream, k=10):
-	mu = np.nanmean(stream)
-
 	buffer = np.zeros((len(stream)-k, 1))
 	for i in range(k, len(stream)):
-		buffer[i-k] = np.nanmean(np.abs(stream[i-k:i]-mu))
+		buffer[i-k] = np.nanmedian(stream[i-k:i])
 
 	return buffer
 
@@ -23,7 +21,7 @@ def moving_vol(stream, k=10):
 
 	return buffer
 
-def change_finder(stream, step=100, window=100, thresh=0.5):
+def thresh_finder(stream, step=100, window=100, thresh=0.25):
 
 	stream = moving_average(stream, window)
 
@@ -34,10 +32,7 @@ def change_finder(stream, step=100, window=100, thresh=0.5):
 	peaks = []
 
 	for k in range(1,len(buffer)):
-		delta = np.abs(buffer[k-1]-buffer[k])
-		#peaks.append()
-		#if buffer[k-1] > buffer[k] and buffer[k-1] > buffer[k-2]:
-		if delta >= thresh:
+		if buffer[k] <= thresh:
 			peaks.append(k*step + window)
 
 	return peaks

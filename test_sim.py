@@ -15,6 +15,7 @@ from deeplens.tracking.contour import *
 from deeplens.tracking.event import *
 from deeplens.core import *
 from deeplens.simple_manager.manager import *
+import os
 
 import cv2
 import numpy as np
@@ -23,14 +24,15 @@ from scipy import stats
 
 from deeplens.dataflow.xform import *
 from deeplens.utils.ui import play, overlay
+from deeplens.constants import *
 
 import matplotlib.pyplot as plt
 
 #v = VideoStream('/Users/sanjayk/Downloads/traffic-001.mp4', limit=2000)
-FILE = 'kidnap.mp4'
+
+FILE = 'crash0.mp4'
 GT = '/Users/sanjaykrishnan/Downloads/LV_v1/VIDS/GT/g' + FILE
 VID = '/Users/sanjaykrishnan/Downloads/LV_v1/VIDS/Test/' + FILE
-
 
 v = VideoStream(GT)
 pipeline = v[KeyPoints(blur=1)]
@@ -44,17 +46,10 @@ for p in pipeline:
     #print(p['bounding_boxes'])
     #hit q to exit
     #cv2.imshow('Player',image)
-
-    #print("test")
-
     #if cv2.waitKey(1) & 0xFF == ord('q'):
     #    exit()
 
 v = VideoStream(VID)
-
-#Crop(300,300,480,360)
-#Crop(0,0,100,100)
-
 pipeline = v[MotionVectors()][Direction()]
 
 kps1 = []

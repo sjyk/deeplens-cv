@@ -50,13 +50,17 @@ class Crop(Map):
 	"""
 
 	def __init__(self,x0,y0,x1,y1):
-		self.x0 = x0
-		self.y0 = y0
-		self.x1 = x1
-		self.y1 = y1
+		self.x0 = max(int(x0),0)
+		self.y0 = max(int(y0),0)
+		self.x1 = int(x1) 
+		self.y1 =int(y1)
 
 	def map(self, data):
 		ff = data
+
+		self.x1 = min(self.x1, self.width)
+		self.y1 = min(self.y1, self.height)
+
 		ff['data'] = ff['data'][self.y0:self.y1,self.x0:self.x1]
 		ff['origin'] = np.array((self.x0, self.y0))
 		return ff
@@ -111,13 +115,20 @@ class Resize(Map):
 	down by that factor.
 	"""
 
-	def __init__(self, scale):
+	def __init__(self, scale, noimg=False):
 		self.scale = scale
+		self.noimg = noimg
 
 	def map(self, data):
 		ff = data
 		#newX,newY = ff['data'].shape[1]*self.scale, ff['data'].shape[0]*self.scale
-		ff['data'] = cv2.resize(ff['data'],(0,0), fx = self.scale, fy = self.scale) 
+		
+		if not self.noimg:
+			ff['data'] = cv2.resize(ff['data'],(0,0), fx = self.scale, fy = self.scale) 
+
+		if 'bounding_boxes' in ff:
+			ff['bounding_boxes'] = [(l, [self.scale*bb[0], self.scale*bb[1], self.scale*bb[2], self.scale*bb[3]] ) for l,bb in ff['bounding_boxes']]
+
 		return ff
 
 	def _serialize(self):

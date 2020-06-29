@@ -105,7 +105,8 @@ class FullStorageManager(StorageManager):
             the video to disk, or a reference in disk to deep storage.
         """
         conn = self.get_conn()
-        self.delete(target, conn)
+        self.delete(target)
+
         if in_extern_storage: 
             physical_dir = self.externdir
         else:
@@ -125,10 +126,9 @@ class FullStorageManager(StorageManager):
         if parallel and not stream:
             db_path = os.path.join(self.basedir, self.db_name)
             write_video_parallel(db_path, filename, target, physical_dir, self.content_splitter, tagger, args=args)
-        
         else:
             write_video_single(conn, filename, target, physical_dir, self.content_splitter, tagger, stream=stream, args=args, background_scale=args['background_scale'], rows=rows, hwang=hwang)
-        
+            
         self.videos.add(target)
 
         self.remove_conn(conn)
@@ -202,7 +202,13 @@ class FullStorageManager(StorageManager):
         """
         logging.info("Calling uncache()")
         return uncache(self.conn, name, clip_condition = condition)
+
     
+    def set_quality(self, name, condition, qscale, rscale, codec='x264', inplace=True):
+        """Caches the specified clips as pre-decoded files
+        """
+        logging.info("Calling cache()")
+        return quality(self.conn, name, condition, qscale, rscale, codec, inplace)    
 
     def delete(self, name, conn=None):
         conn_not_provided = conn == None
@@ -210,9 +216,6 @@ class FullStorageManager(StorageManager):
             conn = self.get_conn()
 
         delete_video(conn, name)
-
-        if conn_not_provided:
-            self.remove_conn(conn)
 
     def list(self):
         return list(self.videos)

@@ -6,11 +6,13 @@ struct.py defines the main data structures used in deeplens. It defines a
 video input stream as well as operators that can transform this stream.
 """
 import cv2
+import os
 from deeplens.error import *
 import numpy as np
 import json
 from timeit import default_timer as timer
 import itertools
+
 
 #sources video from the default camera
 DEFAULT_CAMERA = 0
@@ -60,6 +62,8 @@ class VideoStream():
 			self.frame_count = offset
 			self.cap = cv2.VideoCapture(self.src)
 
+
+		self.scale = get_scale(src)
 
 	def __getitem__(self, xform):
 		"""Applies a transformation to the video stream
@@ -144,7 +148,7 @@ class VideoStream():
 			return None
 
 	def lineage(self):
-		return [self]
+		return [self]	
 
 
 class IteratorVideoStream(VideoStream):
@@ -162,7 +166,9 @@ class IteratorVideoStream(VideoStream):
 		self.sources = refs
 		self.src = src
 		self.limit = limit
-		self.global_lineage = []
+		self.global_lineage = [self]
+
+		self.scale = min([get_scale(s) for s in refs])
 
 	def __getitem__(self, xform):
 		"""Applies a transformation to the video stream
@@ -420,6 +426,12 @@ class Box():
 				   int(self.x1*scalar), \
 				   int(self.y1*scalar))
 
+	def __add__(self, scalar):
+		return Box(int(self.x0 - scalar), \
+				   int(self.y0 - scalar), \
+				   int(self.x1 + scalar), \
+				   int(self.y1 + scalar))
+
 	#helpher methods to test intersection and containement
 	def _zero_x_cond(self, other):
 		return (other.x0 >= self.x0 and other.x0 <= self.x1)
@@ -527,3 +539,15 @@ class CustomTagger(Operator):
 class Serializer(json.JSONEncoder):
 	def default(self, obj):
 		return obj.serialize()
+
+def get_scale(file):
+	filename, file_extension = os.path.splitext(file)
+	prefix = filename.split('-')
+
+	if len(prefix) == 1:
+		return 1.0
+	else:
+		try:
+			return float(prefix[-1])
+		except:
+			return 1.0

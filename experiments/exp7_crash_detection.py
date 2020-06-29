@@ -107,7 +107,7 @@ def fullQuality(index=0):
 	logrecord('fullq', ({'folder_size': get_size('videos') }), 'get', str(result), 's')
 
 
-for i in range(0,5):
+for i in range(4,6):
 	naive(i)
 	full(i)
 	fullQuality(i)

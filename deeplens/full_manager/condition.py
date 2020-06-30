@@ -9,6 +9,8 @@ condition.py defines a implemented Condition class and related functions
 from deeplens.full_manager.full_videoio import query_label, query_clip, query_everything
 from deeplens.struct import Box
 
+import json
+
 #condition is a predicate push down condition
 #implements filter and crop only
 class Condition():
@@ -63,4 +65,21 @@ class Condition():
 					self.crop.intersect_area(clip_position) / clip_position.area() >= 0.7:
 				cropped_ids.append(id)
 		return cropped_ids
+
+
+	def serialize(self):
+		data = {'label' : self.label,
+				'crop' : self.crop,
+				'resolution' : self.resolution, 
+				'sampling' : self.sampling, 
+				'custom_filter' : self.custom_filter}
+
+		return json.dumps(data)
+
+
+
+def deserialize(serialized):
+	return Condition(**json.loads(serialized))
+
+
 

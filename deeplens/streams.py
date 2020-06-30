@@ -7,6 +7,7 @@ from shutil import copyfile
 from subprocess import Popen
 from timeit import default_timer as timer
 import numpy as np
+import cv2
 
 from deeplens.struct import *
 

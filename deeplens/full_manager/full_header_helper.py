@@ -22,7 +22,7 @@ from multiprocessing import Pool
 #import glob
 
 
-def _update_headers_batch(conn, crops, name, start_time, end_time, ids):
+def update_headers_batch(conn, crops, name, start_time, end_time, ids):
 
     for i, id in enumerate(ids):
         clip_info = query_clip(conn, id, name)[0] # Need to update this
@@ -59,7 +59,7 @@ def _update_headers_batch(conn, crops, name, start_time, end_time, ids):
         update_clip_header(conn, id, name, updates)
 
 
-def _new_headers_batch(conn, all_crops, name, video_refs,
+def new_headers_batch(conn, all_crops, name, video_refs,
                             full_dim, scaled_dim, start_time, end_time):
     """
     Create new headers all headers for one batch. In terms of updates, we assume certain
@@ -88,7 +88,7 @@ def _new_headers_batch(conn, all_crops, name, video_refs,
         else:
             insert_label_header(conn, crops[i]['label'], 'storage', ids[i + 1], name)
     for i in range(1, len(all_crops)):
-        _update_headers_batch(conn, all_crops[i], name, start_time, end_time, ids) # TODO
+        update_headers_batch(conn, all_crops[i], name, start_time, end_time, ids) # TODO
     return ids
 
 def delete_video_if_exists(conn, video_name):
@@ -220,5 +220,41 @@ def update_clip_header(conn, clip_id, video_name, args={}):
 def query_clip(conn, clip_id, video_name):
     c = conn.cursor()
     c.execute("SELECT * FROM clip WHERE clip_id = '%d' AND video_name = '%s'" % (clip_id, video_name))
+    result = c.fetchall()
+    return result
+
+
+# update queries later
+def query_background(conn, video_name, background_id=None, clip_id=None):
+    c = conn.cursor()
+    if background_id == None and clip_id == None:
+        raise ValueError("Neither background_id nor clip_id is given")
+    elif background_id != None and clip_id != None:
+        c.execute("SELECT * FROM background WHERE background_id = '%d' AND clip_id = '%d' AND video_name = '%s'" % (background_id, clip_id, video_name))
+    elif background_id != None and clip_id == None:
+        c.execute("SELECT * FROM background WHERE background_id = '%d' and video_name = '%s'" % (background_id, video_name))
+    elif background_id == None and clip_id != None:
+        c.execute("SELECT * FROM background WHERE clip_id = '%d' and video_name = '%s'" % (clip_id, video_name))
+    result = c.fetchall()
+    return result
+
+def query_label(conn, label, video_name):
+    c = conn.cursor()
+    c.execute("SELECT * FROM label WHERE label = '%s' AND video_name = '%s'" % (label, video_name))
+    result = c.fetchall()
+    return result
+
+def query_label_clip(conn, video_name, clip_id, label = None):
+    c = conn.cursor()
+    if label == None:
+        c.execute("SELECT * FROM label WHERE video_name = '%s' AND clip_id = '%d" % (video_name, clip_id))
+    else:
+        c.execute("SELECT * FROM label WHERE label = '%s' AND video_name = '%s' AND clip_id = '%d" % (label, video_name, clip_id))
+    result = c.fetchall()
+    return result
+
+def query_everything(conn, video_name):
+    c = conn.cursor()
+    c.execute("SELECT * FROM label WHERE video_name = '%s'" % video_name)
     result = c.fetchall()
     return result

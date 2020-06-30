@@ -13,21 +13,19 @@ from deeplens.core import StorageManager
 from deeplens.full_manager.full_videoput import *
 from deeplens.pipeline import *
 
-from deeplens.constants import *
-from deeplens.error import *
-from deeplens.feedback.feedback_op import *
+from deeplens.utils.constants import *
+from deeplens.utils.error import *
+from deeplens.dataflow.feedback import *
+from deeplens.full_manager.full_header_helper import *
 
 import os
 import sqlite3
 import logging
 from multiprocessing import Pool
 import time
-from deeplens.utils.parallel_log_reduce import *
+from deeplens.utils.utils import *
 
 DEFAULT_ARGS = {'frame_rate': 30, 'encoding': MP4V, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 20, 'num_processes': 4, 'background_scale': 1}
-
-# NOTE: Frame rate SHOULD be an argument -> need to update
-# NOTE: bounding boxes are at a clip level
 
 class FullStorageManager(StorageManager):
     """ TieredStorageManager is the implementation of a 3 tiered
@@ -116,7 +114,7 @@ class FullStorageManager(StorageManager):
             conn.commit()
             conn.close()
 
-    def put(self, filename, target, args=DEFAULT_ARGS, in_extern_storage=False, parallel=False):
+    def put(self, filename, target, args=DEFAULT_ARGS, aux_streams = None, in_extern_storage=False, parallel=False):
         """put adds a video to the storage manager from a file. It should either add
             the video to disk, or a reference in disk to deep storage.
         """
@@ -141,13 +139,13 @@ class FullStorageManager(StorageManager):
         if tagger.batch_size < args['batch_size']:
             raise ValueError("This setting may currently lead to bugs")
         
-        write_video_single(conn, filename, target, physical_dir, self.content_splitter, tagger, args=args, background_scale=args['background_scale'])
+        write_video_single(conn, filename, target, physical_dir, self.content_splitter, tagger, aux_streams, args=args, background_scale=args['background_scale'])
         
         self.videos.add(target)
 
         self.remove_conn(conn)
 
-    def put_many(self, filenames, targets, args=DEFAULT_ARGS, in_extern_storage=False, log=False):
+    def put_many(self, filenames, targets, aux_streams, args=DEFAULT_ARGS, in_extern_storage=False, log=False):
         conn = self.get_conn()
         start_time = time.time()
         put_args = []
@@ -161,7 +159,11 @@ class FullStorageManager(StorageManager):
                 tagger = name
             else:
                 tagger = self.content_tagger
-            put_arg = (db_path, name, targets[i], physical_dir, self.content_splitter, tagger, args, args['background_scale'])
+            streams = None
+            if aux_streams != None:
+                streams = aux_streams[i]
+            #Note: streams might have to be modified to pass into threads situationally
+            put_arg = (db_path, name, targets[i], physical_dir, self.content_splitter, tagger, streams, args, args['background_scale'])
             put_args.append(put_arg)
             self.delete(targets[i], conn)
         

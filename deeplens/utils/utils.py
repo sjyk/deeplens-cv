@@ -11,6 +11,8 @@ import numpy as np
 import itertools
 import copy
 from deeplens.struct import Box
+import os
+import json
 
 #plays video stream through the system player
 def play(vstream):
@@ -131,3 +133,16 @@ def labels_to_intervals(labels_list):
             output.add((key, interval[0], interval[1]+1))
     return output
 
+def parallel_log_reduce(logs, start_time):
+    times = []
+    for log in logs:
+        with open(log, 'r') as f:
+            time = json.load(f)
+            time['end_time'] = time['end_time'] - start_time
+            times.append(time['end_time'])
+    times.sort()
+    return times
+
+def paralleL_log_delete(logs):
+    for log in logs:
+        os.remove(log)

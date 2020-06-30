@@ -9,8 +9,10 @@ storage system.
 
 from deeplens.dataflow.map import Resize
 from deeplens.simple_manager.file import *
-from deeplens.utils.frame_xform import *
-from deeplens.streams import all
+from deeplens.utils.utils import *
+from deeplens.streams import *
+from deeplens.pipeline import *
+from deeplens.full_manager.full_header_helper import *
 
 import sqlite3
 import random
@@ -30,7 +32,7 @@ import itertools
 class PutOp(Operator):
     def __init__(self, vid_name, encoding, frame_rate, batch_size, condense = True, scale = 1, dir = DEFAULT_TEMP):
         self.encoding = encoding
-        self.vid_name = name
+        self.vid_name = vid_name
         self.batch_size = batch_size
         self.scale = scale
         self.dir = dir
@@ -104,14 +106,14 @@ class HeaderOp(Operator):
             try:
                 frame = next(self.pipeline['full_meta'])
             except StopIteration():
-                _new_headers_batch(self.conn, *self.params.get())
+                new_headers_batch(self.conn, *self.params.get())
                 self.stop = True
                 return self.params
             index = frame.get()
             if frame.first_frame == index:
                 if self.params != None:
-                    _new_headers_batch(self.conn, *self.params.get())
-                old_param = self.params
+                    new_headers_batch(self.conn, *self.params.get())
+                old_params = self.params
                 params = [[frame.crops], frame.vid_name, frame.video_refs, frame.fd, frame.sd, index, index]
                 self.params = CacheStream('header_data')
                 self.params.update(params)
@@ -126,7 +128,7 @@ class HeaderOp(Operator):
             return self.params        
 
 #TODO: assumes batch labels from mapOP right now -> fix if needed later
-def ConverMap(Operator):
+def ConvertMap(Operator):
     def __init__(self, tagger, batch_size):
         self.tagger = tagger
         self.batch_size = batch_size
@@ -147,7 +149,7 @@ def ConverMap(Operator):
         self.labels.update(tags)
         return self.labels
 
-def ConverSplit(Operator):
+def ConvertSplit(Operator):
     def __init__(self, splitter):
         self.splitter = splitter
 
@@ -162,11 +164,11 @@ def ConverSplit(Operator):
             do_join = False
         else:
             batch = self.splitter.map(labels)
-            crops, self.batch_prev, do_join = splitter.join(self.batch_prev, batch)
+            crops, self.batch_prev, do_join = self.splitter.join(self.batch_prev, batch)
         self.crops.update((crops, do_join))
         return self.crops
 
-def write_video_single(conn, video_file, target, dir, splitter, map, args, background_scale=1):
+def write_video_single(conn, video_file, target, dir, splitter, tagger, aux_streams, args, background_scale=1):
     if not os.path.isfile(video_file):
         print("missing file", video_file)
         return None
@@ -174,11 +176,15 @@ def write_video_single(conn, video_file, target, dir, splitter, map, args, backg
         conn = sqlite3.Connection(conn)
     batch_size = args['batch_size']
     v = CVVideoStream(video_file, args['limit'])
-    crops = Pipeline({'video':v})[ConvertMap(map)][ConvertSplit(split, batch_size)]
+    manager_crop = PipelineManager(v)
+    if aux_streams != None:
+        manager_crop.add_streams(aux_streams)
+    manager_crop.add_operators([ConvertMap(tagger, batch_size), ConvertSplit(splitter)])
+    crops = manager_crop.build()
 
     v_main =  CVVideoStream(video_file, args['limit'])
     manager = PipelineManager(v_main)
-    maanger.add_stream(crops, 'crops')
+    manager.add_stream(crops, 'crops')
     manager.add_operator(PutOp)
     manager.add_operator(HeaderOp)
     results = manager.run()

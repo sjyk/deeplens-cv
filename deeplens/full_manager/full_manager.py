@@ -24,7 +24,7 @@ from multiprocessing import Pool
 import time
 from deeplens.utils.utils import *
 
-DEFAULT_ARGS = {'frame_rate': 1, 'encoding': MP4V, 'limit': 110, 'sample': 1.0, 'offset': 0, 'batch_size': 30, 'num_processes': 4, 'background_scale': 1}
+DEFAULT_ARGS = {'frame_rate': 1, 'encoding': MP4V, 'limit': 1000, 'sample': 1.0, 'offset': 0, 'batch_size': 30, 'num_processes': 4, 'background_scale': 1}
 
 class FullStorageManager():
     """ TieredStorageManager is the implementation of a 3 tiered

@@ -96,35 +96,28 @@ class TrackSplitter(Splitter):
             # per label, we don't join the crops
             if label not in labels1:
                 return (crop2, map2, False)
-            if len(labels1[label]) != len(labels2[label]):
-                return (crop2, map2, False)
-            temp1 = copy.deepcopy(labels2[label])
-            for i in labels1[label]:
-                remove = -1
-                for k, j in enumerate(temp1):
-                    bb1 = crop1[i]['bb']
-                    bb2 = crop2[j]['bb']
-                    # Check for interaction between boxes of the same label
-                    intersect = float(bb1.intersect_area(bb2))
-                    union = float(bb1.union_area(bb2))
-                    iou = intersect/union
-                    # Check that the boxes are very close to the same size
-                    x_diff = abs(bb1.x1 - bb1.x0 - (bb2.x1 - bb2.x0))
-                    x_diff = x_diff/float(bb1.x1 - bb1.x0)
-                    y_diff = abs(bb1.y1 - bb1.y0 - (bb2.y1 - bb2.y0))
-                    y_diff = y_diff/float(bb1.y1 - bb1.y0)
-                    # If all conditions are met, the boxes are joined (with translation)
-                    if iou > self.iou and x_diff < self.tran and y_diff < self.tran:
-                        bb =  bb1.x_translate(bb2.x0 - bb1.x0)
-                        bb = bb.y_translate(bb2.y0 - bb1.y0)
-                        crop1[i]['all'].update(crop2[j]['all'])
-                        crops[i] = {'bb':bb, 'label': label, 'all': crop1[i]['all']}
-                        remove = k
-                        break
-                if remove == -1:
-                    return (crop2, map2, False) # we couldn't find a matching box with the above condition
+            j = labels2[label]
+            i = labels1[label]
+            bb1 = crop1[i]['bb']
+            bb2 = crop2[j]['bb']
+            # Check for interaction between boxes of the same label
+            intersect = float(bb1.intersect_area(bb2))
+            union = float(bb1.union_area(bb2))
+            iou = intersect/union
+            # Check that the boxes are very close to the same size
+            x_diff = abs(bb1.x1 - bb1.x0 - (bb2.x1 - bb2.x0))
+            x_diff = x_diff/float(bb1.x1 - bb1.x0)
+            y_diff = abs(bb1.y1 - bb1.y0 - (bb2.y1 - bb2.y0))
+            y_diff = y_diff/float(bb1.y1 - bb1.y0)
+            # If all conditions are met, the boxes are joined (with translation)
+            if iou > self.iou and x_diff < self.tran and y_diff < self.tran:
+                bb =  bb1.x_translate(bb2.x0 - bb1.x0)
+                bb = bb.y_translate(bb2.y0 - bb1.y0)
+                crop1[i]['all'].update(crop2[j]['all'])
+                crops[i] = {'bb':bb, 'label': label, 'all': crop1[i]['all']}
+            else:
+                return (crop2, map2, False) # we couldn't find a matching box with the above condition
 
-                del temp1[remove]
         return crops, (crops, labels1), True
 
 
@@ -189,10 +182,10 @@ class AreaSplitter(Splitter):
             return (crop2, crop2, False)
 
         crops = [None] * len(crop2)
-        indices = range(len(crop2))
+        indices = list(range(len(crop2)))
 
         for i in range(len(crop1)):
-            del indices[remove]
+            
             bb1 = crop1[i]['bb']
             remove = -1
             for j in range(len(indices)):
@@ -215,13 +208,14 @@ class AreaSplitter(Splitter):
                     break
             if remove == -1:
                     return (crop2, crop2, False)
-            
+            del indices[remove]
+
         return (crops, crops, True)
 
 # We can directly use a JSONListStream to 
 def main(video, json_labels):
     labels = {'labels': JSONListStream(json_labels, 'labels', True)}
-    manager = FullStorageManager(miris_tagger, AreaSplitter(), 'miris2')
+    manager = FullStorageManager(miris_tagger, TrackSplitter(), 'miris')
     manager.put(video, 'test0', aux_streams = labels)
 
 

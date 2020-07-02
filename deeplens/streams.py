@@ -9,10 +9,11 @@ from timeit import default_timer as timer
 import numpy as np
 import cv2
 
-from deeplens.struct import *
+from deeplens.utils.error import *
+
 
 class DataStream():
-    def __init__(self, data, name):
+    def __init__(self, name):
         self.name = name
 
     def __iter__(self):
@@ -38,7 +39,7 @@ class DataStream():
 
 class JSONListStream(DataStream):
     def __init__(self, data, name):
-        super.__init__(data, name)
+        super().__init__(name)
         self.data = []
         if type(data) == str:
             files = [data]
@@ -77,7 +78,7 @@ class JSONListStream(DataStream):
 
 class ConstantStream(DataStream):
     def __init__(self, data, name):
-        super.__init__(name)
+        super().__init__(name)
         self.data = data
     
     def get(self):
@@ -97,7 +98,7 @@ class ConstantStream(DataStream):
 
 class CacheStream(DataStream):
     def __init__(self, name):
-        super.__init__(name)
+        super().__init__(name)
         self.data = None
     
     def get(self):
@@ -123,37 +124,38 @@ class CacheStream(DataStream):
 
 class CacheFullMetaStream(CacheStream):
     def __init__(self, name):
-        super.__init__(name)
+        super().__init__(name)
         self.data = 0
         self.name = name
         self.vid_name = None
         self.crops = None
         self.video_refs = None
-        self.fd = None
-        self.sd = None
+        self.fcoor = None
+        self.scoor = None
         self.first_frame = None
         self.new_batch = None
+        self.do_join = None
 
     def update(self, index, new_batch = False):
         self.data = index
         self.new_batch = new_batch
 
-    def update_all(self, index, vid_name, crops, video_refs, fcoor, scoor, joined):
+    def update_all(self, index, vid_name, crops, video_refs, fcoor, scoor, do_join):
         self.data = 0
-        self.name == vid_name
-        self.crops == crops
+        self.name = vid_name
+        self.crops = crops
         self.video_refs = video_refs
-        self.fd = (fw, fh)
-        self.sd = (sw, sh)
+        self.fcoor = fcoor
+        self.scoor = scoor
         self.data = index
-        if not joined:
-            self.first_frame = index
+        self.first_frame = index
         self.new_batch = True
+        self.do_join = do_join
     
 
 class VideoStream(DataStream):
-    def __init__(self, src, name, limit=-1, origin = np.array((0,0)), offset = 0, start_time = 0):
-        super.__init__(name)
+    def __init__(self, name, src, limit=-1, origin = np.array((0,0)), offset = 0, start_time = 0):
+        super().__init__(name)
         self.src = src
         self.limit = limit
         self.origin = origin
@@ -175,10 +177,14 @@ class VideoStream(DataStream):
 
 class CVVideoStream(VideoStream):
     def __init__(self, src, name, limit = -1, origin = np.array((0,0)), offset = 0):
-        super.__init__(name, src, limit, origin, offset)
+        super().__init__(name, src, limit, origin, offset)
         import cv2
         self.propIds = None
         self.frame = None
+        self.cap = cv2.VideoCapture(self.src)
+        self.width = int(self.cap.get(3))   # float
+        self.height = int(self.cap.get(4)) # float
+        self.cap = None
 
     def __iter__(self):
         if self.cap == None:
@@ -202,22 +208,16 @@ class CVVideoStream(VideoStream):
             (self.limit < 0 or self.frame_count < self.limit):
             time_start = timer()
             ret, frame = self.cap.read()
-            self.time_elapsed += timer() - time_start
-
             if ret:
                 self.frame_count += 1
-                self.frame = {'data': frame, \
-                        'frame': (self.frame_count - 1),\
-                        'origin': self.origin,
-                        'width': self.width,
-                        'height': self.hei}
+                self.frame = frame
             else:
                 self.frame = None
         else:
             # self.cap.release()  # commented out due to CorruptedOrMissingVideo error
             self.cap = None
             self.frame = None
-        if self.frame == None:
+        if self.frame is None:
             raise StopIteration("Iterator is closed")
         else:
             return self
@@ -245,11 +245,12 @@ class CVVideoStream(VideoStream):
     @staticmethod
     def init_mat(file_name, encoding, width, height, frame_rate):
         fourcc = cv2.VideoWriter_fourcc(*encoding)
-        cv2.VideoWriter(file_name,
+        writer = cv2.VideoWriter(file_name,
                         fourcc,
                         frame_rate,
                         (width, height),
                         True)
+        return writer
         
     @staticmethod
     def append(data, prev):
@@ -258,7 +259,7 @@ class CVVideoStream(VideoStream):
 
 class RawVideoStream(VideoStream):
     def __init__(self, src, name, limit=-1, origin=np.array((0,0)), offset = 0):
-        super.__init__(src, name, limit, origin, offset)
+        super().__init__(src, name, limit, origin, offset)
         self.curr_frame = None
         self.next_frame = None
     
@@ -310,6 +311,7 @@ class HwangVideoStream(VideoStream):
 
         # TODO(swjz): fetch all rows when (limit == -1)
         self.frames = iter(self.decoder.retrieve(self.rows))
+        return self
 
     def __next__(self):
         self.frame_count += 1

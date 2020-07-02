@@ -20,6 +20,7 @@ import itertools
 #import queue
 from multiprocessing import Pool
 #import glob
+from deeplens.utils.utils import Serializer
 
 
 def update_headers_batch(conn, crops, name, start_time, end_time, ids):
@@ -126,7 +127,8 @@ def move_one_file(conn, clip_id, video_name, dest_ref):
 
 def insert_clip_header(conn, clip_id, video_name, start_time, end_time, origin_x, origin_y, fwidth, fheight, width, height, video_ref='', is_background = False, translation = 'NULL', other = 'NULL'):
     c = conn.cursor()
-    c.execute("INSERT INTO clip VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?. ?, ?)",
+    #print((clip_id, video_name, start_time, end_time, origin_x, origin_y, fwidth, fheight, width, height, video_ref, is_background, translation, other))
+    c.execute("INSERT INTO clip VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                (clip_id, video_name, start_time, end_time, origin_x, origin_y, fwidth, fheight, width, height, video_ref, is_background, translation, other))
     conn.commit()
 

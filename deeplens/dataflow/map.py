@@ -7,19 +7,21 @@ map.py defines the simplest dataflow component in DeepLens
 import random
 
 from deeplens.utils.utils import *
-from deeplens.struct import VideoStreamOperator
+from deeplens.streams import *
+from deeplens.pipeline import *
+
 
 import numpy as np
 from timeit import default_timer as timer
 
-class Map(VideoStreamOperator):
+class Map(Operator):
 	"""Map is an abstract dataflow operator that applies a transformation
 	frame by frame.
 	"""
 
 	#dummy constructor that is overridden by inherriting classes
-	def __init__(self):
-		pass
+	def __init__(self, name = 'map'):
+		self.name = name
 
 	#subclasses must implement this
 	def map(self, data):
@@ -27,20 +29,19 @@ class Map(VideoStreamOperator):
 
 	#sets up a generic iterator
 	def __iter__(self):
-		self.frame_iter = iter(self.video_stream)
-		self.super_iter()
+		self.pipeline = iter(self.pipeline)
+		self.out = CacheStream(self.name)
 		self.time_elapsed = 0
 		return self
 
 	def __next__(self):
-		frame = next(self.frame_iter).f
-		self.super_next()
-
+		frame = next(self.pipeline)['video'].get()
 		time_start = timer()
 		ret = self.map(frame)
+		self.out.update(ret)
 		self.time_elapsed += timer() - time_start
 
-		return ret
+		return self.out
 
 # Con
 class Crop(Map):
@@ -122,7 +123,8 @@ class Resize(Map):
 		return {'scale': self.scale}
 		
 
-class Cut(VideoStreamOperator):
+# The next couple of operators don't work
+class Cut(Operator):
 	"""Cut is a video transformation that returns the clip that lies within a range 
 	"""
 
@@ -168,7 +170,7 @@ class Cut(VideoStreamOperator):
 
 
 
-class Sample(VideoStreamOperator):
+class Sample(Operator):
 	"""Sample is a transform that drops frames from a video stream at a given 
 	rate. 
 	"""
@@ -207,7 +209,7 @@ class Sample(VideoStreamOperator):
 		return {'ratio': self.ratio}
 
 
-class SkipEmpty(VideoStreamOperator):
+class SkipEmpty(Operator):
 
 
 	def __iter__(self):
@@ -230,7 +232,7 @@ class SkipEmpty(VideoStreamOperator):
 		return out
 
 
-class SampleClip(VideoStreamOperator):
+class SampleClip(Operator):
 	"""SampleClip is a transform that drops clips from a video stream at given
 	clip_size and (1-prob_keep) probability.
 	"""

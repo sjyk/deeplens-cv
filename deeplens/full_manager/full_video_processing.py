@@ -200,7 +200,7 @@ class CropUnionSplitter(MapJoin):
         frame = 0
         num_match = 0
         all = []
-        for object in objects:
+        for object in data:
             if len(crops) == 0:
                 crops.append({'bb': object['bb'], 'label': 'foreground', 'all': {}})
             crops[0]['bb'] = crops[0]['bb'].union_box(object['bb'])

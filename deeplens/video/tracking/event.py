@@ -70,6 +70,7 @@ class ActivityMetric(Metric):
 
 
 
+# doesn't work right now -> need to update
 class Filter(Operator):
 	"""Filter() defines cross-correlation kernel and a threshold. It
 	slides this kernel across the metric and if this threshold is exceeded
@@ -90,7 +91,6 @@ class Filter(Operator):
 
 	def __iter__(self):
 		self.frame_iter = iter(self.video_stream)
-		self.super_iter()
 		self.buffer = [None] * len(self.kernel)
 		self.frame_count = 0
 		self.last_event = -self.delay + 1

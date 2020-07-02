@@ -9,7 +9,6 @@ movement and access.
 """ 
 
 
-from deeplens.core import StorageManager
 from deeplens.full_manager.full_videoput import *
 from deeplens.pipeline import *
 
@@ -25,9 +24,9 @@ from multiprocessing import Pool
 import time
 from deeplens.utils.utils import *
 
-DEFAULT_ARGS = {'frame_rate': 30, 'encoding': MP4V, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 20, 'num_processes': 4, 'background_scale': 1}
+DEFAULT_ARGS = {'frame_rate': 1, 'encoding': MP4V, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 30, 'num_processes': 4, 'background_scale': 1}
 
-class FullStorageManager(StorageManager):
+class FullStorageManager():
     """ TieredStorageManager is the implementation of a 3 tiered
     storage manager, with a cache and external storage, where cache
     is in the same location as disk, and external storage is another
@@ -66,10 +65,10 @@ class FullStorageManager(StorageManager):
                                        end_time integer NOT NULL,
                                        origin_x integer NOT NULL,
                                        origin_y integer NOT NULL,
-                                       fheight integer NOT NULL, # original hieght and width
                                        fwidth integer NOT NULL,
-                                       height integer NOT NULL,
+                                       fheight integer NOT NULL,
                                        width integer NOT NULL,
+                                       height integer NOT NULL,
                                        video_ref text NOT NULL,
                                        is_background NOT NULL,
                                        translation text,
@@ -136,8 +135,8 @@ class FullStorageManager(StorageManager):
         else:
             tagger = self.content_tagger
 
-        if tagger.batch_size < args['batch_size']:
-            raise ValueError("This setting may currently lead to bugs")
+        #if tagger.batch_size < args['batch_size']:
+        #    raise ValueError("This setting may currently lead to bugs")
         
         write_video_single(conn, filename, target, physical_dir, self.content_splitter, tagger, aux_streams, args=args, background_scale=args['background_scale'])
         

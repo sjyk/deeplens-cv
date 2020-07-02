@@ -8,7 +8,7 @@ are useful for processing fixed camera videos.
 
 import cv2
 import numpy as np
-from deeplens.struct import Box
+from deeplens.utils.box import Box
 
 #fixed camera bg segmentation
 #finds "moving" pixels
@@ -31,15 +31,15 @@ class FixedCameraBGFGSegmenter(object):
 		count = 0
 		frames = []
 		for frame in vstream:
-			img = frame['data']
-			#print(frame['frame'])
+			frame = vstream.get()
+ 			#print(frame['frame'])
 			if video:
-				frames.append(img)
+				frames.append(frame)
 
-			if len(img.shape) < 3:
-				gray = img
+			if len(frame.shape) < 3:
+				gray = frame
 			else:
-				gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+				gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
 			blurred = cv2.GaussianBlur(gray, (self.blur, self.blur), 0)
 

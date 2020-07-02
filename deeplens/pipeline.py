@@ -7,7 +7,7 @@ video input stream as well as operators that can transform this stream.
 """
 import logging
 
-from deeplens.error import *
+from deeplens.utils.error import *
 from queue import Queue, Empty
 
 #sources video from the default camera
@@ -40,7 +40,7 @@ class Pipeline():
         """Constructs the iterator object and initializes
            the iteration state
         """
-        for stream in range(len(self.streams)):
+        for stream in self.streams:
             self.streams[stream] = iter(self.streams[stream])
         return self
 
@@ -138,7 +138,7 @@ class Operator():
 
     #subscripting binds a transformation to the current stream
     def apply(self, pipeline):
-        self.pipeline = pipeline
+        self.pipeline = iter(pipeline)
         return self
 
     def __getitem__(self, xform):

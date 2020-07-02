@@ -10,9 +10,41 @@ import cv2
 import numpy as np
 import itertools
 import copy
-from deeplens.struct import Box
+from deeplens.utils.box import Box
 import os
 import json
+import random
+import string
+
+def get_rnd_strng(size=10):
+	"""get_rnd_strng() generates a random string for creating temp files.
+
+	Args:
+		size (int) - Size of the string. (Default 10).
+	"""
+	return ''.join(random.choice(string.ascii_lowercase) for i in range(size))
+
+
+def add_ext(name, ext, seq=-1):
+	"""add_ext constructs file names with a name, sequence number, and 
+	extension.
+
+	Args:
+		name (string) - the filename
+		ext (string) - the file extension
+		seq (int) - the number in a sequence with other files 
+					(Default -1) means that it is a standalone 
+					file
+	"""
+
+	#add period if not
+	if '.' not in ext[0]:
+		ext = '.' + ext 
+
+	if seq != -1:
+		ext = str(seq) + ext 
+	
+	return name + ext
 
 #plays video stream through the system player
 def play(vstream):
@@ -146,3 +178,7 @@ def parallel_log_reduce(logs, start_time):
 def paralleL_log_delete(logs):
     for log in logs:
         os.remove(log)
+
+class Serializer(json.JSONEncoder):
+	def default(self, obj):
+		return obj.serialize()

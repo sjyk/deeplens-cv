@@ -5,7 +5,7 @@ the database group (chidata).
 struct.py defines the main data structures used in deeplens. It defines a
 video input stream as well as operators that can transform this stream.
 """
-from deeplens.error import *
+from deeplens.utils.error import *
 import numpy as np
 import json
 from timeit import default_timer as timer

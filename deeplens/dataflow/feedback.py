@@ -11,10 +11,11 @@ import cv2
 import json
 import os
 import random
-from deeplens.constants import *
-from deeplens.simple_manager.file import add_ext, get_rnd_strng
+from deeplens.utils.constants import *
+from deeplens.utils.utils import add_ext, get_rnd_strng
 from deeplens.full_manager.full_header_helper import insert_clip_header, insert_label_header
 from deeplens.streams import *
+from deeplens.pipeline import *
 ## TODO: add a stream to a previous VideoStream??
 
 class Materialize(Operator):

@@ -5,9 +5,10 @@ the database group (chidata).
 testing_utils.py defines some primitives that are useful for debugging and evaluating
 performance.
 """
-from deeplens.simple_manager.file import add_ext
+from deeplens.utils.utils import add_ext
 from deeplens.pipeline import *
 
+import json
 import random
 import string
 import time

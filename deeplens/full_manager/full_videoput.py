@@ -46,7 +46,8 @@ class PutOp(Operator):
         self.meta = CacheFullMetaStream('full_meta')
         vid = self.pipeline.streams['video']
         self.scoor = (int(vid.width * self.scale), int(vid.height*self.scale))
-        self.fcoor =  (vid.width, vid.height)  
+        self.fcoor =  (vid.width, vid.height)
+        self.stop = False
         return self
     
     def _generate_writers(self, crops):
@@ -68,7 +69,7 @@ class PutOp(Operator):
             
     def __next__(self):                
         index = self.meta.get()
-        if index is None:
+        if self.stop:
             raise StopIteration()
         crops, do_join = next(self.pipeline.streams['crops']).get()
         
@@ -80,15 +81,16 @@ class PutOp(Operator):
             try:
                 frame = next(self.pipeline.streams['video'])
             except StopIteration:
-                self.meta.update(None)
+                self.stop = True
                 return {'full_meta': self.meta}         
             
             data = frame.get()
             #data_scaled = cv2.resize(frame, self.scoor) # need to check that this copies data
-            CVVideoStream.append(data, self.writers[0])
             for j, cr in enumerate(crops):
                 fr = crop_box(data, cr['bb'])
                 CVVideoStream.append(fr, self.writers[j + 1])
+            fdata = reverse_crop(data, crops)
+            CVVideoStream.append(fdata, self.writers[0])
             self.meta.update(index + i + 1)
         return {'full_meta': self.meta}
 
@@ -118,21 +120,25 @@ class HeaderOp(Operator):
 
 #TODO: assumes batch labels from mapOP right now -> fix if needed later
 class ConvertMap(Operator):
-    def __init__(self, tagger, batch_size):
+    def __init__(self, tagger, batch_size, multi = True):
         self.tagger = tagger
         self.batch_size = batch_size
+        self.multi = multi
 
     def __iter__(self):
         self.labels = CacheStream('labels')
+        self.pipeline = iter(self.pipeline)
         return self
 
     def __next__(self):
 		# we assume it iterates the entire batch size and save the results
         try:
-            tag = self.tagger(self.pipeline.streams['video'], self.batch_size)
+            tag = self.tagger(self.pipeline.streams['labels'], self.batch_size)
         except StopIteration:
             raise StopIteration("Iterator is closed")
-        if tag:
+        if tag and self.multi:
+            tags = tag
+        elif tag:
             tags = [tag]
         else:
             tags = []
@@ -152,7 +158,8 @@ class ConvertSplit(Operator):
     def __next__(self):
         labels = next(self.pipeline)['labels'].get()
         if not self.initialized:
-            crops, self.batch_prev, _ = self.splitter.initialize([labels])
+            crops, self.batch_prev, _ = self.splitter.initialize(labels)
+            self.initialized = True
             do_join = False
         else:
             batch = self.splitter.map(labels)
@@ -174,7 +181,7 @@ def write_video_single(conn, video_file, target, base_dir, splitter, tagger, aux
 
     manager_crop.add_operators([ConvertMap(tagger, batch_size), ConvertSplit(splitter)])
     crops = manager_crop.build()
-    v_main =  CVVideoStream(video_file, args['limit'])
+    v_main =  CVVideoStream(video_file, target, args['limit'])
     manager = PipelineManager(v_main)
     manager.add_stream(crops, 'crops')
     manager.add_operator(PutOp(target, args, base_dir))

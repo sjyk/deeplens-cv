@@ -39,6 +39,12 @@ def timeof(vstreams):
         list(vstream) #materialize
     return (time.time() - now)
 
+def printCrops(crops):
+    print('~~~PRINTING CROPS~~~')
+    for crop in crops:
+        print("Crop: {}".format(crop['label']))
+        print("bb: {}".format(crop['bb'].serialize()))
+
 """Creates dummy tags without having to execute a neural
 network library.
 """

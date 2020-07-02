@@ -51,7 +51,7 @@ class Splitter():
 """ Creates a crop across different frames
     data: bounding boxes across different frames
 """
-class CropSplitter(MapJoin):
+class CropSplitter(Splitter):
     def __init__(self):
         super().__init__()
         self.map_to_video = True
@@ -176,7 +176,7 @@ class CropSplitter(MapJoin):
 """ Creates a crop across different frames
     data: bounding boxes across different frames
 """
-class CropUnionSplitter(MapJoin):
+class CropUnionSplitter(Splitter):
     def __init__(self):
         super().__init__()
         self.map_to_video = True

@@ -38,19 +38,29 @@ class DataStream():
         raise NotImplemented("materialize not implemented")
 
 class JSONListStream(DataStream):
-    def __init__(self, data, name):
+    def __init__(self, data, name, isList = False):
         super().__init__(name)
         self.data = []
-        if type(data) == str:
-            files = [data]
+        if isList:
+            if type(data) == str:
+                files = [data]
+            else:
+                files = data
+            for file in files:
+                with open(file, 'r') as f:
+                    self.data = self.data + json.load(f)
         else:
-            files = data
-        for file in files:
-            with open(file, 'r') as f:
-                self.data.append(iter(json.load(f)))
+            if type(data) == str:
+                files = [data]
+            else:
+                files = data
+            for file in files:
+                with open(file, 'r') as f:
+                    self.data = self.data.append(json.load(f))
 
-    def __init__(self):
+    def __iter__(self):
         self.index = 0
+        return self
 
     def __next__(self):
         self.index += 1

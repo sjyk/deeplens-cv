@@ -7,6 +7,7 @@ from timeit import default_timer as timer
 from deeplens.constants import *
 from deeplens.struct import VideoStream
 from deeplens.utils.frame_xform import *
+from deeplens.utils.testing_utils import get_size
 from deeplens.utils.ui import play, overlay
 from experiments.environ import logrecord
 
@@ -56,7 +57,7 @@ for p in pipeline:
 for writer in writers.values():
     writer.release()
 
-logrecord('fullTrack', ({'folder_size': os.path.getsize(folder) }), 'put', str(timer() - now), 's')
+logrecord('fullTrack', ({'folder_size': get_size(folder) }), 'put', str(timer() - now), 's')
 
 # measure the latency of get()
 now = timer()
@@ -65,4 +66,4 @@ for clip in filenames.values():
     for i in c:
         pass
 
-logrecord('fullTrack', ({'folder_size': os.path.getsize(folder) }), 'get', str(timer() - now), 's')
+logrecord('fullTrack', ({'folder_size': get_size(folder) }), 'get', str(timer() - now), 's')

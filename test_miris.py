@@ -7,7 +7,10 @@ from deeplens.utils.box import Box
 import copy
 from deeplens.full_manager.full_manager import *
 from deeplens.full_manager.full_video_processing import Splitter
+from deeplens.utils.testing_utils import get_size
 from deeplens.utils.testing_utils import printCrops
+from datetime import datetime
+
 
 def miris_tagger(labels, batch_size):
     bb_labels = []
@@ -212,11 +215,32 @@ class AreaSplitter(Splitter):
 
         return (crops, crops, True)
 
+
+def logrecord(baseline,settings,operation,measurement,*args):
+    print(';'.join([baseline, json.dumps(settings), operation, measurement] + list(args)))
+
+
 # We can directly use a JSONListStream to 
 def main(video, json_labels):
     labels = {'labels': JSONListStream(json_labels, 'labels', True)}
-    manager = FullStorageManager(miris_tagger, TrackSplitter(), 'miris')
-    manager.put(video, 'test0', aux_streams = labels)
+    manager = FullStorageManager(miris_tagger, TrackSplitter(), 'miris2')
+    put_start = datetime.now()
+    manager.put(video, 'test0', aux_streams = labels, args={'frame_rate': 10, 'encoding': MP4V, 'limit': 1000, 'sample': 1.0, 'offset': 0, 'batch_size': 30, 'num_processes': 4, 'background_scale': 1})
+    put_time = (datetime.now() - put_start).total_seconds()
+    logrecord('full', ({'folder_size': get_size('miris2')}), 'put', str(put_time), 's')
+
+    # get_start = datetime.now()
+    # clips = manager.get("SELECT * FROM label WHERE label = '%s' AND video_name = '%s'" % ('box', 'test0'))
+    # clip_ids = [label[2] for label in clips]
+    # print(clip_ids)
+    # for c in clip_ids:
+    #     for i in c:
+    #         # do nothing
+    #         pass
+    #
+    # get_result = (datetime.now() - get_start).total_seconds()
+    #
+    # logrecord('full', ({'folder_size': get_size('miris2')}), 'get', str(get_result), 's')
 
 
 if __name__ == '__main__':

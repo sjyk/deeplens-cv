@@ -27,6 +27,12 @@ fourcc = cv2.VideoWriter_fourcc(*MP4V)
 folder = '/tmp/miris/'
 
 now = timer()
+for i in pipeline:
+    pass
+
+logrecord('naive', ({'folder_size': os.path.getsize(sys.argv[1]) }), 'get', str(timer() - now), 's')
+
+now = timer()
 for p in pipeline:
     image = p['data']
     if labels[p['frame']] == None:

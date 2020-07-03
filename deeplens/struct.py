@@ -122,6 +122,7 @@ class VideoStream():
 							'origin': self.origin}
 
 				else:
+					self.cap = None
 					raise StopIteration("Iterator is closed")
 
 

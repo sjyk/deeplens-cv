@@ -45,6 +45,7 @@ class VideoStream():
 		self.cap = None
 		self.time_elapsed = 0
 		self.hwang = hwang
+		self.finished = False
 
 		# moved from __iter__ to __init__ due to continuous iterating
 		if hwang:
@@ -75,6 +76,7 @@ class VideoStream():
 		"""Constructs the iterator object and initializes
 		   the iteration state
 		"""
+
 		if self.hwang:
 			self.width = self.decoder.video_index.frame_width()
 			self.height = self.decoder.video_index.frame_height()
@@ -102,6 +104,9 @@ class VideoStream():
 
 
 	def __next__(self):
+		if self.finished:
+			raise StopIteration("Iterator is closed")
+
 		if self.hwang:
 			self.frame_count += 1
 			return {'data': next(self.frames),

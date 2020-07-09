@@ -222,6 +222,10 @@ def _write_video_batch(vstream, \
             j += 1
             crops = all_crops[j]
 
+    # the vstream iterator was closed before finishing the batch
+    if index < num_batch * batch_size:
+        vstream.finished = True
+
     #print(num_batch, batch_size, index, vid_write_count)
 
     if not release:

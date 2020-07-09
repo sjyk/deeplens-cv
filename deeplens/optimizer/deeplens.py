@@ -45,9 +45,9 @@ class DeepLensOptimizer():
 
 		return None
 
-	def _getVStreamBitRate(self, vstream):
-		if '.avi' in vstream.src:
-			return get_bitrate(vstream.src)
+	def _getVStreamBitRate(self, src):
+		if '.avi' in src:
+			return get_bitrate(src)
 		else:
 			return None 
 

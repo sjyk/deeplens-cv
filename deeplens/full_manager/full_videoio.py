@@ -703,6 +703,9 @@ def _create_vstream(ref, start_time, end_time, \
 
 
 def _is_contiguous(videos, thresh=5):
+    if len(videos) == 0:
+        return False
+
     prev = None
     for bounds, _ in videos:
 

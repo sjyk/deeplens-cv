@@ -169,7 +169,13 @@ class IteratorVideoStream(VideoStream):
 		self.limit = limit
 		self.global_lineage = [self]
 
-		self.scale = min([get_scale(s) for s in refs])
+		for ref in refs:
+			# if ref is not a filename
+			if not isinstance(ref, str):
+				self.scale = 1.0
+				return
+
+		self.scale = min([get_scale(s) for s in refs], default=1.0)
 
 	def __getitem__(self, xform):
 		"""Applies a transformation to the video stream

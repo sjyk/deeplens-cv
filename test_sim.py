@@ -29,16 +29,16 @@ from deeplens.constants import *
 import matplotlib.pyplot as plt
 
 
-left = Box(1500, 1600, 1750, 1800)
-middle = Box(1750, 1600, 2000, 1800)
-right = Box(2000, 1600, 2250, 1800)
+left = Box(1600, 1600, 1700, 1800)
+middle = Box(1825, 1600, 1975, 1800)
+right = Box(2050, 1600, 2175, 1800)
 
 v = VideoStream('/Users/sanjaykrishnan/Downloads/brooklyn.mp4')
 v = v[GoodKeyPoints()][ActivityMetric('left', left)][
         ActivityMetric('middle', middle)][ActivityMetric('right', right)][
-        Filter('left', [1,1,1], 3, delay=10)][
-        Filter('middle', [1,1,1], 3, delay=10)][
-        Filter('right', [1,1,1], 3, delay=10)]
+        Filter('left', [1], 1, delay=25)][
+        Filter('middle', [1], 1, delay=25)][
+        Filter('right', [1], 1, delay=25)]
 
 count = {'left':0, 'middle':0 ,'right':0}
 for p in v:
@@ -49,10 +49,13 @@ for p in v:
 
     print(count, p['frame'])
 
+    img = overlay(p['data'], [('', (1600, 1600, 1700, 1800)),  ('', (1850, 1600, 1950, 1800)), ('', (2050, 1600, 2150, 1800))])
+    img = overlay(img, p['bounding_boxes'])
 
-    #cv2.imshow('Player',cv2.resize(p['data'], (0,0), fx=0.25,fy=0.25))
-    #if cv2.waitKey(1) & 0xFF == ord('q'):
-    #    exit()
+
+    cv2.imshow('Player',cv2.resize(img, (0,0), fx=0.25,fy=0.25))
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        exit()
 
 
 """

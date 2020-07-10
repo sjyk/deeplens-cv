@@ -28,14 +28,14 @@ def runNaive(src, tot=1000, sel=0.1):
 
     c = VideoStream(src, limit=tot)
     sel = sel / 2
-    left = Box(1500, 1600, 1750, 1800)
-    middle = Box(1750, 1600, 2000, 1800)
-    right = Box(2000, 1600, 2250, 1800)
+    left = Box(1600, 1600, 1700, 1800)
+    middle = Box(1825, 1600, 1975, 1800)
+    right = Box(2050, 1600, 2175, 1800)
     pipelines = c[Cut(tot // 2 - int(tot * sel), tot // 2 + int(tot * sel))][GoodKeyPoints()][ActivityMetric('left', left)][
         ActivityMetric('middle', middle)][ActivityMetric('right', right)][
-        Filter('left', [1,1,1], 3, delay=10)][
-        Filter('middle', [1,1,1], 3, delay=10)][
-        Filter('right', [1,1,1], 3, delay=10)]
+        Filter('left', [1], 1, delay=25)][
+        Filter('middle', [1], 1, delay=25)][
+        Filter('right', [1], 1, delay=25)]
 
     result = count(pipelines, ['left', 'middle', 'right'], stats=True)
 
@@ -54,9 +54,9 @@ def runSimple(src, tot=1000, sel=0.1):
     put_time = timer() - now
     print("Put time for simple:", put_time)
 
-    left = Box(1500, 1600, 1750, 1800)
-    middle = Box(1750, 1600, 2000, 1800)
-    right = Box(2000, 1600, 2250, 1800)
+    left = Box(1600, 1600, 1700, 1800)
+    middle = Box(1825, 1600, 1975, 1800)
+    right = Box(2050, 1600, 2175, 1800)
 
     sel = sel / 2
 
@@ -66,9 +66,9 @@ def runSimple(src, tot=1000, sel=0.1):
     for c in clips:
         pipelines.append(c[GoodKeyPoints()][ActivityMetric('left', left)][
                              ActivityMetric('middle', middle)][ActivityMetric('right', right)][
-                             Filter('left', [1,1,1], 3, delay=10)][
-                             Filter('middle', [1,1,1], 3, delay=10)][
-                             Filter('right', [1,1,1], 3, delay=10)])
+                             Filter('left', [1], 1, delay=25)][
+                             Filter('middle', [1], 1, delay=25)][
+                             Filter('right', [1], 1, delay=25)])
 
     result = counts(pipelines, ['left', 'middle', 'right'], stats=True)
 
@@ -88,9 +88,9 @@ def runFull(src, tot=1000, sel=0.1):
     put_time = timer() - now
     print("Put time for full:", put_time)
 
-    left = Box(1500, 1600, 1750, 1800)
-    middle = Box(1750, 1600, 2000, 1800)
-    right = Box(2000, 1600, 2250, 1800)
+    left = Box(1600, 1600, 1700, 1800)
+    middle = Box(1825, 1600, 1975, 1800)
+    right = Box(2050, 1600, 2175, 1800)
     sel = sel / 2
 
     clips = manager.get('test', Condition(label='foreground', custom_filter=time_filter(tot // 2 - int(tot * sel),
@@ -100,9 +100,9 @@ def runFull(src, tot=1000, sel=0.1):
     for c in clips:
         pipelines.append(c[GoodKeyPoints()][ActivityMetric('left', left)][
                              ActivityMetric('middle', middle)][ActivityMetric('right', right)][
-                             Filter('left', [1,1,1], 3, delay=10)][
-                             Filter('middle', [1,1,1], 3, delay=10)][
-                             Filter('right', [1,1,1], 3, delay=10)])
+                             Filter('left', [1], 1, delay=25)][
+                             Filter('middle', [1], 1, delay=25)][
+                             Filter('right', [1], 1, delay=25)])
 
     result = counts(pipelines, ['left', 'middle', 'right'], stats=True)
 
@@ -122,9 +122,9 @@ def runFullOpt(src, tot=1000, sel=0.1):
     put_time = timer() - now
     print("Put time for full opt:", put_time)
 
-    left = Box(1500, 1600, 1750, 1800)
-    middle = Box(1750, 1600, 2000, 1800)
-    right = Box(2000, 1600, 2250, 1800)
+    left = Box(1600, 1600, 1700, 1800)
+    middle = Box(1825, 1600, 1975, 1800)
+    right = Box(2050, 1600, 2175, 1800)
     sel = sel / 2
 
     clips = manager.get('test', Condition(label='foreground', custom_filter=time_filter(tot // 2 - int(tot * sel),
@@ -135,9 +135,9 @@ def runFullOpt(src, tot=1000, sel=0.1):
     for c in clips:
         pipeline = c[GoodKeyPoints()][ActivityMetric('left', left)][
             ActivityMetric('middle', middle)][ActivityMetric('right', right)][
-            Filter('left', [1,1,1], 3, delay=10)][
-            Filter('middle', [1,1,1], 3, delay=10)][
-            Filter('right', [1,1,1], 3, delay=10)]
+            Filter('left', [1,1,1], 3, delay=25)][
+            Filter('middle', [1,1,1], 3, delay=25)][
+            Filter('right', [1,1,1], 3, delay=25)]
         pipeline = d.optimize(pipeline)
         pipelines.append(pipeline)
 

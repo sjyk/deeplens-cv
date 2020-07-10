@@ -28,7 +28,7 @@ def runNaive(src, tot=1000, sel=0.1):
 
     c = VideoStream(src, limit=tot)
     sel = sel / 2
-    left = Box(1450, 1600, 1800, 1800)
+    left = Box(1500, 1600, 1750, 1800)
     middle = Box(1750, 1600, 2000, 1800)
     right = Box(2000, 1600, 2250, 1800)
     pipelines = c[Cut(tot // 2 - int(tot * sel), tot // 2 + int(tot * sel))][KeyPoints()][ActivityMetric('left', left)][
@@ -36,12 +36,10 @@ def runNaive(src, tot=1000, sel=0.1):
         Filter('left', [-0.25, -0.25, 1, -0.25, -0.25], 1.5, delay=10)][
         Filter('middle', [-0.25, -0.25, 1, -0.25, -0.25], 1.5, delay=10)][
         Filter('right', [-0.25, -0.25, 1, -0.25, -0.25], 1.5, delay=10)]
-    left_result = count(pipelines, ['left'], stats=True)
-    middle_result = count(pipelines, ['middle'], stats=True)
-    right_result = count(pipelines, ['right'], stats=True)
 
-    logrecord('naive', ({'size': tot, 'sel': sel, 'file': src}), 'get', 'left', str(left_result), 'middle',
-              str(middle_result), 'right', str(right_result), 's')
+    result = count(pipelines, ['left', 'middle', 'right'], stats=True)
+
+    logrecord('naive', ({'size': tot, 'sel': sel, 'file': src}), 'get', str(result), 's')
 
 
 # Simple storage manager with temporal filters
@@ -56,7 +54,7 @@ def runSimple(src, tot=1000, sel=0.1):
     put_time = timer() - now
     print("Put time for simple:", put_time)
 
-    left = Box(1450, 1600, 1800, 1800)
+    left = Box(1500, 1600, 1750, 1800)
     middle = Box(1750, 1600, 2000, 1800)
     right = Box(2000, 1600, 2250, 1800)
 
@@ -72,12 +70,9 @@ def runSimple(src, tot=1000, sel=0.1):
                              Filter('middle', [-0.25, -0.25, 1, -0.25, -0.25], 1.5, delay=10)][
                              Filter('right', [-0.25, -0.25, 1, -0.25, -0.25], 1.5, delay=10)])
 
-    left_result = counts(pipelines, ['left'], stats=True)
-    middle_result = counts(pipelines, ['middle'], stats=True)
-    right_result = counts(pipelines, ['right'], stats=True)
+    result = counts(pipelines, ['left', 'middle', 'right'], stats=True)
 
-    logrecord('simple', ({'size': tot, 'sel': sel, 'file': src}), 'get', 'left', str(left_result), 'middle',
-              str(middle_result), 'right', str(right_result), 's')
+    logrecord('simple', ({'size': tot, 'sel': sel, 'file': src}), 'get', str(result), 's')
 
 
 # Full storage manager with bg-fg optimization
@@ -93,7 +88,7 @@ def runFull(src, tot=1000, sel=0.1):
     put_time = timer() - now
     print("Put time for full:", put_time)
 
-    left = Box(1450, 1600, 1800, 1800)
+    left = Box(1500, 1600, 1750, 1800)
     middle = Box(1750, 1600, 2000, 1800)
     right = Box(2000, 1600, 2250, 1800)
     sel = sel / 2
@@ -109,12 +104,9 @@ def runFull(src, tot=1000, sel=0.1):
                              Filter('middle', [-0.25, -0.25, 1, -0.25, -0.25], 1.5, delay=10)][
                              Filter('right', [-0.25, -0.25, 1, -0.25, -0.25], 1.5, delay=10)])
 
-    left_result = counts(pipelines, ['left'], stats=True)
-    middle_result = counts(pipelines, ['middle'], stats=True)
-    right_result = counts(pipelines, ['right'], stats=True)
+    result = counts(pipelines, ['left', 'middle', 'right'], stats=True)
 
-    logrecord('full', ({'size': tot, 'sel': sel, 'file': src}), 'get', 'left', str(left_result), 'middle',
-              str(middle_result), 'right', str(right_result), 's')
+    logrecord('full', ({'size': tot, 'sel': sel, 'file': src}), 'get', str(result), 's')
 
 
 # All optimizations
@@ -130,7 +122,7 @@ def runFullOpt(src, tot=1000, sel=0.1):
     put_time = timer() - now
     print("Put time for full opt:", put_time)
 
-    left = Box(1450, 1600, 1800, 1800)
+    left = Box(1500, 1600, 1750, 1800)
     middle = Box(1750, 1600, 2000, 1800)
     right = Box(2000, 1600, 2250, 1800)
     sel = sel / 2
@@ -149,13 +141,10 @@ def runFullOpt(src, tot=1000, sel=0.1):
         pipeline = d.optimize(pipeline)
         pipelines.append(pipeline)
 
-    left_result = counts(pipelines, ['left'], stats=True)
-    middle_result = counts(pipelines, ['middle'], stats=True)
-    right_result = counts(pipelines, ['right'], stats=True)
+    result = counts(pipelines, ['left', 'middle', 'right'], stats=True)
 
-    logrecord('fullopt', ({'size': tot, 'sel': sel, 'file': src}), 'get', 'left', str(left_result), 'middle',
-              str(middle_result), 'right', str(right_result), 's')
+    logrecord('fullopt', ({'size': tot, 'sel': sel, 'file': src}), 'get', str(result), 's')
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(message)s')
-do_experiments(sys.argv[1], [runFull], 600, range(2, 10))
+do_experiments(sys.argv[1], [runNaive, runSimple, runFull, runFullOpt], 600, range(2, 3))

@@ -13,7 +13,7 @@ import logging
 import time
 import itertools
 
-def count(stream, key, stats=False):
+def count(stream, keys, stats=False):
 	"""Count counts the true hits of a defined event.
 	"""
 
@@ -27,12 +27,10 @@ def count(stream, key, stats=False):
 		if frame_count == 1:
 			logging.info("Processing first frame of stream")
 
-		try:
+		for key in keys:
 			if frame[key]:
 				subkey = key + '_' + str(frame[key])
 				counter[subkey] = counter.get(subkey,0) + 1
-		except:
-			pass
 
 	# profiling
 	for obj in stream.lineage():

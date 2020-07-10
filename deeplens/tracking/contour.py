@@ -152,7 +152,7 @@ class SizeMovementDetector(KeyPoints):
 class GoodKeyPoints(KeyPoints):
 
 	def __init__(self, \
-				 maxCorners = 1000,\
+				 maxCorners = 1500,\
                  qualityLevel = 0.2,\
                  minDistance = 25,\
                  blockSize = 9,\

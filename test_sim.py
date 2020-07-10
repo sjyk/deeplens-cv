@@ -34,7 +34,7 @@ middle = Box(1825, 1600, 1975, 1800)
 right = Box(2050, 1600, 2175, 1800)
 
 v = VideoStream('/Users/sanjaykrishnan/Downloads/brooklyn.mp4')
-v = v[GoodKeyPoints()][ActivityMetric('left', left)][
+v = v[Cut(0,600)][GoodKeyPoints()][ActivityMetric('left', left)][
         ActivityMetric('middle', middle)][ActivityMetric('right', right)][
         Filter('left', [1], 1, delay=25)][
         Filter('middle', [1], 1, delay=25)][
@@ -49,7 +49,7 @@ for p in v:
 
     print(count, p['frame'])
 
-    img = overlay(p['data'], [('', (1600, 1600, 1700, 1800)),  ('', (1850, 1600, 1950, 1800)), ('', (2050, 1600, 2150, 1800))])
+    img = overlay(p['data'], [('', (1600, 1600, 1700, 1800)),  ('', (1850, 1600, 1950, 1800)), ('', (2050, 1600, 2175, 1800))])
     img = overlay(img, p['bounding_boxes'])
 
 

@@ -114,6 +114,8 @@ class Filter(Operator):
 		self.buffer.append(out[self.name])
 		self.buffer = self.buffer[1:len(self.kernel)+1]
 
+		#print(self.last_event + self.delay)
+
 		if self.frame_count > self.last_event + self.delay:
 			if self._dot():
 				#print('frame hit',out['frame'])

@@ -47,12 +47,12 @@ for p in v:
     count['middle'] += p['middle']
     count['right'] += p['right']
 
-    print(count)
+    print(count, p['frame'])
 
 
-    cv2.imshow('Player',cv2.resize(p['data'], (0,0), fx=0.25,fy=0.25))
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        exit()
+    #cv2.imshow('Player',cv2.resize(p['data'], (0,0), fx=0.25,fy=0.25))
+    #if cv2.waitKey(1) & 0xFF == ord('q'):
+    #    exit()
 
 
 """

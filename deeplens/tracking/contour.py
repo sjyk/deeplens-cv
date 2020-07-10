@@ -155,12 +155,14 @@ class GoodKeyPoints(KeyPoints):
 				 maxCorners = 1000,\
                  qualityLevel = 0.2,\
                  minDistance = 25,\
-                 blockSize = 9):
+                 blockSize = 9,\
+                 blur=1):
 
 		self.maxCorners = maxCorners
 		self.qualityLevel = qualityLevel
 		self.minDistance = minDistance
 		self.blockSize = blockSize
+		self.blur = blur
 
 	def map(self, data):
 

@@ -163,6 +163,7 @@ class GoodKeyPoints(KeyPoints):
 		self.minDistance = minDistance
 		self.blockSize = blockSize
 		self.blur = blur
+		self.area_thresh = 1
 
 	def map(self, data):
 

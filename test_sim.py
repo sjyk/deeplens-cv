@@ -28,8 +28,34 @@ from deeplens.constants import *
 
 import matplotlib.pyplot as plt
 
-#v = VideoStream('/Users/sanjayk/Downloads/traffic-001.mp4', limit=2000)
 
+left = Box(1500, 1600, 1750, 1800)
+middle = Box(1750, 1600, 2000, 1800)
+right = Box(2000, 1600, 2250, 1800)
+
+v = VideoStream('/Users/sanjaykrishnan/Downloads/brooklyn.mp4')
+v = v[GoodKeyPoints()][ActivityMetric('left', left)][
+        ActivityMetric('middle', middle)][ActivityMetric('right', right)][
+        Filter('left', [1,1,1], 3, delay=10)][
+        Filter('middle', [1,1,1], 3, delay=10)][
+        Filter('right', [1,1,1], 3, delay=10)]
+
+count = {'left':0, 'middle':0 ,'right':0}
+for p in v:
+
+    count['left'] += p['left']
+    count['middle'] += p['middle']
+    count['right'] += p['right']
+
+    print(count)
+
+
+    cv2.imshow('Player',cv2.resize(p['data'], (0,0), fx=0.25,fy=0.25))
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        exit()
+
+
+"""
 FILE = 'crash1.mp4'
 GT = '/Users/sanjaykrishnan/Downloads/LV_v1/VIDS/GT/g' + FILE
 VID = '/Users/sanjaykrishnan/Downloads/LV_v1/VIDS/Test/' + FILE
@@ -86,3 +112,4 @@ plt.show()
 
 print(thresh_finder(kps1,100,100))
 #print(change_finder(kps,100,20))
+"""

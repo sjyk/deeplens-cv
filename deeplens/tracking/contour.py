@@ -147,3 +147,43 @@ class SizeMovementDetector(KeyPoints):
 				'edge_high': self.edge_high,
 				'area_thresh': self.area_thresh,
 				'label': self.label}
+
+
+class GoodKeyPoints(KeyPoints):
+
+	def __init__(self, \
+				 maxCorners = 1000,\
+                 qualityLevel = 0.2,\
+                 minDistance = 25,\
+                 blockSize = 9):
+
+		self.maxCorners = maxCorners
+		self.qualityLevel = qualityLevel
+		self.minDistance = minDistance
+		self.blockSize = blockSize
+
+	def map(self, data):
+
+		ff = data
+
+		if len(ff['data'].shape) < 3:
+			gray = ff['data']
+		else:
+			gray = ff['data'][:,:,0]
+
+
+		feature_params = dict( maxCorners = self.maxCorners,
+                               qualityLevel = self.qualityLevel,
+                               minDistance = self.minDistance,
+                               blockSize = self.blockSize )
+
+		gray = cv2.cvtColor(ff['data'], cv2.COLOR_BGR2GRAY)
+		p0 = cv2.goodFeaturesToTrack(gray, mask = None, **feature_params)
+
+		bounding_boxes = []
+		for i in p0:
+			bounding_boxes.append(('object',(i[0,0], i[0,1], i[0,0],i[0,1])))
+
+		ff['bounding_boxes'] = bounding_boxes
+
+		return ff

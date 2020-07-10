@@ -31,11 +31,11 @@ def runNaive(src, tot=1000, sel=0.1):
     left = Box(1500, 1600, 1750, 1800)
     middle = Box(1750, 1600, 2000, 1800)
     right = Box(2000, 1600, 2250, 1800)
-    pipelines = c[Cut(tot // 2 - int(tot * sel), tot // 2 + int(tot * sel))][KeyPoints()][ActivityMetric('left', left)][
+    pipelines = c[Cut(tot // 2 - int(tot * sel), tot // 2 + int(tot * sel))][GoodKeyPoints()][ActivityMetric('left', left)][
         ActivityMetric('middle', middle)][ActivityMetric('right', right)][
-        Filter('left', [-0.25, -0.25, 1, -0.25, -0.25], 1.5, delay=10)][
-        Filter('middle', [-0.25, -0.25, 1, -0.25, -0.25], 1.5, delay=10)][
-        Filter('right', [-0.25, -0.25, 1, -0.25, -0.25], 1.5, delay=10)]
+        Filter('left', [1,1,1], 3, delay=10)][
+        Filter('middle', [1,1,1], 3, delay=10)][
+        Filter('right', [1,1,1], 3, delay=10)]
 
     result = count(pipelines, ['left', 'middle', 'right'], stats=True)
 
@@ -64,11 +64,11 @@ def runSimple(src, tot=1000, sel=0.1):
                         lambda f: overlap(f['start'], f['end'], tot // 2 - int(tot * sel), tot // 2 + int(tot * sel)))
     pipelines = []
     for c in clips:
-        pipelines.append(c[KeyPoints()][ActivityMetric('left', left)][
+        pipelines.append(c[GoodKeyPoints()][ActivityMetric('left', left)][
                              ActivityMetric('middle', middle)][ActivityMetric('right', right)][
-                             Filter('left', [-0.25, -0.25, 1, -0.25, -0.25], 1.5, delay=10)][
-                             Filter('middle', [-0.25, -0.25, 1, -0.25, -0.25], 1.5, delay=10)][
-                             Filter('right', [-0.25, -0.25, 1, -0.25, -0.25], 1.5, delay=10)])
+                             Filter('left', [1,1,1], 3, delay=10)][
+                             Filter('middle', [1,1,1], 3, delay=10)][
+                             Filter('right', [1,1,1], 3, delay=10)])
 
     result = counts(pipelines, ['left', 'middle', 'right'], stats=True)
 
@@ -98,11 +98,11 @@ def runFull(src, tot=1000, sel=0.1):
     pipelines = []
 
     for c in clips:
-        pipelines.append(c[KeyPoints()][ActivityMetric('left', left)][
+        pipelines.append(c[GoodKeyPoints()][ActivityMetric('left', left)][
                              ActivityMetric('middle', middle)][ActivityMetric('right', right)][
-                             Filter('left', [-0.25, -0.25, 1, -0.25, -0.25], 1.5, delay=10)][
-                             Filter('middle', [-0.25, -0.25, 1, -0.25, -0.25], 1.5, delay=10)][
-                             Filter('right', [-0.25, -0.25, 1, -0.25, -0.25], 1.5, delay=10)])
+                             Filter('left', [1,1,1], 3, delay=10)][
+                             Filter('middle', [1,1,1], 3, delay=10)][
+                             Filter('right', [1,1,1], 3, delay=10)])
 
     result = counts(pipelines, ['left', 'middle', 'right'], stats=True)
 
@@ -133,11 +133,11 @@ def runFullOpt(src, tot=1000, sel=0.1):
     pipelines = []
     d = DeepLensOptimizer()
     for c in clips:
-        pipeline = c[KeyPoints()][ActivityMetric('left', left)][
+        pipeline = c[GoodKeyPoints()][ActivityMetric('left', left)][
             ActivityMetric('middle', middle)][ActivityMetric('right', right)][
-            Filter('left', [-0.25, -0.25, 1, -0.25, -0.25], 1.5, delay=10)][
-            Filter('middle', [-0.25, -0.25, 1, -0.25, -0.25], 1.5, delay=10)][
-            Filter('right', [-0.25, -0.25, 1, -0.25, -0.25], 1.5, delay=10)]
+            Filter('left', [1,1,1], 3, delay=10)][
+            Filter('middle', [1,1,1], 3, delay=10)][
+            Filter('right', [1,1,1], 3, delay=10)]
         pipeline = d.optimize(pipeline)
         pipelines.append(pipeline)
 

@@ -81,7 +81,7 @@ class RunningBackground(Map):
 class KeyPointFilter(Map):
 	#removes transient keypoints
 
-	def __init__(self,distance=5):
+	def __init__(self,distance=10):
 		self.distance = distance
 
 	def __iter__(self):

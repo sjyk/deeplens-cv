@@ -31,7 +31,7 @@ import itertools
 # need to cache to header
 
 class PutOp(Operator):
-    def __init__(self, target, args, basedir = DEFAULT_TEMP):
+    def __init__(self, target, args, save_labels, basedir = DEFAULT_TEMP):
         self.target = target
         self.encoding = args['encoding']
         self.batch_size = args['batch_size']
@@ -40,11 +40,12 @@ class PutOp(Operator):
         self.frame_rate = args['frame_rate']
         self.scoor = None
         self.coor = None
+        self.save_labels = save_labels
 
     def __iter__(self):
-        self.pipeline = iter(self.pipeline)
-        self.meta = CacheFullMetaStream('full_meta')
-        vid = self.pipeline.streams['video']
+        self.meta = CacheFullMetaStream('full_meta', 'cache')
+        vid = self.streams['video']
+        self.streams['full_meta'] = self.meta
         self.scoor = (int(vid.width * self.scale), int(vid.height*self.scale))
         self.fcoor =  (vid.width, vid.height)
         self.stop = False
@@ -71,7 +72,10 @@ class PutOp(Operator):
         index = self.meta.get()
         if self.stop:
             raise StopIteration()
-        crops, do_join = next(self.pipeline.streams['crops']).get()
+        labels_stream = next(self.pipeline.pipelines['crops'])
+        crops, do_join = labels_stream['crops'].get()
+        if self.save_labels:
+            self.streams['labels'] = labels_stream['labels']
         
         if not do_join:
             self._generate_writers(crops)
@@ -79,7 +83,7 @@ class PutOp(Operator):
         
         for i in range(self.batch_size):
             try:
-                frame = next(self.pipeline.streams['video'])
+                frame = next(self.streams['video'])
             except StopIteration:
                 self.stop = True
                 return {'full_meta': self.meta}         
@@ -92,17 +96,18 @@ class PutOp(Operator):
             fdata = reverse_crop(data, crops)
             CVVideoStream.append(fdata, self.writers[0])
             self.meta.update(index + i + 1)
-        return {'full_meta': self.meta}
-
+        return self.streams
 
 class HeaderOp(Operator):
-    def __init__(self, conn):
+    def __init__(self, conn, labels = False):
         self.conn = conn
         self.ids = None
+        self.labels = labels
 
     def __iter__(self):
         self.index = None
-        self.params = CacheStream('header_data')
+        self.cache_ids = CacheStream('header_ids')
+        self.streams['header_ids'] = self.cache_ids
         return self
 
     def __next__(self):
@@ -113,27 +118,64 @@ class HeaderOp(Operator):
             update_headers_batch(*params)
         else:
             params = (self.conn, [fr.crops], fr.name, fr.video_refs, fr.fcoor, fr.scoor, fr.first_frame, fr.data)
-            #print(params)
             self.ids = new_headers_batch(*params)
-        self.params.update(params)
-        return self.params        
+            self.cache_ids.update(self.ids)
+        return self.streams    
+
+class LabelsOp(Operator):
+    def __init__(self, conn, target):
+        self.conn = conn
+        self.vid_name = target
+        self.frames = {}
+
+    def __iter__(self):
+        self.ids = None
+        return self
+
+    def __next__(self):
+        streams = next(self.pipeline)
+        ids = streams['header_ids'].get()
+        labels = streams['labels'].get()
+        for label in labels:
+            if label not in self.frames:
+                self.frames[label] = {}
+            for crop in labels[label]:
+                data = labels[label][crop]
+                if self.ids is not None and len(self.ids) == len(ids) and self.ids[crop] == ids[crop]:
+                    try:
+                        self.frames[label][crop] += data.size()
+                        update_label_header(self.conn, ids[crop], self.vid_name, label, data.type)
+                    except:
+                        insert_label_header(self.conn, label, data.serialize(), ids[crop], self.vid_name, data.type)
+                else:
+                    frames = data.size()
+                    insert_label_header(self.conn, label, data.serialize(), ids[crop], self.vid_name, data.type, frames)
+                    self.frames[label][crop] = frames
+                    
+        self.ids = ids
+        
+        return self.streams
+
 
 #TODO: assumes batch labels from mapOP right now -> fix if needed later
 class ConvertMap(Operator):
-    def __init__(self, tagger, batch_size, multi = True):
+    def __init__(self, tagger, batch_size, only_labels = False, multi = True):
         self.tagger = tagger
         self.batch_size = batch_size
         self.multi = multi
+        self.only_labels = False
 
     def __iter__(self):
-        self.labels = CacheStream('labels')
-        self.pipeline = iter(self.pipeline)
+        self.labels = CacheStream('labels', 'cache_labels')
+        self.streams['labels'] = self.labels
+        if self.only_labels:
+            del self.streams['video']
         return self
 
     def __next__(self):
 		# we assume it iterates the entire batch size and save the results
         try:
-            tag = self.tagger(self.pipeline.streams['labels'], self.batch_size)
+            tag = self.tagger(self.pipeline.streams, self.batch_size)
         except StopIteration:
             raise StopIteration("Iterator is closed")
         if tag and self.multi:
@@ -143,15 +185,16 @@ class ConvertMap(Operator):
         else:
             tags = []
         self.labels.update(tags)
-
-        return {'labels': self.labels}
+        return self.streams
 
 class ConvertSplit(Operator):
-    def __init__(self, splitter):
+    def __init__(self, splitter, save_labels):
         self.splitter = splitter
+        self.save_labels = save_labels
 
     def __iter__(self):
-        self.crops = CacheStream('crops')
+        self.crops = CacheStream('crops', 'bound_boxes')
+        self.streams['crops'] = self.crops
         self.initialized = False
         return self
 
@@ -164,10 +207,14 @@ class ConvertSplit(Operator):
         else:
             batch = self.splitter.map(labels)
             crops, self.batch_prev, do_join = self.splitter.join(self.batch_prev, batch)
-        self.crops.update((crops, do_join))
-        return self.crops
+        if self.save_labels:
+            self.crops.update((crops[0], do_join))
+            self.streams['labels'].update(crops[1])
+        else:
+            self.crops.update((crops, do_join))
+        return self.streams
 
-def write_video_single(conn, video_file, target, base_dir, splitter, tagger, aux_streams, args, background_scale=1):
+def write_video_single(conn, video_file, target, base_dir, splitter, tagger, args, labels = None, only_labels = False, save_labels = True, background_scale=1):
     if not os.path.isfile(video_file):
         print("missing file", video_file)
         return None
@@ -176,17 +223,22 @@ def write_video_single(conn, video_file, target, base_dir, splitter, tagger, aux
     batch_size = args['batch_size']
     v = CVVideoStream(video_file, target, args['limit'])
     manager_crop = PipelineManager(v)
-    if aux_streams != None:
-        manager_crop.add_streams(aux_streams)
+    if labels != None:
+        manager_crop.add_streams(labels)
 
-    manager_crop.add_operators([ConvertMap(tagger, batch_size), ConvertSplit(splitter)])
+    manager_crop.add_operators([ConvertMap(tagger, batch_size, only_labels), ConvertSplit(splitter, save_labels)])
+    #manager_crop.add_operators([ConvertMap(tagger, batch_size, only_labels)])
+    #manager_crop.run(result = 'labels')
     crops = manager_crop.build()
     v_main =  CVVideoStream(video_file, target, args['limit'])
     manager = PipelineManager(v_main)
-    manager.add_stream(crops, 'crops')
-    manager.add_operator(PutOp(target, args, base_dir))
-    manager.add_operator(HeaderOp(conn))
-    results = manager.run()
+    manager.add_pipeline(crops, 'crops')
+    manager.add_operator(PutOp(target, args, save_labels, base_dir))
+    manager.add_operator(HeaderOp(conn, target))
+    if save_labels and labels is not None:
+        manager.add_operator(LabelsOp(conn, target))
+    results = manager.run('header_ids')
+    print(results)
     return results
 
 

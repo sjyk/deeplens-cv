@@ -13,8 +13,9 @@ from deeplens.utils.error import *
 
 
 class DataStream():
-    def __init__(self, name):
+    def __init__(self, name, stream_type):
         self.name = name
+        self.type = stream_type
 
     def __iter__(self):
         raise NotImplemented("__iter__ implemented")
@@ -38,25 +39,27 @@ class DataStream():
         raise NotImplemented("materialize not implemented")
 
 class JSONListStream(DataStream):
-    def __init__(self, data, name, isList = False):
-        super().__init__(name)
+    def __init__(self, data, name, stream_type, limit = -1, isList = False):
+        super().__init__(name, stream_type)
         self.data = []
-        if isList:
-            if type(data) == str:
-                files = [data]
+        self.limit = limit
+        if data is not None:
+            if isList:
+                if type(data) == str:
+                    files = [data]
+                else:
+                    files = data
+                for file in files:
+                    with open(file, 'r') as f:
+                        self.data = self.data + json.load(f)
             else:
-                files = data
-            for file in files:
-                with open(file, 'r') as f:
-                    self.data = self.data + json.load(f)
-        else:
-            if type(data) == str:
-                files = [data]
-            else:
-                files = data
-            for file in files:
-                with open(file, 'r') as f:
-                    self.data = self.data.append(json.load(f))
+                if type(data) == str:
+                    files = [data]
+                else:
+                    files = data
+                for file in files:
+                    with open(file, 'r') as f:
+                        self.data = self.data.append(json.load(f))
 
     def __iter__(self):
         self.index = 0
@@ -64,20 +67,30 @@ class JSONListStream(DataStream):
 
     def __next__(self):
         self.index += 1
-        if self.index >= len(self.data):
+        #print(self.limit)
+        if self.index >= len(self.data) or (self.index > self.limit and self.limit > 0):
             raise StopIteration("Iterator is closed")
         return self
     
+    def serialize(self, fp = None):
+        if not fp:
+            return json.dumps(self.data)
+        else:
+            return json.dump(self.data, fp)
+
     def get(self):
         return self.data[self.index - 1]
     
+    def size(self):
+        return len(self.data)
+
     @staticmethod
     def init_mat():
         return []
 
     @staticmethod
     def append(data, prev):
-        return prev.append(data)
+        return prev.data.append(data)
 
     @staticmethod
     def materialize(data, fp = None):
@@ -86,10 +99,81 @@ class JSONListStream(DataStream):
         else:
             return json.dump(data, fp)
 
+class JSONDictStream(DataStream):
+    def __init__(self, data, name, stream_type, limit = 0):
+        super().__init__(name, stream_type)
+        self.data = {}
+        if data is not None:
+            if type(data) == str:
+                files = [data]
+            else:
+                files = data
+            for file in files:
+                with open(file, 'r') as f:
+                    self.data = self.data.update(json.load(f))
+        self.limit = limit
+
+    def __iter__(self):
+        self.index = -1
+        return self
+
+    def __next__(self):
+        self.index += 1
+        if self.limit and self.index >= self.limit:
+            raise StopIteration("Iterator is closed")
+        return self
+
+    def size(self):
+        return len(self.data)
+    
+    def get(self):
+        if self.index in self.data:
+            return self.data[self.index]
+        else:
+            return None
+    
+    def update_limit(self, limit):
+        self.limit = limit
+
+    def add(self, data, index):
+        self.data[index] = data
+
+    def update(self, stream):
+        self.data.update(stream.data)
+
+    def serialize(self, fp = None):
+        if not fp:
+            return json.dumps(self.data)
+        else:
+            return json.dump(self.data, fp)
+    
+    @staticmethod
+    def init_mat():
+        return {}
+
+    @staticmethod
+    def append(data, prev):
+        prev.data[data[0]] = data[1]
+        return prev
+
+    @staticmethod
+    def materialize(data, fp = None):
+        if not fp:
+            return json.dumps(data)
+        else:
+            return json.dump(data, fp)
+
+
 class ConstantStream(DataStream):
-    def __init__(self, data, name):
-        super().__init__(name)
+    def __init__(self, data, stream_type, name):
+        super().__init__(name, stream_type)
         self.data = data
+
+    def __iter__(self):
+        return self
+    
+    def __next__(self):
+        return self
     
     def get(self):
         return self.data
@@ -107,9 +191,17 @@ class ConstantStream(DataStream):
         return data
 
 class CacheStream(DataStream):
-    def __init__(self, name):
-        super().__init__(name)
+    def __init__(self, name, stream_type = None):
+        if stream_type == None:
+            stream_type = 'cache'
+        super().__init__(name, stream_type)
         self.data = None
+
+    def __iter__(self):
+        return self
+    
+    def __next__(self):
+        return self
     
     def get(self):
         return self.data
@@ -133,8 +225,8 @@ class CacheStream(DataStream):
             return json.dump(data, fp)
 
 class CacheFullMetaStream(CacheStream):
-    def __init__(self, name):
-        super().__init__(name)
+    def __init__(self, name, stream_type):
+        super().__init__(name, stream_type)
         self.data = 0
         self.name = name
         self.vid_name = None
@@ -145,6 +237,12 @@ class CacheFullMetaStream(CacheStream):
         self.first_frame = None
         self.new_batch = None
         self.do_join = None
+
+    def __iter__(self):
+        return self
+    
+    def __next__(self):
+        return self
 
     def update(self, index, new_batch = False):
         self.data = index
@@ -165,7 +263,7 @@ class CacheFullMetaStream(CacheStream):
 
 class VideoStream(DataStream):
     def __init__(self, name, src, limit=-1, origin = np.array((0,0)), offset = 0, start_time = 0):
-        super().__init__(name)
+        super().__init__(name, 'video')
         self.src = src
         self.limit = limit
         self.origin = origin

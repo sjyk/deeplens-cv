@@ -82,7 +82,8 @@ class FullStorageManager():
                                        clip_id integer NOT NULL,
                                        video_name text NOT NULL,
                                        type text NOT NULL,
-                                       PRIMARY KEY (label, clip_id, video_name)
+                                       frames integer,
+                                       PRIMARY KEY (label, clip_id, video_name, type)
                                        FOREIGN KEY (clip_id, video_name) REFERENCES clip(clip_id, video_name)
                                    );
         """
@@ -138,7 +139,7 @@ class FullStorageManager():
         #if tagger.batch_size < args['batch_size']:
         #    raise ValueError("This setting may currently lead to bugs")
         
-        write_video_single(conn, filename, target, physical_dir, self.content_splitter, tagger, aux_streams, args=args, background_scale=args['background_scale'])
+        write_video_single(conn, filename, target, physical_dir, self.content_splitter, tagger, args, aux_streams, background_scale=args['background_scale'])
         
         self.videos.add(target)
 

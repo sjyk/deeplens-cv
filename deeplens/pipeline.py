@@ -9,6 +9,7 @@ import logging
 
 from deeplens.utils.error import *
 from queue import Queue, Empty
+from deeplens.streams import *
 
 #sources video from the default camera
 DEFAULT_CAMERA = 0
@@ -27,7 +28,7 @@ class Pipeline():
     (label, box).
     """
 
-    def __init__(self, streams):
+    def __init__(self, streams, pipeline = {}):
         """Constructs a videostream object
 
            Input: src- Source camera or file or url
@@ -35,6 +36,7 @@ class Pipeline():
                   origin- Set coordinate origin
         """
         self.streams = streams
+        self.pipelines = pipeline
 
     def __iter__(self):
         """Constructs the iterator object and initializes
@@ -42,6 +44,9 @@ class Pipeline():
         """
         for stream in self.streams:
             self.streams[stream] = iter(self.streams[stream])
+
+        for pipeline in self.pipelines:
+            iter(self.pipelines[pipeline])
         return self
 
     def __getitem__(self, xform):
@@ -50,6 +55,8 @@ class Pipeline():
         return xform.apply(self)
 
     def __next__(self):
+        for pipeline in self.pipelines:
+            next(self.pipelines[pipeline])
         for stream in self.streams:
             self.streams[stream] = next(self.streams[stream])
         return self.streams
@@ -74,6 +81,7 @@ class PipelineManager():
         self.operators = []
         self.vstream = vstream
         self.dstreams = {}
+        self.pipelines = {}
 
     def get_operators(self):
         return self.operators
@@ -86,17 +94,23 @@ class PipelineManager():
             raise MissingVideoStream()
         streams = {'video': self.vstream}
         streams.update(self.dstreams)
-        pipeline = Pipeline(streams)
+        if len(self.pipelines) == 0:
+            pipeline = Pipeline(streams)
+        else:
+            pipeline = Pipeline(streams, self.pipelines)
         for op in self.operators:
             pipeline = pipeline[op]
         return pipeline
 
-    def run(self, keep_result = True):
+    def run(self, result = None):
         pipeline = self.build()
         results = []            
         for frame in pipeline:
-            if keep_result:
-                results.append(frame.get())
+            if result:
+                frame = frame[result].get()
+                if type(frame) == DataStream:
+                    frame = frame.materialize(frame)
+                results.append(frame)
         return results
 
     def add_operator(self, operator):
@@ -127,6 +141,10 @@ class PipelineManager():
         self.dstreams = {}
         return(vstream, dstreams)
 
+    def add_pipeline(self, pipeline, name):
+        self.pipelines[name] = pipeline
+        self.dstreams.update(pipeline.streams)
+
 class Operator():
     """An operator defines consumes an iterator over frames
     and produces and iterator over frames. The Operator class
@@ -139,7 +157,9 @@ class Operator():
     #subscripting binds a transformation to the current stream
     def apply(self, pipeline):
         self.pipeline = iter(pipeline)
+        self.streams = self.pipeline.streams
         return self
+        
 
     def __getitem__(self, xform):
         """Applies a transformation to the video stream

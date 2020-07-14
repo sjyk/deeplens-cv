@@ -85,9 +85,9 @@ def new_headers_batch(conn, all_crops, name, video_refs,
     for i in range(0, len(crops)):
         if type(crops[i]['label']) is list:
             for j in range(len(crops[i]['label'])):
-                insert_label_header(conn, crops[i]['label'][j], 'storage', ids[i + 1], name)
+                insert_label_header(conn, crops[i]['label'][j], json.dumps(crops[i]['all'], cls=Serializer), ids[i + 1], name)
         else:
-            insert_label_header(conn, crops[i]['label'], 'storage', ids[i + 1], name)
+            insert_label_header(conn, crops[i]['label'], json.dumps(crops[i]['all'], cls=Serializer), ids[i + 1], name)
     for i in range(1, len(all_crops)):
         update_headers_batch(conn, all_crops[i], name, start_time, end_time, ids) # TODO
     return ids
@@ -128,6 +128,8 @@ def move_one_file(conn, clip_id, video_name, dest_ref):
 def insert_clip_header(conn, clip_id, video_name, start_time, end_time, origin_x, origin_y, fwidth, fheight, width, height, video_ref='', is_background = False, translation = 'NULL', other = 'NULL'):
     c = conn.cursor()
     #print((clip_id, video_name, start_time, end_time, origin_x, origin_y, fwidth, fheight, width, height, video_ref, is_background, translation, other))
+    if other == None:
+        other = 'NULL'
     c.execute("INSERT INTO clip VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                (clip_id, video_name, start_time, end_time, origin_x, origin_y, fwidth, fheight, width, height, video_ref, is_background, translation, other))
     conn.commit()
@@ -138,9 +140,11 @@ def insert_background_header(conn, background_id, clip_id, video_name):
     c.execute("INSERT INTO background VALUES (?, ?, ?)", (background_id, clip_id, video_name))
     conn.commit()
 
-def insert_label_header(conn, label, value, clip_id, video_name, type = 'background'):
+def insert_label_header(conn, label, value, clip_id, video_name, data_type = 'box', frames = None):
     c = conn.cursor()
-    c.execute("INSERT INTO label VALUES (?, ?, ?, ?, ?)", (label, value, clip_id, video_name, type))
+    if frames == None:
+        frames = 'NULL'
+    c.execute("INSERT INTO label VALUES (?, ?, ?, ?, ?, ?)", (label, value, clip_id, video_name, data_type, frames))
     conn.commit()
 
 def insert_lineage_header(conn, video_name, lineage, parent):
@@ -217,6 +221,12 @@ def update_clip_header(conn, clip_id, video_name, args={}):
     c = conn.cursor()
     for key, value in args.items():
         c.execute("UPDATE clip SET '%s' = '%s' WHERE clip_id = '%d' AND video_name = '%s'" % (key, value, clip_id, video_name))
+    conn.commit()
+
+def update_label_header(conn, clip_id, video_name, label, data_type, args={}):
+    c = conn.cursor()
+    for key, value in args.items():
+        c.execute("UPDATE label SET '%s' = '%s' WHERE clip_id = '%d' AND video_name = '%s' AND label = '%s' AND type = '%s"  % (key, value, clip_id, video_name, label, data_type))
     conn.commit()
 
 def query_clip(conn, clip_id, video_name):

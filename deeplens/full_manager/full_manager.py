@@ -239,6 +239,7 @@ class FullStorageManager():
         """retrievies a clip of satisfying the condition.
         If the clip was in external storage, get moves it to disk. TODO: Figure out if I should implement this feature or not
         """
+        conn = self.get_conn()
         c = conn.cursor()
         c.execute(query)
         result = c.fetchall()

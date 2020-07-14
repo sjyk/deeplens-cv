@@ -7,7 +7,10 @@ from deeplens.utils.box import Box
 import copy
 from deeplens.full_manager.full_manager import *
 from deeplens.full_manager.full_video_processing import Splitter
+from deeplens.utils.testing_utils import get_size
 from deeplens.utils.testing_utils import printCrops
+from datetime import datetime
+
 
 def miris_tagger(streams, batch_size):
     bb_labels = JSONListStream(None, 'map_labels', 'car_tracking')
@@ -391,6 +394,11 @@ class CropAreaSplitter(AreaSplitter):
                     new_crops.append(crops[i])
         
         return new_crops, new_crop_labels
+
+
+def logrecord(baseline,settings,operation,measurement,*args):
+    print(';'.join([baseline, json.dumps(settings), operation, measurement] + list(args)))
+
 
 # We can directly use a JSONListStream to 
 def main(video, json_labels):

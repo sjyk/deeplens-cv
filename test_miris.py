@@ -11,7 +11,6 @@ from deeplens.utils.testing_utils import get_size
 from deeplens.utils.testing_utils import printCrops
 from datetime import datetime
 
-
 def miris_tagger(streams, batch_size):
     bb_labels = JSONListStream(None, 'map_labels', 'car_tracking')
     for i in range(batch_size):
@@ -76,7 +75,7 @@ class TrackSplitter(Splitter):
                     all_data = {}
                     all_data[frame] = ob
                     crops.append({'bb': ob['bb'], 'label': ob['label'], 'all': all_data})
-                    crop_labels[ob['label']] = {i: JSONDictStream(None, str(ob['label']), obs.type, size = obs.size())}
+                    crop_labels[ob['label']] = {i: JSONDictStream(None, str(ob['label']), obs.type, limit = obs.size())}
                     crop_labels[ob['label']][i].add(ob['bb'].serialize(), frame)
             frame += 1
         return (crops, crop_labels), labels
@@ -288,7 +287,7 @@ class CropAreaSplitter(AreaSplitter):
             pair_iou.append([])
             for j in range(i + 1, size, 1):
                 if merged_crops[i] == -1 or merged_crops[j] == -1:
-                    pair_iou[i].append(3)
+                    pair_iou[i].append(-1)
                 else:
                     intersect = float(crops[j]['bb'].intersect_area(crops[i]['bb']))
                     union = float(crops[j]['bb'].union_area(crops[i]['bb']))
@@ -296,16 +295,30 @@ class CropAreaSplitter(AreaSplitter):
                     pair_iou[i].append(iou)
         return pair_iou
 
-    def _min_iou(self, pair_iou):
-        min_iou = 2
-        pair = [None, None]
+    def _max_iou(self, pair_iou):
+        max_iou = 0
+        pair = (None, None)
         for i in range(len(pair_iou)):
             for j in range(len(pair_iou[i])):
-                if min_iou > pair_iou[i][j]:
-                    min_iou = pair_iou[i][j]
-                    pair = [i, i + j + 1]
+                if max_iou < pair_iou[i][j]:
+                    max_iou = pair_iou[i][j]
+                    pair = (i, i + j + 1)
         return pair
-            
+
+    def _min_dist(self, crops, merged_crops, max_dist = float('inf')):
+        size = len(crops)
+        min_dist = max_dist
+        pair = (None, None)
+        for i in range(size):
+            for j in range(i + 1, size, 1):
+                if merged_crops[i] == -1 or merged_crops[j] == -1:
+                    continue
+                dist = crops[i]['bb'].distance(crops[j]['bb'])
+                if dist < min_dist:
+                     pair = (i, j)
+                     min_dist = dist
+        return pair
+
     def map(self, data):
         """
         Union bounding boxes to form crops for a batch of frames
@@ -354,7 +367,11 @@ class CropAreaSplitter(AreaSplitter):
             merged_crops = [None]*len(crops)
             for i in range(len(crops) - self.num_crops):
                 pair_iou = self._pair_iou(crops, merged_crops)
-                i, j = self._min_iou(pair_iou)
+                i, j = self._max_iou(pair_iou)
+                # account for zero
+                if i is None:
+                    print('merged non-overlapping boxes')
+                    i, j = self._min_dist(crops, merged_crops)
                 crop1 = crops[i]
                 crop2 = crops[j]
                 bb = crop1['bb'].union_box(crop2['bb'])
@@ -364,7 +381,7 @@ class CropAreaSplitter(AreaSplitter):
                 elif merged_crops[i] is not None:
                     merged_crops.append((*merged_crops[i], j))
                 elif merged_crops[j] is not None:
-                    merged_crops.append((*merged_crops[j], j))
+                    merged_crops.append((i, *merged_crops[j]))
                 else:
                     merged_crops.append((i, j))
                 merged_crops[i] = -1
@@ -378,7 +395,8 @@ class CropAreaSplitter(AreaSplitter):
                     if merged_crops[i] == -1:
                         delete_count += 1
                     elif merged_crops[i] == None:
-                        new_crop_labels[label][i - delete_count] = crop_labels[label][i]
+                        if i in crop_labels[label]:
+                            new_crop_labels[label][i - delete_count] = crop_labels[label][i]
                     else:
                         index = i - delete_count
                         for j in merged_crops[i]:
@@ -403,7 +421,7 @@ def logrecord(baseline,settings,operation,measurement,*args):
 # We can directly use a JSONListStream to 
 def main(video, json_labels):
     labels = {'tracking': JSONListStream(json_labels, 'tracking', 'labels', isList = True)}
-    manager = FullStorageManager(miris_tagger, CropAreaSplitter(3), 'miris2')
+    manager = FullStorageManager(miris_tagger, CropAreaSplitter(4), 'miris4')
     manager.put(video, 'test0', aux_streams = labels)
 
 if __name__ == '__main__':

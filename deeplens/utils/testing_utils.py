@@ -10,7 +10,7 @@ import random
 import string
 import time
 import os
-
+from deeplens.utils.utils import add_ext
 """Calculates size of a directory
 Stolen from https://stackoverflow.com/questions/1392413/calculating-a-directorys-size-using-python
 """
@@ -55,12 +55,12 @@ def printCrops(crops):
         print("Crop: {}".format(crop['label']))
         print("bb: {}".format(crop['bb'].serialize()))
 
-def testGetClipIds(manager, query, order = True):
-    clip_ids = manager.get(query)
-    
-
-def testGetVideoStreams(manager, query, order = True):
+"""Types of gets: pipeline, video, query
+"""
+def testGet(manager, query, order = True, pipeline = None):
     pass
 
-def testGetPipeline(manager, query, order = True, pipeline = None):
+"""Types of gets: pipeline, video, query
+"""
+def testPut(maanger, splitter):
     pass

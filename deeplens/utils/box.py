@@ -9,6 +9,7 @@ from deeplens.utils.error import *
 import numpy as np
 import json
 from timeit import default_timer as timer
+import math
 
 #sources video from the default camera
 DEFAULT_CAMERA = 0
@@ -53,6 +54,12 @@ class Box():
 		"""Calculates the area contained in the box
 		"""
 		return np.abs((self.x1 - self.x0) * (self.y1 - self.y0))
+
+	def center(self, integer = False):
+		if integer:
+			return (self.x1 + self.x0)//2, (self.y1 + self.y0)//2
+		else:
+			return (self.x1 + self.x0)/2, (self.y1 + self.y0)/2
 
 	def __mul__(self, scalar):
 		return Box(int(self.x0/scalar), \
@@ -101,6 +108,12 @@ class Box():
 	def union_area(self, other):
 		ia = self.intersect_area(other)
 		return self.area() + other.area() - ia
+	
+	def distance(self, other):
+		x0, y0 = self.center()
+		x1, y1 = other.center()
+		dist = math.sqrt((x0 - x1)**2 + (y0 - y1)**2)
+		return dist 
 
 	def union_box(self, other):
 		return Box(min(self.x0, other.x0), \

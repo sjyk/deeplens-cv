@@ -281,9 +281,6 @@ def write_video_single(conn, \
                         rows=None,
                         hwang=False):
     start = time.time()
-    if not os.path.isfile(video_file):
-        print("missing file", video_file)
-        return None
     if type(map) == str:
         map = YoutubeTagger(map, './deeplens/media/train/processed1.csv')
     if type(conn) == str:

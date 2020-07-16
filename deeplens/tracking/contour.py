@@ -184,8 +184,9 @@ class GoodKeyPoints(KeyPoints):
 		p0 = cv2.goodFeaturesToTrack(gray, mask = None, **feature_params)
 
 		bounding_boxes = []
-		for i in p0:
-			bounding_boxes.append(('object',(i[0,0], i[0,1], i[0,0],i[0,1])))
+		if p0 is not None:
+			for i in p0:
+				bounding_boxes.append(('object',(i[0,0], i[0,1], i[0,0],i[0,1])))
 
 		ff['bounding_boxes'] = bounding_boxes
 

@@ -22,59 +22,18 @@ from deeplens.utils.ui import play
 import cv2
 import numpy as np
 
-"""
-c = VideoStream('/Volumes/RAMDisk/tcam.mp4', limit=150)
-region = Box(200,550,350,750)
-pipelines = c[KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)]
-result = count(pipelines, ['one'], stats=True)
-print(result)
-"""
+from deeplens.extern.cache import persist
 
+FILENAME = '' #the video file that you want to load
+vstream = VideoStream(FILENAME, limit=1000) #limit is the max number of frames
 
-#vstream = VideoStream('/Users/sanjayk/Dropbox/DeepLensTestVideos/tcam.mp4', limit=100)
+size = persist(vstream, 'cache.npz') #how big the size of the stored raw video is
 
-#for v in vstream:
-#    pass
+from deeplens.struct import RawVideoStream
 
-"""
-from deeplens.extern.cache import persist, load, materialize
+vstream = RawVideoStream('cache.npz', shape=(1000,1080,1920,3)) #retrieving the data (have to provide dimensions (num frames, w, h, channels)
 
-c = materialize(c)
-region = Box(200,550,350,750)
-pipelines = c[KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)]
-result = count(pipelines, ['one'], stats=True)
-print(result)
-"""
-
-#from deeplens.extern.cache import persist
-#vstream = VideoStream('/Users/sanjayk/Dropbox/DeepLensTestVideos/tcam.mp4', limit=1000)
-#size = persist(vstream, 'cache.npz')
-
-#from deeplens.struct import RawVideoStream
-
-#vstream = RawVideoStream('cache.npz', shape=(1000,1080,1920,3))
-
-#for v in vstream:
-#    pass
-
-manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=300), CropSplitter(), 'videos')
-manager.put('tcam.mp4', 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': 1000, 'batch_size': 100, 'num_processes': 4})
-#manager.cache('test', Condition(label='foreground'))
-clips = manager.get('test', Condition(label='foreground'))
-
-region = Box(200, 550, 350, 750)
-	
-#clips = manager.get('test', Condition(label='foreground'))
-
-pipelines = []
-d = DeepLensOptimizer()
-for c in clips:
-	pipeline = c[KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)]
-	#pipeline = d.optimize(pipeline)
-	pipelines.append(pipeline)
-
-result = counts(pipelines, ['one'], stats=True)
-print(result)
-
-manager.uncache('test', Condition(label='foreground'))
+#do something
+for v in vstream:
+    pass
 

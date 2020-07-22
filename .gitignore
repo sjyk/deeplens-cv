@@ -126,3 +126,11 @@ train/
 ssd_mobilenet_v1_coco_2017_11_17/**
 mscoco_label_map.pbtxt
 
+# random video directories
+miris_10/*
+output.mkv
+sample1/*
+sample2/*
+test_batch.py
+*.txt
+deprecated_files/*

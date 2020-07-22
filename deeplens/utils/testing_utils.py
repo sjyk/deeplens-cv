@@ -23,22 +23,6 @@ def get_size(start_path = '.'):
 			if not os.path.islink(fp):
 				total_size += os.path.getsize(fp)
 	return total_size
-
-"""Calculates the size of files on disk for a particular cached stream
-"""
-def sizeof(output):
-    seq = 0
-    size = 0
-    
-    while True:
-        try:
-            file = add_ext(output, '.seq', seq) 
-            size += os.path.getsize(file)
-            seq += 1
-        
-        except FileNotFoundError:
-            break
-    return size
     
 """Calculates the read time for a particular stream
 """
@@ -54,13 +38,3 @@ def printCrops(crops):
     for crop in crops:
         print("Crop: {}".format(crop['label']))
         print("bb: {}".format(crop['bb'].serialize()))
-
-"""Types of gets: pipeline, video, query
-"""
-def testGet(manager, query, order = True, pipeline = None):
-    pass
-
-"""Types of gets: pipeline, video, query
-"""
-def testPut(maanger, splitter):
-    pass

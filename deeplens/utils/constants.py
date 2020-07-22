@@ -14,9 +14,11 @@ XVID, DIVX, H264, MP4V, UNENC, GSC = 'XVID', 'DIVX', 'X264', 'FMP4', 'MJPG', 'Y8
 #ENCODINGS = [XVID, DIVX, H264, MP4V, UNENC, GSC]
 ENCODINGS = [XVID]
 FORMATS = [GZ,BZ2,RAW]
+FOURCC = 828601953
 
 #default file out
 AVI = '.avi'
+MKV = '.mkv'
 
 #default frame rate
 DEFAULT_FRAME_RATE = 30.0

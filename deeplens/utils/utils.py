@@ -55,7 +55,7 @@ def play(vstream):
 
 #shows a single frame
 def show(frame):
-	cv2.imshow('Debug',frame['data'])
+	cv2.imshow('Debug',frame)
 	cv2.waitKey(0)
 
 #overlays a bounding box with labels over a frame

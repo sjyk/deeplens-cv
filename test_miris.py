@@ -67,14 +67,11 @@ class TrackSplitter(Splitter):
                 if ob['label'] in labels:
                     i = labels[ob['label']]
                     crops[i]['bb'] = crops[i]['bb'].union_box(ob['bb'])
-                    crops[i]['all'][frame] = ob
                     crop_labels[ob['label']][i].add(ob['bb'].serialize(), frame)
                 else:
                     i = len(crops)
                     labels[ob['label']] = i
-                    all_data = {}
-                    all_data[frame] = ob
-                    crops.append({'bb': ob['bb'], 'label': ob['label'], 'all': all_data})
+                    crops.append({'bb': ob['bb'], 'label': ob['label'], 'all': None})
                     crop_labels[ob['label']] = {i: JSONDictStream(None, str(ob['label']), obs.type, limit = obs.size())}
                     crop_labels[ob['label']][i].add(ob['bb'].serialize(), frame)
             frame += 1
@@ -103,7 +100,7 @@ class TrackSplitter(Splitter):
             # if the batches have different labels or different number of crops
             # per label, we don't join the crops
             if label not in labels1:
-                return (crop2, map2, False)
+                return ((crop2, crop_labels2), map2, False) 
             j = labels2[label]
             i = labels1[label]
             bb1 = crop1[i]['bb']
@@ -121,14 +118,13 @@ class TrackSplitter(Splitter):
             if iou > self.iou and x_diff < self.tran and y_diff < self.tran:
                 bb =  bb1.x_translate(bb2.x0 - bb1.x0)
                 bb = bb.y_translate(bb2.y0 - bb1.y0)
-                crop1[i]['all'].update(crop2[j]['all'])
-                crops[i] = {'bb':bb, 'label': label, 'all': crop1[i]['all']}
+                crops[i] = {'bb':bb, 'label': label, 'all': None}
             else:
                 return ((crop2, crop_labels2), map2, False) # we couldn't find a matching box with the above condition
 
         for lb in crop_labels1:
-            cr1 = crop_labels1[lb].keys()[0]
-            cr2 = crop_labels2[lb].keys()[0]
+            cr1 = list(crop_labels1[lb].keys())[0]
+            cr2 = list(crop_labels2[lb].keys())[0]
             crop_labels1[lb][cr1].update(crop_labels2[lb][cr2])
         return (crops, crop_labels1), ((crops, crop_labels1), labels1), True
 
@@ -182,7 +178,6 @@ class AreaSplitter(Splitter):
                     crop_labels[ob['label']][i].add(ob['bb'].serialize(), frame)
             
                     crops[match]['bb'] = crops[match]['bb'].union_box(ob['bb'])
-                    crops[match]['all'][frame] = ob
                 if match == -1:
                     if ob['label'] not in crop_labels:
                         crop_labels[ob['label']] = {len(crops): JSONDictStream(None, str(ob['label']), objs.type, limit = objs.size())}
@@ -190,9 +185,7 @@ class AreaSplitter(Splitter):
                     if match not in crop_labels[ob['label']]:
                         crop_labels[ob['label']][match] = JSONDictStream(None, str(ob['label']), objs.type, limit = objs.size())
                     crop_labels[ob['label']][match].add(ob['bb'].serialize(), frame)
-                    all = {}
-                    all[frame] = ob
-                    crops.append({'bb': ob['bb'], 'label': 'foreground', 'all': all})
+                    crops.append({'bb': ob['bb'], 'label': 'foreground', 'all': None})
             frame += 1
         return crops, crop_labels
 
@@ -250,7 +243,7 @@ class AreaSplitter(Splitter):
                 cr2 = crop_corr1[cr]
                 if cr2 in crop_labels2[lb]:
                     limit = crop_labels1[lb][cr].limit + crop_labels2[lb][cr2].limit
-                    crop_labels1[lb][cr].updata(crop_labels2[lb][cr2])
+                    crop_labels1[lb][cr].update(crop_labels2[lb][cr2])
                     crop_labels1[lb][cr].update_limit(limit)
 
 
@@ -411,7 +404,10 @@ class CropAreaSplitter(AreaSplitter):
                 if merged_crops[i] != -1:
                     new_crops.append(crops[i])
         
-        return new_crops, new_crop_labels
+            return new_crops, new_crop_labels
+        
+        else:
+            return crops, crop_labels
 
 
 def logrecord(baseline,settings,operation,measurement,*args):

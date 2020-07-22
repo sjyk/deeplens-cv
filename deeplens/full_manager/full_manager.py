@@ -23,8 +23,9 @@ import logging
 from multiprocessing import Pool
 import time
 from deeplens.utils.utils import *
+import itertools
 
-DEFAULT_ARGS = {'frame_rate': 1, 'encoding': MP4V, 'limit': 1000, 'sample': 1.0, 'offset': 0, 'batch_size': 30, 'num_processes': 4, 'background_scale': 1}
+DEFAULT_ARGS = {'frame_rate': 1, 'encoding': MP4V, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 30, 'num_processes': 4, 'background_scale': 1}
 
 class FullStorageManager():
     """ TieredStorageManager is the implementation of a 3 tiered
@@ -180,17 +181,16 @@ class FullStorageManager():
         self.remove_conn(conn)
         return times
 
-    # TODO: update feature if needed
-    # def put_fixed(self, filename, target, crops, batch = False, args=DEFAULT_ARGS, in_extern_storage = False):
-    #     conn = self.get_conn()
-    #     self.delete(target, conn)
-    #     if in_extern_storage: 
-    #         physical_dir = self.externdir
-    #     else:
-    #         physical_dir = self.basedir
-    #     write_video_fixed(conn, filename, target, physical_dir, crops, batch = batch, args=args)
-    #     self.videos.add(target)
-    #     self.remove_conn(conn)
+    def put_fixed(self, filename, target, crops, batch = False, args=DEFAULT_ARGS, in_extern_storage = False):
+        conn = self.get_conn()
+        self.delete(target, conn)
+        if in_extern_storage: 
+            physical_dir = self.externdir
+        else:
+            physical_dir = self.basedir
+        write_video_fixed(conn, filename, target, physical_dir, crops, batch = batch, args=args)
+        self.videos.add(target)
+        self.remove_conn(conn)
 
     def put_streams(self, name, vstream, dstreams = None, materialize = True, args=None, batch_size = -1):
         if args == None:
@@ -221,18 +221,15 @@ class FullStorageManager():
         conn = self.get_conn()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT background_id, clip_id FROM background WHERE video_name = '%s'" % name)
+        cursor.execute("SELECT video_ref FROM clip WHERE video_name = '%s'" % name)
         clips = cursor.fetchall()
-        clips = set().union(*map(set, clips))
         size = 0
         for clip in clips:
-            cursor.execute("SELECT video_ref FROM clip WHERE clip_id = '%d'" % clip)
-            video_ref = cursor.fetchone()[0]
+            clip = clip[0]
             try:
-                size += os.path.getsize(video_ref)
+                size += os.path.getsize(clip)
             except FileNotFoundError:
-                logging.warning("File %s not found" % video_ref)
-
+                logging.warning("File %s not found" % clip)
         return size
     
     def get(self, query):
@@ -244,6 +241,14 @@ class FullStorageManager():
         c.execute(query)
         result = c.fetchall()
         return result
+
+    def get_vstreams(self, query):
+        video_refs = self.get(query)
+        video_refs.sort(key=lambda tup: tup[2])
+        vstreams = itertools.chain([CVVideoStream(clip[10], 'result') for clip in video_refs])
+        clip_ids = [clip[0] for clip in video_refs]
+        return vstreams, clip_ids
+
     
     def create_vstream(self, video_name, clip_id, name = None, stream_type = CVVideoStream):
         clip = query_clip(self.conn, clip_id, video_name)[0]
@@ -265,7 +270,6 @@ class FullStorageManager():
             name = label
         dstream = stream_type(label[1], name)
         return dstream
-
 
 def sname_to_class(name):
     import importlib

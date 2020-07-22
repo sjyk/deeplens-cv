@@ -57,7 +57,7 @@ class PutOp(Operator):
         self.writers = []
         for i in range(len(crops) + 1):
             seg_name = os.path.join(self.dir, r_name)
-            file_name = add_ext(seg_name, AVI, i)
+            file_name = add_ext(seg_name, MKV, i)
             self.file_names.append(file_name)
             if i == 0:
                 out = CVVideoStream.init_mat(file_name, self.encoding, self.scoor[0], self.scoor[1], self.frame_rate)
@@ -72,8 +72,11 @@ class PutOp(Operator):
         index = self.meta.get()
         if self.stop:
             raise StopIteration()
-        labels_stream = next(self.pipeline.pipelines['crops'])
-        crops, do_join = labels_stream['crops'].get()
+        if len(self.pipeline.pipelines) == 0:
+            crops, do_join = next(self.streams['crops']).get()
+        else:
+            labels_stream = next(self.pipeline.pipelines['crops'])
+            crops, do_join = labels_stream['crops'].get()
         if self.save_labels:
             self.streams['labels'] = labels_stream['labels']
         
@@ -90,6 +93,7 @@ class PutOp(Operator):
             
             data = frame.get()
             #data_scaled = cv2.resize(frame, self.scoor) # need to check that this copies data
+            #print(crops)
             for j, cr in enumerate(crops):
                 fr = crop_box(data, cr['bb'])
                 CVVideoStream.append(fr, self.writers[j + 1])
@@ -114,7 +118,7 @@ class HeaderOp(Operator):
         fr = next(self.pipeline)['full_meta']
         #print(fr.crops)
         if fr.do_join:
-            params = (self.conn, [fr.crops], fr.name, fr.first_frame, fr.data, self.ids)
+            params = (self.conn, fr.crops, fr.name, fr.first_frame, fr.data, self.ids)
             update_headers_batch(*params)
         else:
             params = (self.conn, [fr.crops], fr.name, fr.video_refs, fr.fcoor, fr.scoor, fr.first_frame, fr.data)
@@ -221,14 +225,12 @@ def write_video_single(conn, video_file, target, base_dir, splitter, tagger, arg
     if type(conn) == str:
         conn = sqlite3.Connection(conn)
     batch_size = args['batch_size']
-    v = CVVideoStream(video_file, target, args['limit'])
+    v = CVVideoStream(video_file, 'label_video', args['limit'])
     manager_crop = PipelineManager(v)
     if labels != None:
         manager_crop.add_streams(labels)
 
     manager_crop.add_operators([ConvertMap(tagger, batch_size, only_labels), ConvertSplit(splitter, save_labels)])
-    #manager_crop.add_operators([ConvertMap(tagger, batch_size, only_labels)])
-    #manager_crop.run(result = 'labels')
     crops = manager_crop.build()
     v_main =  CVVideoStream(video_file, target, args['limit'])
     manager = PipelineManager(v_main)
@@ -238,11 +240,25 @@ def write_video_single(conn, video_file, target, base_dir, splitter, tagger, arg
     if save_labels and labels is not None:
         manager.add_operator(LabelsOp(conn, target))
     results = manager.run('header_ids')
-    print(results)
     return results
 
-
-        
+def write_video_fixed(conn, video_file, target, base_dir, crops, args, labels = None, save_labels = False, background_scale=1):
+    if not os.path.isfile(video_file):
+        print("missing file", video_file)
+        return None
+    if type(conn) == str:
+        conn = sqlite3.Connection(conn)
+    batch_size = args['batch_size']
+    v_main =  CVVideoStream(video_file, target, args['limit'])
+    manager = PipelineManager(v_main)
+    manager.add_operator(crops, 'crops')
+    manager.add_operator(PutOp(target, args, save_labels, base_dir))
+    manager.add_operator(HeaderOp(conn, target))
+    if save_labels and labels is not None:
+        manager.add_operator(LabelsOp(conn, target))
+    results = manager.run('header_ids')
+    #print(results)
+    return results
 
 
 

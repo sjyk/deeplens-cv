@@ -9,7 +9,7 @@ are useful for processing fixed camera videos.
 import cv2
 import numpy as np
 from deeplens.utils.box import Box
-
+from deeplens.utils.utils import show
 #fixed camera bg segmentation
 #finds "moving" pixels
 class FixedCameraBGFGSegmenter(object):
@@ -24,14 +24,17 @@ class FixedCameraBGFGSegmenter(object):
 
 
 	#returns a bounding box around the foreground.
-	def segment(self, vstream, batch_size, video = False):
+	def segment(self, streams, batch_size, video = False):
 
 		dynamic_mask = None
 		prev = None
 		count = 0
 		frames = []
+		vstream = streams['video']
+		print(vstream.name)
 		for frame in vstream:
 			frame = vstream.get()
+			#show(frame)
  			#print(frame['frame'])
 			if video:
 				frames.append(frame)

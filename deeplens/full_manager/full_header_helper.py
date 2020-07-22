@@ -33,29 +33,18 @@ def update_headers_batch(conn, crops, name, start_time, end_time, ids):
         if i != 0:
             origin_x = crops[i - 1]['bb'].x0
             origin_y = crops[i - 1]['bb'].y0
-            translation = clip_info[10]
+            translation = clip_info[12]
             if translation == 'NULL':
                 if origin_x != clip_info[4] or origin_y != clip_info[5]:
                     updates['translation'] = json.dumps([(start_time, origin_x, origin_y)])
             else:
-                translation = json.loads(clip_info[10])
+                translation = json.loads(clip_info[12])
                 if type(translation) is list:
                     if translation[-1][1] != origin_x or translation[-1][2] != origin_y:
                         translation.append((start_time, origin_x, origin_y))
                         updates['translation'] = json.dumps(translation)
                 else:
                     raise ValueError('Translation object is wrongly formatted')
-            other = clip_info[11]
-            if other == 'NULL':
-                updates['other'] = json.dumps(crops[i - 1]['all'], cls=Serializer)
-            else:
-                other = json.loads(clip_info[11])
-                if type(other) is dict:
-                    logging.debug(crops[i - 1])
-                    other.update(crops[i - 1]['all'])
-                    updates['other'] = json.dumps(other, cls=Serializer)
-                else:
-                    raise ValueError('All object is wrongly formatted')
         
         update_clip_header(conn, id, name, updates)
 

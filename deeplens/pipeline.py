@@ -143,7 +143,9 @@ class PipelineManager():
 
     def add_pipeline(self, pipeline, name):
         self.pipelines[name] = pipeline
-        self.dstreams.update(pipeline.streams)
+        for stream in pipeline.streams:
+            if stream != 'video':
+                self.dstreams[stream] = pipeline.streams[stream]
 
 class Operator():
     """An operator defines consumes an iterator over frames

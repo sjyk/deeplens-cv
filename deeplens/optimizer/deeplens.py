@@ -3,8 +3,10 @@ from deeplens.tracking.contour import KeyPoints
 from deeplens.dataflow.map import Crop, GC, SkipEmpty
 from deeplens.struct import build, RawVideoStream, IteratorVideoStream, VideoStream
 from deeplens.extern.ffmpeg import *
+from deeplens.full_manager.condition import Condition
 
 import numpy as np
+import datetime
 
 class DeepLensOptimizer():
 
@@ -24,12 +26,23 @@ class DeepLensOptimizer():
 		self.skip_empty = skip_empty
 		self.adaptive_blur = adaptive_blur
 
+		self.start = datetime.datetime.now()
+
+		self.usage_stats = {}
+
 	#only handles one region
 	def get_metric_region(self, pipeline):
 		for index, op in enumerate(pipeline):
 			if isinstance(op, Metric):
 				return op.region
 		return None
+
+	def get_size_est(self, src):
+		width = get_width(src)
+		height = get_height(src)
+		duration = get_duration(src)
+
+		return width*height*duration*3
 
 	#only handles one region
 	def get_metric_index(self, pipeline):
@@ -49,7 +62,7 @@ class DeepLensOptimizer():
 		if '.avi' in src:
 			return get_bitrate(src)
 		else:
-			return None 
+			return np.inf 
 
 	#sqrt scale, seems to work
 	def get_bitrate_scale(self, pipeline):
@@ -61,6 +74,8 @@ class DeepLensOptimizer():
 				return np.sqrt(7*rawbitrate/baseline)
 			else:
 				return 1.0
+		elif isinstance(pipeline[0],RawVideoStream):
+			return 1.0
 		else:
 			rawbitrate = self._getVStreamBitRate(pipeline[0])
 
@@ -68,6 +83,13 @@ class DeepLensOptimizer():
 				return np.sqrt(7*rawbitrate/baseline)
 			else:
 				return 1.0
+
+	def get_source_clips(self, pipeline):
+
+		if isinstance(pipeline[0],IteratorVideoStream):
+			return [src for src in pipeline[0].sources]
+		else:
+			return [pipeline[0].src]
 
 	def optimize(self, stream):
 		pipeline = stream.lineage()
@@ -84,7 +106,13 @@ class DeepLensOptimizer():
 			region.y1 = region.y1*pipeline[0].scale
 
 			if not (region is None):
-				region = region + 150 #self.crop_pd_ratio
+				region = region*self.crop_pd_ratio
+
+				for file in self.get_source_clips(pipeline):
+					area = (region.x1 - region.x0)*(region.y1 - region.y0)
+
+					self.usage_stats[file] = self.usage_stats.get(file,np.array([0.0,0.0,0.0])) + np.array([area, 1,0])  
+					self.usage_stats[file][2] = (datetime.datetime.now()-self.start).total_seconds()
 
 				pipeline.insert(1,Crop(region.x0*pipeline[0].scale, region.y0*pipeline[0].scale, region.x1*pipeline[0].scale, region.y1*pipeline[0].scale))
 
@@ -127,6 +155,45 @@ class DeepLensOptimizer():
 			if not (index is None):
 				pipeline.insert(index,GC())
 
+		return build(pipeline)
+
+	def clip_filter(self, filename):
+
+		def do_filter(conn, video_name):
+			c = conn.cursor()
+
+			#filename_proc = filename.split('/')[1]
+
+			#print("SELECT clip_id FROM clip WHERE video_ref=%%sfilename_proc" % (str(filename)))
+			c.execute("SELECT clip_id FROM clip WHERE video_ref = '%s'" % (str(filename)))
+
+			return [cl[0] for cl in c.fetchall()]
+
+		return do_filter 
+
+	def _cacheClip(self, manager, clip):
+		videos = manager.list()
+		for video in videos:
+			cache_condition = self.clip_filter(clip)
+			manager.cache(video, Condition(custom_filter=cache_condition))
+
+	def cacheLRU(self, manager, budget):
+		videos = manager.list()
+		current_level = sum(manager.size(v) for v in videos)
+
+		clips_to_cache = [ (v[2],k) for k,v in self.usage_stats.items() if '.npz' not in k]
+		clips_to_cache.sort(reverse=True) #sort by time
+
+		for _ , clip in clips_to_cache:
+			if current_level >= budget:
+				break
+
+			self._cacheClip(manager, clip)
+			current_level = sum(manager.size(v) for v in videos)
+
+			#print(current_level)
+
+			
 
 
-		return build(pipeline) 
+

@@ -38,7 +38,9 @@ class Condition():
 
 	def query(self, conn, video_name):
 		if self.label == None:
-			return self.query_everything(conn, video_name)
+			clip_ids = self.query_everything(conn, video_name)
+			filtered_ids = self.custom_filter(conn, video_name)
+			return list(set(clip_ids).intersection(filtered_ids))
 
 		clips = query_label(conn, self.label, video_name)
 		clip_ids = [label[1] for label in clips]

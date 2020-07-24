@@ -14,10 +14,10 @@ from deeplens.tracking.event import *
 #from deeplens.extern.ffmpeg import *
 #from deeplens
 
-#manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=30), CropSplitter(), 'videos')
+manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=30), CropSplitter(), 'videos')
 #manager = FullStorageManager(SizeMovementTagger(), CropSplitter(), 'videos')
-manager = FullStorageManager(TensorFlowObjectDetect(model_file='ssd_mobilenet_v1_coco_2017_11_17', label_file='mscoco_label_map.pbtxt',
-                               num_classes=90, confidence=0.25), CropSplitter(), 'videos')
+#manager = FullStorageManager(TensorFlowObjectDetect(model_file='ssd_mobilenet_v1_coco_2017_11_17', label_file='mscoco_label_map.pbtxt',
+#                               num_classes=90, confidence=0.25), CropSplitter(), 'videos')
 manager.put('./cut3.mp4', 'test2')
 #res = manager.get('test', Condition(label='small'))
 #print([video for video in res[0]][0]['data'].shape)

@@ -254,7 +254,6 @@ class RawVideoStream(VideoStream):
 		self.mmap_colors = None
 		self.buffer_size = buffer_size
 
-
 	def __getitem__(self, xform):
 		"""Applies a transformation to the video stream
 		"""

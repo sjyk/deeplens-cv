@@ -131,6 +131,6 @@ miris_10/*
 output.mkv
 sample1/*
 sample2/*
-test_batch.py
 *.txt
 deprecated_files/*
+batch*

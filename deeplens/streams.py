@@ -365,6 +365,75 @@ class CVVideoStream(VideoStream):
         prev.write(data)
         return prev
 
+class CVVideoStreams(VideoStream):
+    def __init__(self, srcs, name, limit = -1, origin = np.array((0,0)), offset = 0):
+        super().__init__(name, srcs, limit, origin, offset)
+        import cv2
+        self.frame = None
+        self.cap = None
+        self.index = 0
+    
+    def _cache(self):
+        if len(srcs) == self.index:
+            return
+        next_cache = self.srcs[self.index + 1]
+        self.next_vstream = CVVideoStream(next_cache, self.name)
+
+    def __iter__(self):
+        self.frame_count = 0
+        self.vstream = CVVideoStream(self.srcs[0], self.name, offset= self.frame_count)
+        self.t
+        return self
+
+    def __next__(self):
+        if self.limit > 0 and self.frame_count >= self.limit:
+            raise StopIteration("Iterator is closed")
+        elif self.cap.isOpened():
+            try:
+                self.frame = next(self.vstream).get()
+            except StopIteration:
+                pass # update new fr
+
+        if self.frame is None:
+            raise StopIteration("Iterator is closed")
+        else:
+            return self
+        
+    def get(self):
+        return self.frame
+    
+    def get_cap_info(self, propId):
+        """ If we currently have a VideoCapture op
+        """
+        if self.cap:
+            return self.cap.get(propId)
+        else:
+            return None
+
+    def __call__(self, propIds = None):
+        """ Sets the propId argument so that we can
+        take advantage of video manipulation already
+        supported by VideoCapture (cv2)
+        Arguments:
+            propIds: {'ID': property}
+        """
+        self.propIds = propIds
+
+    @staticmethod
+    def init_mat(file_name, encoding, width, height, frame_rate):
+        fourcc = cv2.VideoWriter_fourcc(*encoding)
+        writer = cv2.VideoWriter(file_name,
+                        fourcc,
+                        frame_rate,
+                        (width, height),
+                        True)
+        return writer
+        
+    @staticmethod
+    def append(data, prev):
+        prev.write(data)
+        return prev
+
 class RawVideoStream(VideoStream):
     def __init__(self, src, name, limit=-1, origin=np.array((0,0)), offset = 0):
         super().__init__(src, name, limit, origin, offset)

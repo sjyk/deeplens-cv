@@ -11,6 +11,7 @@ import string
 import time
 import os
 from deeplens.utils.utils import add_ext
+import subprocess
 """Calculates size of a directory
 Stolen from https://stackoverflow.com/questions/1392413/calculating-a-directorys-size-using-python
 """
@@ -32,6 +33,14 @@ def timeof(vstreams):
     for vstream in vstreams:
         list(vstream) #materialize
     return (time.time() - now)
+
+def convertFormat(files, base_dir):
+    for f in files:
+        output = os.path.basename(f)
+        output = os.path.join(base_dir, output)
+        print(f)
+        ARGS = 'ffmpeg -i {} -c:v libx264 -preset medium -crf 22 -c:a copy {}'.format(f, output).split()
+        result = subprocess.run(ARGS, stdout=subprocess.PIPE)
 
 def printCrops(crops):
     print('~~~PRINTING CROPS~~~')

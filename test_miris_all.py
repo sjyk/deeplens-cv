@@ -8,11 +8,11 @@ import time
 TEST_QUERIES = {}
 
 # type of videos used from the miris dataset
-VID_TYPES = ['beach', 'shibuya', 'uav', 'warsaw']
-#VID_TYPES = ['shibuya']
+#VID_TYPES = ['beach', 'shibuya', 'uav', 'warsaw']
+VID_TYPES = ['shibuya']
 
 #directory of the storage manager
-STORAGE_DIR = 'miris_h264'
+STORAGE_DIR = 'miris_test'
 
 def putManager(manager, base_dir, splitter):
     
@@ -24,7 +24,7 @@ def putManager(manager, base_dir, splitter):
         labels = os.path.join(dire, 'json')
         videos = os.path.join(dire, 'videos')
         
-        for vid in os.listdir():
+        for vid in os.listdir(videos):
             if vid.endswith('mp4'):
                 name = vid.split('.')[0]
                 lb_dir= os.path.join(labels, name + '-baseline.json')

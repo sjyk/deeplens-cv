@@ -21,8 +21,8 @@ def overlap(s1,e1, s2, e2):
 
 
 def cleanUp():
-	if os.path.exists('./videos'):
-		shutil.rmtree('./videos')
+	if os.path.exists('/tmp/videos'):
+		shutil.rmtree('/tmp/videos')
 
 
 def logrecord(baseline,settings,operation,measurement,*args):
@@ -30,9 +30,9 @@ def logrecord(baseline,settings,operation,measurement,*args):
 
 def do_experiments(data, baseline_lst, size, sels):
 	for si in sels:
-		s = si/10
+		# s = si/10
 		for b in baseline_lst:
-			b(data,tot=size, sel=s)
+			b(data,tot=size, batch_size=si)
 
 
 def do_experiments_size(data, baseline_lst, sizes, sel):

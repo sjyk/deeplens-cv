@@ -31,7 +31,14 @@ def runNaive(src, tot=1000, sel=0.1):
     left = Box(1600, 1600, 1700, 1800)
     middle = Box(1825, 1600, 1975, 1800)
     right = Box(2050, 1600, 2175, 1800)
-    pipelines = c[Cut(tot // 2 - int(tot * sel), tot // 2 + int(tot * sel))][GoodKeyPoints()][ActivityMetric('left', left)][
+    # left = Box(1600/3, 1600/3, 1700/3, 1800/3)
+    # middle = Box(1825/3, 1600/3, 1975/3, 1800/3)
+    # right = Box(2050/3, 1600/3, 2175/3, 1800/3)
+
+    # left = Box(1600 / 2, 1600 / 2, 1700 / 2, 1800 / 2)
+    # middle = Box(1825 / 2, 1600 / 2, 1975 / 2, 1800 / 2)
+    # right = Box(2050 / 2, 1600 / 2, 2175 / 2, 1800 / 2)
+    pipelines = c[GoodKeyPoints()][ActivityMetric('left', left)][
         ActivityMetric('middle', middle)][ActivityMetric('right', right)][
         Filter('left', [1], 1, delay=25)][
         Filter('middle', [1], 1, delay=25)][
@@ -76,37 +83,47 @@ def runSimple(src, tot=1000, sel=0.1):
 
 
 # Full storage manager with bg-fg optimization
-def runFull(src, tot=1000, sel=0.1):
+def runFull(src, tot=1000, batch_size=20):
     cleanUp()
 
-    manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter(blur=51).segment, batch_size=20), CropSplitter(),
-                                 'videos')
+
+    folder = '/tmp/videos'
+    manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=batch_size), CropSplitter(),
+                                 folder)
     now = timer()
     manager.put(src, 'test',
-                args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': 20,
+                args={'encoding': 'X264', 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': batch_size,
                       'num_processes': 4, 'background_scale': 1})
     put_time = timer() - now
     print("Put time for full:", put_time)
+    print("Batch size:", batch_size, "Folder size:", get_size(folder))
 
-    left = Box(1600, 1600, 1700, 1800)
-    middle = Box(1825, 1600, 1975, 1800)
-    right = Box(2050, 1600, 2175, 1800)
-    sel = sel / 2
+    # left = Box(1600, 1600, 1700, 1800)
+    # middle = Box(1825, 1600, 1975, 1800)
+    # right = Box(2050, 1600, 2175, 1800)
 
-    clips = manager.get('test', Condition(label='foreground', custom_filter=time_filter(tot // 2 - int(tot * sel),
-                                                                                        tot // 2 + int(tot * sel))))
-    pipelines = []
+    # left = Box(1600 / 3, 1600 / 3, 1700 / 3, 1800 / 3)
+    # middle = Box(1825 / 3, 1600 / 3, 1975 / 3, 1800 / 3)
+    # right = Box(2050 / 3, 1600 / 3, 2175 / 3, 1800 / 3)
 
-    for c in clips:
-        pipelines.append(c[GoodKeyPoints()][ActivityMetric('left', left)][
-                             ActivityMetric('middle', middle)][ActivityMetric('right', right)][
-                             Filter('left', [1], 1, delay=25)][
-                             Filter('middle', [1], 1, delay=25)][
-                             Filter('right', [1], 1, delay=25)])
+    # left = Box(1600 / 2, 1600 / 2, 1700 / 2, 1800 / 2)
+    # middle = Box(1825 / 2, 1600 / 2, 1975 / 2, 1800 / 2)
+    # right = Box(2050 / 2, 1600 / 2, 2175 / 2, 1800 / 2)
 
-    result = counts(pipelines, ['left', 'middle', 'right'], stats=True)
 
-    logrecord('full', ({'size': tot, 'sel': sel, 'file': src}), 'get', str(result), 's')
+    # clips = manager.get('test', Condition(label='foreground', custom_filter=None))
+    # pipelines = []
+    #
+    # for c in clips:
+    #     pipelines.append(c[GoodKeyPoints()][ActivityMetric('left', left)][
+    #                          ActivityMetric('middle', middle)][ActivityMetric('right', right)][
+    #                          Filter('left', [1], 1, delay=25)][
+    #                          Filter('middle', [1], 1, delay=25)][
+    #                          Filter('right', [1], 1, delay=25)])
+    #
+    # result = counts(pipelines, ['left', 'middle', 'right'], stats=True)
+    #
+    # logrecord('full', ({'size': tot, 'batch_size': batch_size, 'file': src, 'folder_size': get_size(folder)}), 'get', str(result), 's')
 
 
 # All optimizations
@@ -127,8 +144,7 @@ def runFullOpt(src, tot=1000, sel=0.1):
     right = Box(2050, 1600, 2175, 1800)
     sel = sel / 2
 
-    clips = manager.get('test', Condition(label='foreground', custom_filter=time_filter(tot // 2 - int(tot * sel),
-                                                                                        tot // 2 + int(tot * sel))))
+    clips = manager.get('test', Condition(label='foreground', custom_filter=None))
 
     pipelines = []
     d = DeepLensOptimizer()

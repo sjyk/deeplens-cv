@@ -61,6 +61,38 @@ def doexperiments_lru(budget=1000000000):
 
 		print(i, budget, time1['elapsed'], time2['elapsed'])
 
+def doexperiments_ks(budget=1000000000):
+
+	for i in range(0,300,50):
+		cleanUp()
+
+		manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=100), CropSplitter(), 'videos')
+		manager.put('tcam.mp4', 'test', args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': 2000, 'batch_size': 100, 'num_processes': 4, 'background_scale': 1})
+		clips = manager.get('test', Condition(label='foreground'))
+
+		region = spatial_selectivity(buffer=i)
+
+		d = DeepLensOptimizer()
+		pipelines = []
+		for c in clips:
+			pipeline = c[KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)]
+			pipeline = d.optimize(pipeline)
+			pipelines.append(pipeline)
+
+		result, time1 = counts(pipelines, ['one'], stats=True) 
+		d.cacheKnapsack(manager, budget)
+
+		clips = manager.get('test', Condition(label='foreground'))
+		pipelines = []
+		for c in clips:
+			pipeline = c[KeyPoints()][ActivityMetric('one', region)][Filter('one', [-0.25,-0.25,1,-0.25,-0.25],1.5, delay=10)]
+			pipeline = d.optimize(pipeline)
+			pipelines.append(pipeline)
+
+		result, time2 = counts(pipelines, ['one'], stats=True) 
+
+		print(i, budget, time1['elapsed'], time2['elapsed'])
+
+doexperiments_ks(budget=1000000000)
 doexperiments_lru(budget=1000000000)
-doexperiments_lru(budget=3000000000)
-doexperiments_lru(budget=5000000000)
+#doexperiments_lru(budget=5000000000)

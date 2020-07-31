@@ -193,6 +193,25 @@ class DeepLensOptimizer():
 
 			#print(current_level)
 
+
+	def cacheKnapsack(self, manager, budget):
+		videos = manager.list()
+		current_level = sum(manager.size(v) for v in videos)
+
+		def _benefit_model(stats, constant=113000.0):
+			return (1 - stats[0]/constant)*stats[1]
+
+
+		clips_to_cache = [ (_benefit_model(v),k) for k,v in self.usage_stats.items() if '.npz' not in k]
+		#clips_to_cache.sort(reverse=True) #sort by time
+
+		for value , clip in clips_to_cache:
+			#print(value)
+			if current_level >= budget or value < 0:
+				break
+
+			self._cacheClip(manager, clip)
+			current_level = sum(manager.size(v) for v in videos)
 			
 
 

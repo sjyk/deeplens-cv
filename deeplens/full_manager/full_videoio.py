@@ -658,7 +658,7 @@ def uncache(conn, video_name, clip_condition):
             #print(update)
 
 
-def query(conn, video_name, clip_condition, rows=None, hwang=False):
+def query(conn, video_name, clip_condition, rows=None, hwang=False, large=False):
     """
     Args:
         conn (SQLite conn object) - please pass self.conn directly
@@ -680,18 +680,22 @@ def query(conn, video_name, clip_condition, rows=None, hwang=False):
         start_time, end_time = clip[0][2], clip[0][3]
         height, width = clip[0][6], clip[0][7]
 
-        vstream = _create_vstream(clip_ref, start_time, end_time, \
+        if large:
+            yield _create_vstream(clip_ref, start_time, end_time, \
                                   height, width, origin, rows=rows, hwang=hwang)
+        else:
+            vstream = _create_vstream(clip_ref, start_time, end_time, \
+                                      height, width, origin, rows=rows, hwang=hwang)
+            #print(clip[0][2], clip[0][3], clip[0])
+            video_refs.append(((start_time, end_time),vstream))
 
-        #print(clip[0][2], clip[0][3], clip[0])
-        video_refs.append(((start_time, end_time),vstream))
+    if not large:
+        video_refs.sort(key=lambda tup: tup[0][0]) #sort by clip start
 
-    video_refs.sort(key=lambda tup: tup[0][0]) #sort by clip start
-
-    if _is_contiguous(video_refs):
-        return _chain_contiguous(video_refs)
-    else:
-        return [v for _, v in video_refs]
+        if _is_contiguous(video_refs):
+            return _chain_contiguous(video_refs)
+        else:
+            return [v for _, v in video_refs]
 
 def _create_vstream(ref, start_time, end_time, \
                     height, width, origin, rows=None, hwang=False):

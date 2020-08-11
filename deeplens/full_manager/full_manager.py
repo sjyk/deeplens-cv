@@ -179,7 +179,7 @@ class FullStorageManager(StorageManager):
         self.videos.add(target)
         self.remove_conn(conn)
 
-    def get(self, name, condition, rows=None, hwang=False):
+    def get(self, name, condition, rows=None, hwang=False, large=False):
         """retrievies a clip of satisfying the condition.
         If the clip was in external storage, get moves it to disk. TODO: Figure out if I should implement this feature or not
         """
@@ -188,7 +188,7 @@ class FullStorageManager(StorageManager):
         #     raise VideoNotFound(name + " not found in " + str(self.videos))
         conn = self.get_conn()
         logging.info("Calling get()")
-        return query(self.conn, name, clip_condition = condition, rows=rows, hwang=hwang)
+        return query(self.conn, name, clip_condition = condition, rows=rows, hwang=hwang, large=large)
 
 
     def cache(self, name, condition, rows=None, hwang=False):

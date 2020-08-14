@@ -8,6 +8,7 @@ from subprocess import Popen
 from timeit import default_timer as timer
 import numpy as np
 import cv2
+import threading
 
 from deeplens.utils.error import *
 
@@ -366,59 +367,56 @@ class CVVideoStream(VideoStream):
         return prev
 
 class CVVideoStreams(VideoStream):
-    def __init__(self, srcs, name, limit = -1, origin = np.array((0,0)), offset = 0):
-        super().__init__(name, srcs, limit, origin, offset)
+    def __init__(self, src, name, limit = -1, origin = np.array((0,0)), offset = 0, test_limit = -1):
+        super().__init__(name, src, limit, origin, offset)
         import cv2
         self.frame = None
         self.cap = None
-        self.index = 0
+        self.test_limit = test_limit # only using this in experiment latency testing !!
     
     def _cache(self):
-        if len(srcs) == self.index:
-            return
-        next_cache = self.srcs[self.index + 1]
-        self.next_vstream = CVVideoStream(next_cache, self.name)
+        next_cache = self.src[self.index + 1]
+        self.next_vstream = iter(CVVideoStream(next_cache, self.name, limit = self.test_limit))
+        self.next_frame = next(self.next_vstream).get()
 
     def __iter__(self):
+        self.index = 0
         self.frame_count = 0
-        self.vstream = CVVideoStream(self.srcs[0], self.name, offset= self.frame_count)
-        self.t
+        self.vstream = iter(CVVideoStream(self.src[0], self.name, limit = self.test_limit, offset=self.offset))
+        self.thread = threading.Thread(target=self._cache)
+        self.thread.start()
         return self
 
     def __next__(self):
         if self.limit > 0 and self.frame_count >= self.limit:
             raise StopIteration("Iterator is closed")
-        elif self.cap.isOpened():
-            try:
-                self.frame = next(self.vstream).get()
-            except StopIteration:
-                pass # update new fr
-
-        if self.frame is None:
-            raise StopIteration("Iterator is closed")
         else:
+            try:
+                print(self.frame_count)
+                self.frame = next(self.vstream).get()
+                self.frame_count += 1
+            except StopIteration:
+                # change vstreams
+                if self.index + 1 < len(self.src):
+                    print(self.frame_count)
+                    self.thread.join()
+                    self.vstream = self.next_vstream
+                    self.frame = self.next_frame
+                    self.frame_count += 1
+                    # start another thread
+                    self.next_frame = None
+                    self.next_vstream = None
+                    self.thread = threading.Thread(target=self._cache)
+                    self.thread.start()
+                    self.index += 1
+                else:
+                    raise StopIteration("Iterator is closed")
+            
             return self
         
     def get(self):
         return self.frame
     
-    def get_cap_info(self, propId):
-        """ If we currently have a VideoCapture op
-        """
-        if self.cap:
-            return self.cap.get(propId)
-        else:
-            return None
-
-    def __call__(self, propIds = None):
-        """ Sets the propId argument so that we can
-        take advantage of video manipulation already
-        supported by VideoCapture (cv2)
-        Arguments:
-            propIds: {'ID': property}
-        """
-        self.propIds = propIds
-
     @staticmethod
     def init_mat(file_name, encoding, width, height, frame_rate):
         fourcc = cv2.VideoWriter_fourcc(*encoding)

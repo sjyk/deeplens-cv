@@ -86,9 +86,19 @@ def runSimple(src, tot=1000, sel=0.1):
 def runFull(src, tot=1000, batch_size=20):
     cleanUp()
 
-
     folder = '/tmp/videos'
-    manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=batch_size), CropSplitter(),
+
+    def tagger(vstream, batch_size):
+        count = 0
+        for frame in vstream:
+            count += 1
+            if count >= batch_size:
+                break
+        if count == 0:
+            raise StopIteration("Iterator is closed")
+        return {'label': 'foreground', 'bb': Box(1600/3, 1600/3, 2175/3, 1800/3)}
+
+    manager = FullStorageManager(CustomTagger(tagger, batch_size=batch_size), CropSplitter(),
                                  folder)
     now = timer()
     manager.put(src, 'test',
@@ -102,28 +112,34 @@ def runFull(src, tot=1000, batch_size=20):
     # middle = Box(1825, 1600, 1975, 1800)
     # right = Box(2050, 1600, 2175, 1800)
 
-    # left = Box(1600 / 3, 1600 / 3, 1700 / 3, 1800 / 3)
-    # middle = Box(1825 / 3, 1600 / 3, 1975 / 3, 1800 / 3)
-    # right = Box(2050 / 3, 1600 / 3, 2175 / 3, 1800 / 3)
+    left = Box(1600 / 3, 1600 / 3, 1700 / 3, 1800 / 3)
+    middle = Box(1825 / 3, 1600 / 3, 1975 / 3, 1800 / 3)
+    right = Box(2050 / 3, 1600 / 3, 2175 / 3, 1800 / 3)
 
     # left = Box(1600 / 2, 1600 / 2, 1700 / 2, 1800 / 2)
     # middle = Box(1825 / 2, 1600 / 2, 1975 / 2, 1800 / 2)
     # right = Box(2050 / 2, 1600 / 2, 2175 / 2, 1800 / 2)
 
 
-    # clips = manager.get('test', Condition(label='foreground', custom_filter=None))
-    # pipelines = []
-    #
-    # for c in clips:
-    #     pipelines.append(c[GoodKeyPoints()][ActivityMetric('left', left)][
-    #                          ActivityMetric('middle', middle)][ActivityMetric('right', right)][
-    #                          Filter('left', [1], 1, delay=25)][
-    #                          Filter('middle', [1], 1, delay=25)][
-    #                          Filter('right', [1], 1, delay=25)])
-    #
+    clips = manager.get('test', Condition(label='foreground', custom_filter=None))
+    pipelines = []
+
+    now = timer()
+    frame_count = 0
+    for c in clips:
+        for frame in c:
+            frame_count += 1
+        # pipelines.append(c[GoodKeyPoints()][ActivityMetric('left', left)][
+        #                      ActivityMetric('middle', middle)][ActivityMetric('right', right)][
+        #                      Filter('left', [1], 1, delay=25)][
+        #                      Filter('middle', [1], 1, delay=25)][
+        #                      Filter('right', [1], 1, delay=25)])
+
     # result = counts(pipelines, ['left', 'middle', 'right'], stats=True)
-    #
-    # logrecord('full', ({'size': tot, 'batch_size': batch_size, 'file': src, 'folder_size': get_size(folder)}), 'get', str(result), 's')
+    result = timer() - now
+    print(frame_count)
+
+    logrecord('full', ({'size': tot, 'batch_size': batch_size, 'file': src, 'folder_size': get_size(folder)}), 'get', str(result), 's')
 
 
 # All optimizations
@@ -164,4 +180,4 @@ def runFullOpt(src, tot=1000, sel=0.1):
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(message)s')
 #do_experiments(sys.argv[1], [runNaive, runSimple, runFull, runFullOpt], 600, range(9, 10))
-do_experiments(sys.argv[1], [runFull], 600, range(9,10))
+do_experiments(sys.argv[1], [runFull], 600, [5, 10, 15, 30])

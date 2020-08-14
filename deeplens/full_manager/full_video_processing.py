@@ -8,7 +8,7 @@ storage manager require as input.
 import copy
 import logging
 
-IOU_THRESHOLD = 1
+IOU_THRESHOLD = 0.7
 TRANSLATION_ERROR = 0.05
 
 """ Defines a map join operation
@@ -127,7 +127,7 @@ class CropSplitter(MapJoin):
         """
         crop1, labels1 = map1
         crop2, labels2 = map2
-        # return (crop2, map2, False) # -> NOTE: Just uncomment this to remove joins
+        return (crop2, map2, False) # -> NOTE: Just uncomment this to remove joins
         # If the two batches have different number of crops or labels
         # we don't join the crops
         if len(crop1) == 0 and len(crop2) == 0:
@@ -221,7 +221,7 @@ class CropUnionSplitter(MapJoin):
         the same crop sizes.
         Returns: (crop, temp_data, join_prev)
         """
-        # return (crop2, crop2, False) # -> NOTE: Just uncomment this to remove joins
+        return (crop2, crop2, False) # -> NOTE: Just uncomment this to remove joins
         # If the two batches have different number of crops or labels
         # we don't join the crops
         

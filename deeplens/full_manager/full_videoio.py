@@ -133,7 +133,7 @@ def _write_video_batch(vstream, \
                         encoding,
                         batch_size,
                         dir=DEFAULT_TEMP, \
-                        frame_rate=24,
+                        frame_rate=30,
                         release=True,
                         writers=None):
     '''
@@ -658,7 +658,7 @@ def uncache(conn, video_name, clip_condition):
             #print(update)
 
 
-def query(conn, video_name, clip_condition, rows=None, hwang=False, large=False):
+def query(conn, video_name, clip_condition, rows=None, hwang=False):
     """
     Args:
         conn (SQLite conn object) - please pass self.conn directly
@@ -680,22 +680,21 @@ def query(conn, video_name, clip_condition, rows=None, hwang=False, large=False)
         start_time, end_time = clip[0][2], clip[0][3]
         height, width = clip[0][6], clip[0][7]
 
-        if large:
-            yield _create_vstream(clip_ref, start_time, end_time, \
-                                  height, width, origin, rows=rows, hwang=hwang)
-        else:
-            vstream = _create_vstream(clip_ref, start_time, end_time, \
-                                      height, width, origin, rows=rows, hwang=hwang)
-            #print(clip[0][2], clip[0][3], clip[0])
-            video_refs.append(((start_time, end_time),vstream))
+        yield _create_vstream(clip_ref, start_time, end_time, \
+                              height, width, origin, rows=rows, hwang=hwang)
 
-    if not large:
-        video_refs.sort(key=lambda tup: tup[0][0]) #sort by clip start
+        # NOTE: Old code that does not scale
+        # vstream = _create_vstream(clip_ref, start_time, end_time, \
+        #                           height, width, origin, rows=rows, hwang=hwang)
+        # #print(clip[0][2], clip[0][3], clip[0])
+        # video_refs.append(((start_time, end_time),vstream))
 
-        if _is_contiguous(video_refs):
-            return _chain_contiguous(video_refs)
-        else:
-            return [v for _, v in video_refs]
+    # video_refs.sort(key=lambda tup: tup[0][0]) #sort by clip start
+    #
+    # if _is_contiguous(video_refs):
+    #     return _chain_contiguous(video_refs)
+    # else:
+    #     return [v for _, v in video_refs]
 
 def _create_vstream(ref, start_time, end_time, \
                     height, width, origin, rows=None, hwang=False):

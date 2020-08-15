@@ -373,6 +373,9 @@ class CVVideoStreams(VideoStream):
         self.frame = None
         self.cap = None
         self.test_limit = test_limit # only using this in experiment latency testing !!
+        if len(self.src) < 2:
+            raise CorruptedOrMissingVideo("At least 2 video files required to use CVVideoStreams."
+                                          "For single video, use CVVideoStream instead.")
     
     def _cache(self):
         next_cache = self.src[self.index + 1]
@@ -392,13 +395,11 @@ class CVVideoStreams(VideoStream):
             raise StopIteration("Iterator is closed")
         else:
             try:
-                print(self.frame_count)
                 self.frame = next(self.vstream).get()
                 self.frame_count += 1
             except StopIteration:
                 # change vstreams
                 if self.index + 1 < len(self.src):
-                    print(self.frame_count)
                     self.thread.join()
                     self.vstream = self.next_vstream
                     self.frame = self.next_frame

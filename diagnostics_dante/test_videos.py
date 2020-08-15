@@ -2,7 +2,8 @@ import os
 from diagnostic import diagnostic
 
 def test_videos(path_to_videos, number_of_trials):
-    path_to_csv = path_to_videos + "diagnostics.csv"
+    os.mkdir('results')
+    path_to_csv = "results/diagnostics.csv"
 
     import csv
     with open(path_to_csv, 'w', newline='') as file:
@@ -19,7 +20,7 @@ def test_videos(path_to_videos, number_of_trials):
             #size = name.split('_')[1]
 
             # For testing
-            size = 'ben'
+            size = 10
 
             for trial_number in range(number_of_trials):
                 info = diagnostic(path_to_videos + video_path)
@@ -32,8 +33,9 @@ def test_videos(path_to_videos, number_of_trials):
 
             continue
         else:
+            print("There's a snake in my boot!")
             continue
     return path_to_csv
 
 # Test
-#test_videos("videos/",5)
+test_videos("videos/",5)

@@ -8,7 +8,7 @@ storage manager require as input.
 import copy
 import logging
 
-IOU_THRESHOLD = 0.7
+IOU_THRESHOLD = 1
 TRANSLATION_ERROR = 0.05
 
 """ Defines a map join operation

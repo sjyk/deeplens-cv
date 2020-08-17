@@ -3,43 +3,50 @@ import pandas as pd
 from matplotlib import pyplot as plt 
 
 def graph_diagnostics(path_to_agg_csv):
-    #os.mkdir('results/graphs')
+    os.mkdir('results/graphs')
 
-    df = pd.read_csv(path_to_agg_csv)
-    
-    fig1 = plt.figure(figsize = (10, 5)) 
-    plt.bar(df['Size'], height=df['File Size Max'], bottom=df['File Size Min'])   
-    plt.xlabel("Video Size (pixels)") 
-    plt.ylabel("Cache size (bytes)") 
-    plt.title("(Shape) Storage Size") 
-    plt.show()
+    dfo = pd.read_csv(path_to_agg_csv)
 
-    fig2 = plt.figure(figsize = (10, 5)) 
-  
-    plt.bar(df['Size'], height=df['Storage Time Max'], bottom=df['Storage Time Min'])   
-    plt.xlabel("Video Size (pixels)") 
-    plt.ylabel("Storage Time (seconds)") 
-    plt.title("(Shape) Storage Time") 
-    plt.show()
+    for size, df in dfo.groupby('Size'):
+        fig0 = plt.figure(figsize = (10, 5))
+        p1 = plt.bar(df['Shape'], height=df['Storage Time Median'])
+        p2 = plt.bar(df['Shape'], height=df['Retrieval Time Median'], bottom=df['Storage Time Median'])
+        plt.xlabel("Shape") 
+        plt.ylabel("Total Time (seconds)") 
+        plt.title(f"{size} Total Time") 
+        plt.savefig(f"results/graphs/{size}_totaltime.png")
 
-    fig3 = plt.figure(figsize = (10, 5)) 
-  
-    plt.bar(df['Size'], height=df['Retrieval Time Max'], bottom=df['Retrieval Time Min'])   
-    plt.xlabel("Video Size (pixels)") 
-    plt.ylabel("Retrieval Time (seconds)") 
-    plt.title("(Shape) Retrieval Time") 
-    plt.show()
+    for shape, df in dfo.groupby('Shape'):
+        fig1 = plt.figure(figsize = (10, 5)) 
+        plt.bar(df['Size'], height=df['File Size Max'], bottom=df['File Size Min']) 
+        plt.xlabel("Video Size (pixels)") 
+        plt.ylabel("Cache size (bytes)") 
+        plt.title(f"{shape} File Size") 
+        plt.savefig(f"results/graphs/{shape}_filesize.png")
 
-    fig3 = plt.figure(figsize = (10, 5)) 
-  
-    p1 = plt.bar(df['Size'], height=df['Storage Time Median'])
-    p2 = plt.bar(df['Size'], height=df['Retrieval Time Median'], bottom=df['Storage Time Median'])
-    plt.xlabel("Video Size (pixels)") 
-    plt.ylabel("Total Time (seconds)") 
-    plt.title("(Shape) Total Time") 
-    plt.show()
+        fig2 = plt.figure(figsize = (10, 5)) 
+        plt.bar(df['Size'], height=df['Storage Time Max'], bottom=df['Storage Time Min'])   
+        plt.xlabel("Video Size (pixels)") 
+        plt.ylabel("Storage Time (seconds)") 
+        plt.title(f"{shape} Storage Time") 
+        plt.savefig(f"results/graphs/{shape}_storagetime.png")
 
-    path_to_graphs = None # A folder of graphs
+        fig3 = plt.figure(figsize = (10, 5)) 
+        plt.bar(df['Size'], height=df['Retrieval Time Max'], bottom=df['Retrieval Time Min'])   
+        plt.xlabel("Video Size (pixels)") 
+        plt.ylabel("Retrieval Time (seconds)") 
+        plt.title(f"{shape} Retrieval Time") 
+        plt.savefig(f"results/graphs/{shape}_retrievaltime.png")
+
+        fig3 = plt.figure(figsize = (10, 5))
+        p1 = plt.bar(df['Size'], height=df['Storage Time Median'])
+        p2 = plt.bar(df['Size'], height=df['Retrieval Time Median'], bottom=df['Storage Time Median'])
+        plt.xlabel("Video Size (pixels)") 
+        plt.ylabel("Total Time (seconds)") 
+        plt.title(f"{shape} Total Time") 
+        plt.savefig(f"results/graphs/{shape}_totaltime.png")
+
+    path_to_graphs = 'results/graphs' # A folder of graphs
     return path_to_graphs
 
 # Test

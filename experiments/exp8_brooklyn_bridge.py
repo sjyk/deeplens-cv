@@ -180,4 +180,4 @@ def runFullOpt(src, tot=1000, sel=0.1):
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(message)s')
 #do_experiments(sys.argv[1], [runNaive, runSimple, runFull, runFullOpt], 600, range(9, 10))
-do_experiments(sys.argv[1], [runFull], 600, [5, 10, 15, 30])
+do_experiments(sys.argv[1], [runFull], 600, [30])

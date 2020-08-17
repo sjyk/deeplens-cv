@@ -28,11 +28,11 @@ def cleanUp():
 def logrecord(baseline,settings,operation,measurement,*args):
 	print(';'.join([baseline, json.dumps(settings), operation, measurement] + list(args)), flush=True)
 
-def do_experiments(data, baseline_lst, size, sels):
-	for si in sels:
+def do_experiments(data, baseline_lst, size, batch_sizes):
+	for i in batch_sizes:
 		# s = si/10
 		for b in baseline_lst:
-			b(data,tot=size, batch_size=si)
+			b(data,tot=size, batch_size=i)
 
 
 def do_experiments_size(data, baseline_lst, sizes, sel):

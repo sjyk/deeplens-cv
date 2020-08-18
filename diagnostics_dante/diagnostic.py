@@ -42,7 +42,7 @@ def diagnostic(video_path, size):
 
     vstream = VideoStream(FILENAME, limit=LIMIT) #limit is the max number of frames
 
-    vstream[Crop(0, 0, size[0], size[1])]
+    vstream = vstream[Crop(0, 0, size[0], size[1])]
 
     t0 = time.time()
 
@@ -50,7 +50,7 @@ def diagnostic(video_path, size):
 
     t1 = time.time()
 
-    vstream = RawVideoStream('cache.npz', shape=(LIMIT,1080,1920,3)) #retrieving the data (have to provide dimensions (num frames, w, h, channels)
+    vstream = RawVideoStream('cache.npz', shape=(LIMIT,size[1],size[0],3)) #retrieving the data (have to provide dimensions (num frames, w, h, channels)
     #do something
     f = 0
     for v in vstream:
@@ -68,4 +68,4 @@ def diagnostic(video_path, size):
 
 
 # Test
-# print(diagnostic('../tcam.mp4'))
+print(diagnostic('../tcam.mp4', (1080, 1080)))

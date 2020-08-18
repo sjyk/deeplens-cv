@@ -7,14 +7,14 @@ def graph_diagnostics(path_to_agg_csv):
 
     dfo = pd.read_csv(path_to_agg_csv)
 
-    for size, df in dfo.groupby('Size'):
-        fig0 = plt.figure(figsize = (10, 5))
-        p1 = plt.bar(df['Shape'], height=df['Storage Time Median'])
-        p2 = plt.bar(df['Shape'], height=df['Retrieval Time Median'], bottom=df['Storage Time Median'])
-        plt.xlabel("Shape") 
-        plt.ylabel("Total Time (seconds)") 
-        plt.title(f"{size} Total Time") 
-        plt.savefig(f"results/graphs/{size}_totaltime.png")
+    # for size, df in dfo.groupby('Size'):
+    #     fig0 = plt.figure(figsize = (10, 5))
+    #     p1 = plt.bar(df['Shape'], height=df['Storage Time Median'])
+    #     p2 = plt.bar(df['Shape'], height=df['Retrieval Time Median'], bottom=df['Storage Time Median'])
+    #     plt.xlabel("Shape") 
+    #     plt.ylabel("Total Time (seconds)") 
+    #     plt.title(f"{size} Total Time") 
+    #     plt.savefig(f"results/graphs/{size}_totaltime.png")
 
     for shape, df in dfo.groupby('Shape'):
         fig1 = plt.figure(figsize = (10, 5)) 

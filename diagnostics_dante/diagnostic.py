@@ -42,7 +42,7 @@ def diagnostic(video_path, size):
 
     vstream = VideoStream(FILENAME, limit=LIMIT) #limit is the max number of frames
 
-    vstream[crop(0, 0, size[0], size[1])]
+    vstream[Crop(0, 0, size[0], size[1])]
 
     t0 = time.time()
 

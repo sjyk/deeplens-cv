@@ -12,4 +12,4 @@ def aggregate_csv(path_to_csv):
     return path_to_agg_csv
 
 # Test
-aggregate_csv("results/diagnostics.csv")
+#aggregate_csv("results/diagnostics.csv")

@@ -50,4 +50,4 @@ def graph_diagnostics(path_to_agg_csv):
     return path_to_graphs
 
 # Test
-graph_diagnostics("results/diagnostics_agg.csv")
+#graph_diagnostics("results/diagnostics_agg.csv")

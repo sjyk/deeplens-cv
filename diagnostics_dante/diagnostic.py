@@ -32,7 +32,7 @@ sys.path.insert(0,currentdir)
 
 import time
 
-def diagnostic(video_path):
+def diagnostic(video_path, size):
     file_size = None
     time_storage = None
     time_retreive = None
@@ -41,6 +41,8 @@ def diagnostic(video_path):
     LIMIT = 100
 
     vstream = VideoStream(FILENAME, limit=LIMIT) #limit is the max number of frames
+
+    vstream[crop(0, 0, size[0], size[1])]
 
     t0 = time.time()
 

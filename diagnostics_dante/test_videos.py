@@ -10,7 +10,8 @@ def test_videos(video_path, dictionary_of_video_sizes, number_of_trials):
         writer = csv.writer(file)
         writer.writerow(["Shape", "Size", "Trial #", "File Size", "Storage Time", "Retrieval Time"])
     
-    for shape, sizes in dictionary_of_video_sizes:
+    print(dictionary_of_video_sizes)
+    for shape, sizes in dictionary_of_video_sizes.items():
         for trial_number in range(number_of_trials):
             for size in sizes:
                 info = diagnostic(video_path, size)

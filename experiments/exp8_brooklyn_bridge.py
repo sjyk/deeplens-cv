@@ -96,25 +96,25 @@ def runFull(src, tot=1000, batch_size=20):
                 break
         if count == 0:
             raise StopIteration("Iterator is closed")
-        return {'label': 'foreground', 'bb': Box(1600/3, 1600/3, 2175/3, 1800/3)}
+        return {'label': 'foreground', 'bb': Box(1600, 1600, 2175, 1800)}
 
     manager = FullStorageManager(CustomTagger(tagger, batch_size=batch_size), CropSplitter(),
                                  folder)
     now = timer()
     manager.put(src, 'test',
-                args={'encoding': 'X264', 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': batch_size,
+                args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': batch_size,
                       'num_processes': 4, 'background_scale': 1})
     put_time = timer() - now
     print("Put time for full:", put_time)
     print("Batch size:", batch_size, "Folder size:", get_size(folder))
 
-    # left = Box(1600, 1600, 1700, 1800)
-    # middle = Box(1825, 1600, 1975, 1800)
-    # right = Box(2050, 1600, 2175, 1800)
+    left = Box(1600, 1600, 1700, 1800)
+    middle = Box(1825, 1600, 1975, 1800)
+    right = Box(2050, 1600, 2175, 1800)
 
-    left = Box(1600 / 3, 1600 / 3, 1700 / 3, 1800 / 3)
-    middle = Box(1825 / 3, 1600 / 3, 1975 / 3, 1800 / 3)
-    right = Box(2050 / 3, 1600 / 3, 2175 / 3, 1800 / 3)
+    # left = Box(1600 / 3, 1600 / 3, 1700 / 3, 1800 / 3)
+    # middle = Box(1825 / 3, 1600 / 3, 1975 / 3, 1800 / 3)
+    # right = Box(2050 / 3, 1600 / 3, 2175 / 3, 1800 / 3)
 
     # left = Box(1600 / 2, 1600 / 2, 1700 / 2, 1800 / 2)
     # middle = Box(1825 / 2, 1600 / 2, 1975 / 2, 1800 / 2)
@@ -180,4 +180,4 @@ def runFullOpt(src, tot=1000, sel=0.1):
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(message)s')
 #do_experiments(sys.argv[1], [runNaive, runSimple, runFull, runFullOpt], 600, range(9, 10))
-do_experiments(sys.argv[1], [runFull], 600, [30])
+do_experiments(sys.argv[1], [runFull], 7200, [72])

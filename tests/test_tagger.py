@@ -26,7 +26,8 @@ def test_tagger():
     end = time.time()
     print("Without background resizing:", end - start)
     res = manager.get('test', Condition(label='foreground'))
-    shape1 = [video for video in res[0]][0]['data'].shape
+    shape1 = next(next(res))['data'].shape
+    assert shape1[2] == 3
 
     if os.path.exists('/tmp/videos'):
         shutil.rmtree('/tmp/videos')
@@ -36,10 +37,8 @@ def test_tagger():
     end = time.time()
     print("With background resizing:", end - start)
     res = manager.get('test', Condition(label='foreground'))
-    shape2 = [video for video in res[0]][0]['data'].shape
-
-    assert shape1 == shape2
-    assert shape1[2] == 3
+    shape2 = next(next(res))['data'].shape
+    assert shape2[2] == 3
 
 if __name__ == '__main__':
     test_tagger()

@@ -159,7 +159,7 @@ def _write_video_batch(vstream, \
         r_name = vid_name + get_rnd_strng(64)
         for i in range(len(crops) + 1):
             seg_name = os.path.join(dir, r_name)
-            file_name = add_ext(seg_name, '.mkv', i)
+            file_name = add_ext(seg_name, '.avi', i)
             file_names.append(file_name)
 
             fourcc = cv2.VideoWriter_fourcc(*encoding)

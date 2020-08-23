@@ -16,7 +16,7 @@ from deeplens.extern.cache import *
 from deeplens.media.youtube_tagger import *
 from deeplens.struct import *
 
-import sqlite3
+import psycopg2
 import random
 
 import cv2
@@ -77,8 +77,6 @@ def _new_headers_batch(conn, all_crops, name, video_refs,
     """
     crops = all_crops[0]
     ids = [random.getrandbits(63) for i in range(len(crops) + 1)]
-    for i in range(1, len(crops) + 1):
-        insert_background_header(conn, ids[0], ids[i], name)
     for i in range(0, len(crops) + 1):
         if i == 0:
             if len(crops):
@@ -94,7 +92,8 @@ def _new_headers_batch(conn, all_crops, name, video_refs,
             height = crops[i - 1]['bb'].y1 - crops[i - 1]['bb'].y0
             insert_clip_header(conn, ids[i], name, start_time, end_time, origin_x,
                             origin_y, width, height, video_refs[i], other = json.dumps(crops[i - 1]['all'], cls=Serializer))
-
+    for i in range(1, len(crops) + 1):
+        insert_background_header(conn, ids[0], ids[i], name)
 
     for i in range(0, len(crops)):
         if type(crops[i]['label']) is list: # TODO: deal with crop all later
@@ -284,7 +283,7 @@ def write_video_single(conn, \
     if type(map) == str:
         map = YoutubeTagger(map, './deeplens/media/train/processed1.csv')
     if type(conn) == str:
-        conn = sqlite3.Connection(conn)
+        conn = psycopg2.connect(conn)
     batch_size = args['batch_size']
 
     v = VideoStream(video_file, args['limit'], rows=rows, hwang=hwang)#[Resize(0.99)]
@@ -431,7 +430,7 @@ def write_video_fixed(conn, \
                     args={}):
     
     if type(conn) == str:
-        conn = sqlite3.Connection(conn)
+        conn = psycopg2.connect(conn)
     v = VideoStream(video_file, args['limit'])
     v = iter(v)
     full_width = v.width
@@ -489,19 +488,19 @@ def move_one_file(conn, clip_id, video_name, dest_ref):
 
 def insert_clip_header(conn, clip_id, video_name, start_time, end_time, origin_x, origin_y, height, width, video_ref='', is_background = False, translation = 'NULL', other = 'NULL'):
     c = conn.cursor()
-    c.execute("INSERT INTO clip VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    c.execute("INSERT INTO clip VALUES ('%d', '%s', '%d', '%d', '%d', '%d', '%d', '%d', '%s', '%d', '%s', '%s')" %
                (clip_id, video_name, start_time, end_time, origin_x, origin_y, height, width, video_ref, is_background, translation, other))
     conn.commit()
 
 
 def insert_background_header(conn, background_id, clip_id, video_name):
     c = conn.cursor()
-    c.execute("INSERT INTO background VALUES (?, ?, ?)", (background_id, clip_id, video_name))
+    c.execute("INSERT INTO background VALUES ('%d', '%d', '%s')" % (background_id, clip_id, video_name))
     conn.commit()
 
 def insert_label_header(conn, label, clip_id, video_name):
     c = conn.cursor()
-    c.execute("INSERT INTO label VALUES (?, ?, ?)", (label, clip_id, video_name))
+    c.execute("INSERT INTO label VALUES ('%s', '%d', '%s')" % (label, clip_id, video_name))
     conn.commit()
 
 def delete_label_header(conn, video_name, label = None, clip_id = None):
@@ -570,7 +569,7 @@ def delete_background(conn, background_id, video_name):
 def update_clip_header(conn, clip_id, video_name, args={}):
     c = conn.cursor()
     for key, value in args.items():
-        c.execute("UPDATE clip SET '%s' = '%s' WHERE clip_id = '%d' AND video_name = '%s'" % (key, value, clip_id, video_name))
+        c.execute("UPDATE clip SET %s = '%s' WHERE clip_id = '%d' AND video_name = '%s'" % (key, value, clip_id, video_name))
     conn.commit()
 
 def query_clip(conn, clip_id, video_name):

@@ -9,6 +9,7 @@ image streams.
 import cv2
 import numpy as np
 import itertools
+import socket
 
 #plays video stream through the system player
 def play(vstream):
@@ -103,3 +104,15 @@ def labels_to_intervals(labels_list):
             output.add((key, interval[0], interval[1]+1))
     return output
 
+# from https://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
+def get_local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.255.255.255', 1))
+        IP = s.getsockname()[0]
+    except Exception:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP

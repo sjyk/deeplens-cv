@@ -14,9 +14,10 @@ from deeplens.full_manager.full_videoio import *
 
 from deeplens.constants import *
 from deeplens.error import *
+from deeplens.utils.utils import get_local_ip
 
 import os
-import sqlite3
+import psycopg2
 import logging
 from multiprocessing import Pool
 import time
@@ -32,13 +33,13 @@ class FullStorageManager(StorageManager):
     is in the same location as disk, and external storage is another
     directory
     """
-    def __init__(self, content_tagger, content_splitter, basedir, db_name='header.db', reuse_conn = True):
+    def __init__(self, content_tagger, content_splitter, basedir, dsn='dbname=header user=postgres password=secret', reuse_conn=True):
         self.content_tagger = content_tagger
         self.content_splitter = content_splitter
         self.basedir = basedir
         self.videos = set()
         self.threads = None
-        self.db_name =  db_name
+        self.dsn = dsn
         self.reuse_conn = reuse_conn
 
         if not os.path.exists(basedir):
@@ -51,15 +52,15 @@ class FullStorageManager(StorageManager):
         self.conn = self.create_conn()
         self.cursor = self.conn.cursor()
         sql_create_background_table = """CREATE TABLE IF NOT EXISTS background (
-                                             background_id integer NOT NULL,
-                                             clip_id integer NOT NULL,
+                                             background_id bigint NOT NULL,
+                                             clip_id bigint NOT NULL,
                                              video_name text NOT NULL,
-                                             PRIMARY KEY (background_id, clip_id, video_name)
-                                             FOREIGN KEY (background_id, clip_id, video_name) REFERENCES clip(clip_id, clip_id, video_name)
+                                             PRIMARY KEY (background_id, clip_id, video_name),
+                                             FOREIGN KEY (clip_id, video_name) REFERENCES clip(clip_id, video_name) ON DELETE CASCADE
                                          );
         """
         sql_create_clip_table = """CREATE TABLE IF NOT EXISTS clip (
-                                       clip_id integer NOT NULL,
+                                       clip_id bigint NOT NULL,
                                        video_name text NOT NULL,
                                        start_time integer NOT NULL,
                                        end_time integer NOT NULL,
@@ -68,7 +69,7 @@ class FullStorageManager(StorageManager):
                                        height integer NOT NULL,
                                        width integer NOT NULL,
                                        video_ref text NOT NULL,
-                                       is_background NOT NULL,
+                                       is_background integer NOT NULL,
                                        translation text,
                                        other text,
                                        PRIMARY KEY (clip_id, video_name)
@@ -76,18 +77,18 @@ class FullStorageManager(StorageManager):
         """
         sql_create_label_table = """CREATE TABLE IF NOT EXISTS label (
                                        label text NOT NULL,
-                                       clip_id integer NOT NULL,
+                                       clip_id bigint NOT NULL,
                                        video_name text NOT NULL,
-                                       PRIMARY KEY (label, clip_id, video_name)
-                                       FOREIGN KEY (clip_id, video_name) REFERENCES clip(clip_id, video_name)
+                                       PRIMARY KEY (label, clip_id, video_name),
+                                       FOREIGN KEY (clip_id, video_name) REFERENCES clip(clip_id, video_name) ON DELETE CASCADE
                                    );
         """
+        self.cursor.execute(sql_create_clip_table)
         self.cursor.execute(sql_create_label_table)
         self.cursor.execute(sql_create_background_table)
-        self.cursor.execute(sql_create_clip_table)
 
     def create_conn(self):
-        return sqlite3.connect(os.path.join(self.basedir, self.db_name))
+        return psycopg2.connect(self.dsn)
 
     def get_conn(self):
         conn = self.conn
@@ -124,8 +125,8 @@ class FullStorageManager(StorageManager):
                 raise ValueError("This setting may currently lead to bugs")
 
         if parallel and not stream:
-            db_path = os.path.join(self.basedir, self.db_name)
-            write_video_parallel(db_path, filename, target, physical_dir, self.content_splitter, tagger, args=args)
+            dsn = self.dsn
+            write_video_parallel(dsn, filename, target, physical_dir, self.content_splitter, tagger, args=args)
         else:
             write_video_single(conn, filename, target, physical_dir, self.content_splitter, tagger, stream=stream, args=args, background_scale=args['background_scale'], rows=rows, hwang=hwang)
             
@@ -137,7 +138,7 @@ class FullStorageManager(StorageManager):
         conn = self.get_conn()
         start_time = time.time()
         put_args = []
-        db_path = os.path.join(self.basedir, self.db_name)
+        dsn = self.dsn
         if in_extern_storage: 
             physical_dir = self.externdir
         else:
@@ -147,7 +148,7 @@ class FullStorageManager(StorageManager):
                 tagger = name
             else:
                 tagger = self.content_tagger
-            put_arg = (db_path, name, targets[i], physical_dir, self.content_splitter, tagger, 0, False, args, log, args['background_scale'])
+            put_arg = (dsn, name, targets[i], physical_dir, self.content_splitter, tagger, 0, False, args, log, args['background_scale'])
             put_args.append(put_arg)
             self.delete(targets[i], conn)
         

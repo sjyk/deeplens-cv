@@ -20,7 +20,7 @@ def test_tagger():
 
     if os.path.exists('/tmp/videos'):
         shutil.rmtree('/tmp/videos')
-    manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=20), CropSplitter(), '/tmp/videos')
+    manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=20), CropSplitter(), '/tmp/videos', dsn='dbname=postgres user=postgres password=postgres host=127.0.0.1')
     start = time.time()
     output = manager.put('/tmp/test.mp4' , 'test', parallel = False, args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': 1000, 'batch_size': 20, 'num_processes': 8, 'background_scale': 1})
     end = time.time()
@@ -31,7 +31,7 @@ def test_tagger():
 
     if os.path.exists('/tmp/videos'):
         shutil.rmtree('/tmp/videos')
-    manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=20), CropSplitter(), '/tmp/videos')
+    manager = FullStorageManager(CustomTagger(FixedCameraBGFGSegmenter().segment, batch_size=20), CropSplitter(), '/tmp/videos', dsn='dbname=postgres user=postgres password=postgres host=127.0.0.1')
     start = time.time()
     output = manager.put('/tmp/test.mp4' , 'test', parallel = False, args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': 1000, 'batch_size': 20, 'num_processes': 8, 'background_scale': 0.2})
     end = time.time()

@@ -33,13 +33,13 @@ class FullStorageManager(StorageManager):
     is in the same location as disk, and external storage is another
     directory
     """
-    def __init__(self, content_tagger, content_splitter, basedir, dsn='dbname=header user=postgres password=secret', reuse_conn=True):
+    def __init__(self, content_tagger, content_splitter, basedir, dsn='dbname=header user=postgres password=secret host=127.0.0.1', reuse_conn=True):
         self.content_tagger = content_tagger
         self.content_splitter = content_splitter
         self.basedir = basedir
         self.videos = set()
         self.threads = None
-        self.dsn = dsn
+        self.dsn = dsn  # config of postgres server, e.g. 'dbname=header user=postgres password=secret host=127.0.0.1'
         self.reuse_conn = reuse_conn
 
         if not os.path.exists(basedir):

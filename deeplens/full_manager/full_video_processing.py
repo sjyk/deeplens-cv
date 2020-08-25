@@ -52,9 +52,10 @@ class Splitter():
     data: bounding boxes across different frames
 """
 class CropSplitter(MapJoin):
-    def __init__(self):
+    def __init__(self, do_join=True):
         super().__init__()
         self.map_to_video = True
+        self.do_join = do_join
 
     def initialize(self, data):
         """
@@ -119,7 +120,7 @@ class CropSplitter(MapJoin):
         logging.debug(len(crops))
         return (crops, labels)
 
-    def join(self, map1, map2, do_join=True):
+    def join(self, map1, map2):
         """
         Join the second map to the first if it has the objects, and almost
         the same crop sizes.
@@ -127,7 +128,7 @@ class CropSplitter(MapJoin):
         """
         crop1, labels1 = map1
         crop2, labels2 = map2
-        if not do_join:
+        if not self.do_join:
             return (crop2, map2, False) # -> NOTE: Just uncomment this to remove joins
         # If the two batches have different number of crops or labels
         # we don't join the crops
@@ -182,9 +183,10 @@ class CropSplitter(MapJoin):
     data: bounding boxes across different frames
 """
 class CropUnionSplitter(MapJoin):
-    def __init__(self):
+    def __init__(self, do_join=True):
         super().__init__()
         self.map_to_video = True
+        self.do_join = do_join
 
     def initialize(self, data):
         """
@@ -216,13 +218,13 @@ class CropUnionSplitter(MapJoin):
             frame += 1
         return crops
 
-    def join(self, crop1, crop2, do_join=True):
+    def join(self, crop1, crop2):
         """
         Join the second map to the first if it has the objects, and almost
         the same crop sizes.
         Returns: (crop, temp_data, join_prev)
         """
-        if not do_join:
+        if not self.do_join:
             return (crop2, crop2, False) # -> NOTE: Just uncomment this to remove joins
         # If the two batches have different number of crops or labels
         # we don't join the crops

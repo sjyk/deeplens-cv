@@ -53,7 +53,7 @@ def runNaive(src, tot=1000, sel=0.1):
 def runFull(src, tot=1000, batch_size=20):
     cleanUp()
 
-    folder = '/tmp/videos'
+    folder = '/var/www/html/videos'
 
     def tagger(vstream, batch_size):
         count = 0

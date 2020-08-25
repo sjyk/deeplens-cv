@@ -21,8 +21,8 @@ def overlap(s1,e1, s2, e2):
 
 
 def cleanUp():
-	if os.path.exists('./videos'):
-		shutil.rmtree('./videos')
+	if os.path.exists('/var/www/html/videos'):
+		shutil.rmtree('/var/www/html/videos')
 
 
 def logrecord(baseline,settings,operation,measurement,*args):

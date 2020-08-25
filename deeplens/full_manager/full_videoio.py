@@ -133,7 +133,7 @@ def _write_video_batch(vstream, \
                         encoding,
                         batch_size,
                         dir=DEFAULT_TEMP, \
-                        frame_rate=30,
+                        frame_rate=24,
                         release=True,
                         writers=None):
     '''
@@ -279,7 +279,8 @@ def write_video_single(conn, \
                         log=False,
                         background_scale=1,
                         rows=None,
-                        hwang=False):
+                        hwang=False,
+                        do_join=True):
     start = time.time()
     if type(map) == str:
         map = YoutubeTagger(map, './deeplens/media/train/processed1.csv')
@@ -336,7 +337,7 @@ def write_video_single(conn, \
         batch_crops = _split_video_batch(v, splitter, batch_size, v_cache = v_cache)
         if batch_crops == None:
             break
-        crops, batch_prev, do_join = splitter.join(batch_prev, batch_crops)
+        crops, batch_prev, do_join = splitter.join(batch_prev, batch_crops, do_join=True)
         
         #print('B',[c['bb'] for c in crops if c['bb'].y1 > 1080])
         #print(crops)

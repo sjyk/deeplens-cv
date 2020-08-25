@@ -34,6 +34,10 @@ def do_experiments(data, baseline_lst, size, sels):
 		for b in baseline_lst:
 			b(data,tot=size, sel=s)
 
+def do_experiments_batch_size(data, baseline_lst, size, batch_sizes):
+	for i in batch_sizes:
+		for b in baseline_lst:
+			b(data,tot=size, batch_size=i)
 
 def do_experiments_size(data, baseline_lst, sizes, sel):
 	for si in sizes:

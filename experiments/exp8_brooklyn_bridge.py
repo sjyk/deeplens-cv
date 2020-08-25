@@ -98,7 +98,7 @@ def runFull(src, tot=1000, batch_size=20):
             raise StopIteration("Iterator is closed")
         return {'label': 'foreground', 'bb': Box(1600, 1600, 2175, 1800)}
 
-    manager = FullStorageManager(CustomTagger(tagger, batch_size=batch_size), CropSplitter(),
+    manager = FullStorageManager(CustomTagger(tagger, batch_size=batch_size), CropSplitter(do_join=False),
                                  folder)
     now = timer()
     manager.put(src, 'test',

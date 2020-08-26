@@ -3,7 +3,7 @@ import sys
 from environ import *
 
 from deeplens.full_manager.condition import Condition
-from deeplens.full_manager.full_video_processing import CropSplitter
+from deeplens.full_manager.full_video_processing import NullSplitter
 from deeplens.tracking.background import FixedCameraBGFGSegmenter
 from deeplens.optimizer.deeplens import DeepLensOptimizer
 
@@ -66,7 +66,7 @@ def runFull(src, tot=1000, batch_size=20):
         return {'label': 'foreground', 'bb': Box(1600, 1600, 2175, 1800)}
 
     def put():
-        manager = FullStorageManager(CustomTagger(tagger, batch_size=batch_size), CropSplitter(do_join=False),
+        manager = FullStorageManager(CustomTagger(tagger, batch_size=batch_size), NullSplitter(),
                                      folder, dsn='dbname=header user=postgres password=deeplens host=10.0.0.5')
         now = timer()
         manager.put(src, 'test',

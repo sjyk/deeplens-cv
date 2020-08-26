@@ -48,6 +48,40 @@ class Splitter():
     def initialize(self):
         raise NotImplemented("MapJoin must implement an initialize function")
 
+""" Keeps the crops there without any modification
+    We assume the labels for the entire batch are given at the first frame of the batch
+"""
+class NullSplitter(MapJoin):
+    def __init__(self):
+        super().__init__()
+
+    def initialize(self, data):
+        """
+        returns (crops, temp_data)
+        """
+        crops, labels = self.map(data)
+        return crops, (crops, labels), False
+
+    def map(self, data):
+        crops = []
+        labels = {}
+        index = 0
+        for objects in data:
+            for object in objects:
+                crops.append({'bb': object['bb'], 'label': object['label'], 'all': {}})
+                if object['label'] in labels:
+                    labels[object['label']].append(index)
+                else:
+                    labels[object['label']] = [index]
+                index += 1
+            break  # keep the first frame only, ignore all subsequent frames of the same batch
+        return (crops, labels)
+
+    def join(self, map1, map2):
+        crop1, labels1 = map1
+        crop2, labels2 = map2
+        return (crop2, map2, False)
+
 """ Creates a crop across different frames
     data: bounding boxes across different frames
 """

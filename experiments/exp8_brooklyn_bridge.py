@@ -3,7 +3,7 @@ import sys
 from environ import *
 
 from deeplens.full_manager.condition import Condition
-from deeplens.full_manager.full_video_processing import CropSplitter
+from deeplens.full_manager.full_video_processing import CropSplitter, NullSplitter
 from deeplens.tracking.background import FixedCameraBGFGSegmenter
 from deeplens.optimizer.deeplens import DeepLensOptimizer
 
@@ -98,7 +98,7 @@ def runFull(src, tot=1000, batch_size=20):
             raise StopIteration("Iterator is closed")
         return {'label': 'foreground', 'bb': Box(1600, 1600, 2175, 1800)}
 
-    manager = FullStorageManager(CustomTagger(tagger, batch_size=batch_size), CropSplitter(do_join=False),
+    manager = FullStorageManager(CustomTagger(tagger, batch_size=batch_size), NullSplitter(),
                                  folder)
     now = timer()
     manager.put(src, 'test',
@@ -180,4 +180,4 @@ def runFullOpt(src, tot=1000, sel=0.1):
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(message)s')
 #do_experiments(sys.argv[1], [runNaive, runSimple, runFull, runFullOpt], 600, range(9, 10))
-do_experiments_batch_size(sys.argv[1], [runFull], 7200, [72])
+do_experiments_batch_size(sys.argv[1], [runFull], 720, [72])

@@ -25,4 +25,4 @@ path_to_csv = test_videos(video_path, dictionary_of_video_sizes, number_of_trial
 path_to_agg_csv = aggregate_csv(path_to_csv)
 
 # Graph aggregate csv and put results in new folder
-path_to_graphs = graph_diagnostics(path_to_agg_csv)
+path_to_graphs = graph_diagnostics(path_to_csv, path_to_agg_csv)

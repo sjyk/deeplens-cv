@@ -68,4 +68,4 @@ def diagnostic(video_path, size):
 
 
 # Test
-print(diagnostic('../tcam.mp4', (1080, 1080)))
+#print(diagnostic('../tcam.mp4', (1080, 1080)))

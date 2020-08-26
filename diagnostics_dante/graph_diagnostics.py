@@ -1,6 +1,7 @@
 import os
 import pandas as pd 
 from matplotlib import pyplot as plt 
+from aggregate_csv import human_format
 
 def graph_diagnostics(path_to_csv, path_to_agg_csv):
     os.mkdir('results/graphs')
@@ -12,20 +13,26 @@ def graph_diagnostics(path_to_csv, path_to_agg_csv):
     for shape, dfi in dfo.groupby('Shape'):
         storage_time = []
         retrieval_time = []
+        sizes = []
 
         for size, df in dfi.groupby('Size'):
+            sizes.append(human_format(size))
             storage_time.append(df['Storage Time'].tolist())
             retrieval_time.append(df['Retrieval Time'].tolist())
 
-        fig = plt.figure(figsize = (10, 5)) 
-        ax2 = fig.add_axes([0, 0, 1, 1])
-        bp2 = ax2.boxplot(storage_time)
+        fig, ax = plt.subplots()
+        ax.set_title(f"{shape} Storage Time")
+        ax.boxplot(storage_time, labels=sizes)
+        plt.xlabel("Size (pixels)")
+        plt.ylabel("Time (seconds)")
         plt.savefig(f"results/graphs/spread/{shape}_storagetime.png")
         fig.clf()
 
-        fig = plt.figure(figsize = (10, 5)) 
-        ax3 = fig.add_axes([0, 0, 1, 1])
-        bp3 = ax3.boxplot(retrieval_time)
+        fig, ax = plt.subplots()
+        ax.set_title(f"{shape} Retrieval Time")
+        ax.boxplot(retrieval_time, labels=sizes)
+        plt.xlabel("Size (pixels)")
+        plt.ylabel("Time (seconds)")
         plt.savefig(f"results/graphs/spread/{shape}_retrievaltime.png")
         fig.clf()
 
@@ -63,4 +70,4 @@ def graph_diagnostics(path_to_csv, path_to_agg_csv):
     return path_to_graphs
 
 # Test
-graph_diagnostics("results/diagnostics.csv", "results/diagnostics_agg.csv")
+#graph_diagnostics("results/diagnostics.csv", "results/diagnostics_agg.csv")

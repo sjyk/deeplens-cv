@@ -7,6 +7,7 @@ def aggregate_csv(path_to_csv):
     df.columns = df.columns.get_level_values(0)
     df.columns = ['Shape', 'Size', 'File Size Min', 'File Size Median', 'File Size Max', 'Storage Time Min', 'Storage Time Median', 'Storage Time Max', 'Retrieval Time Min', 'Retrieval Time Median', 'Retrieval Time Max']
 
+    df = df.sort_values(by='Size')
     df['Size'] = df['Size'].apply(lambda x: human_format(x))
 
     path_to_agg_csv = path_to_csv[:-4] + "_agg.csv"

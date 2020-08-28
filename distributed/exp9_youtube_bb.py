@@ -47,9 +47,6 @@ youtube_ids2=list(dict.fromkeys(youtube_ids))
 
 total_start = timer()
 for item in youtube_ids2:
-    try:
-        video_path="http://10.0.0.5/train/"+item+".mp4"
-        runFullPut(video_path)
-    except:
-        print("missing file for full", item)
+    video_path="http://10.0.0.5/train/"+item+".mp4"
+    runFullPut(video_path)
 print("Total put time on worker %s):" % get_local_ip(), timer() - total_start)

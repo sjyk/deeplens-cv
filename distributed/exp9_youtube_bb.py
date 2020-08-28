@@ -8,6 +8,7 @@ import environ
 from environ import *
 
 from deeplens.constants import *
+from deeplens.error import CorruptedOrMissingVideo
 from deeplens.full_manager.condition import Condition
 from deeplens.full_manager.full_manager import FullStorageManager
 from deeplens.full_manager.full_video_processing import NullSplitter
@@ -47,6 +48,9 @@ youtube_ids2=list(dict.fromkeys(youtube_ids))
 
 total_start = timer()
 for item in youtube_ids2:
-    video_path="http://10.0.0.5/train/"+item+".mp4"
-    runFullPut(video_path)
+    try:
+        video_path="http://10.0.0.5/train/"+item+".mp4"
+        runFullPut(video_path)
+    except CorruptedOrMissingVideo:
+        print("missing file for full", item)
 print("Total put time on worker %s):" % get_local_ip(), timer() - total_start)

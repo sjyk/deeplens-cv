@@ -135,7 +135,7 @@ class YoutubeTagger(Operator):
 
     def __iter__(self):
         self.input_iter = iter(self.video_stream)
-        #self.super_iter()
+        self.super_iter()
         return self
     
     def parseID(self):

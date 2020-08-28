@@ -49,32 +49,35 @@ def runNaive(src, tot=1000, sel=0.1):
     logrecord('naive', ({'size': tot, 'sel': sel, 'file': src}), 'get', str(result), 's')
 
 
+def fixed_tagger(vstream, batch_size):
+    count = 0
+    for frame in vstream:
+        count += 1
+        if count >= batch_size:
+            break
+    if count == 0:
+        raise StopIteration("Iterator is closed")
+    return {'label': 'foreground', 'bb': Box(1600, 1600, 2175, 1800)}
+
+
 # Full storage manager with bg-fg optimization
 def runFull(src, tot=1000, batch_size=20):
     cleanUp()
 
-    folder = '/var/www/html/videos'
-
-    def tagger(vstream, batch_size):
-        count = 0
-        for frame in vstream:
-            count += 1
-            if count >= batch_size:
-                break
-        if count == 0:
-            raise StopIteration("Iterator is closed")
-        return {'label': 'foreground', 'bb': Box(1600, 1600, 2175, 1800)}
+    local_folder = '/var/www/html/videos'
+    ip_addr = get_local_ip()
+    remote_folder = 'http://' + ip_addr + '/videos'
+    manager = FullStorageManager(CustomTagger(fixed_tagger, batch_size=batch_size), NullSplitter(),
+                                 local_folder, remote_folder, dsn='dbname=header user=postgres password=deeplens host=10.0.0.5')
 
     def put():
-        manager = FullStorageManager(CustomTagger(tagger, batch_size=batch_size), NullSplitter(),
-                                     folder, dsn='dbname=header user=postgres password=deeplens host=10.0.0.5')
         now = timer()
         manager.put(src, 'test',
                     args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': tot, 'batch_size': batch_size,
                           'num_processes': 4, 'background_scale': 1})
         put_time = timer() - now
         print("Put time for full:", put_time)
-        print("Batch size:", batch_size, "Folder size:", get_size(folder))
+        print("Batch size:", batch_size, "Folder size:", get_size(local_folder))
 
     def get():
         left = Box(1600, 1600, 1700, 1800)
@@ -108,9 +111,10 @@ def runFull(src, tot=1000, batch_size=20):
         result = timer() - now
         print(frame_count)
 
-        logrecord('full', ({'size': tot, 'batch_size': batch_size, 'file': src, 'folder_size': get_size(folder)}), 'get', str(result), 's')
+        logrecord('full', ({'size': tot, 'batch_size': batch_size, 'file': src, 'folder_size': get_size(local_folder)}), 'get', str(result), 's')
 
     put()
+    get()
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(message)s')

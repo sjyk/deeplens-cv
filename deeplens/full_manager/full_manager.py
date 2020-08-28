@@ -33,21 +33,21 @@ class FullStorageManager(StorageManager):
     is in the same location as disk, and external storage is another
     directory
     """
-    def __init__(self, content_tagger, content_splitter, basedir, dsn='dbname=header user=postgres password=secret host=127.0.0.1', reuse_conn=True):
+    def __init__(self, content_tagger, content_splitter, local_dir, remote_dir, dsn='dbname=header user=postgres password=secret host=127.0.0.1', reuse_conn=True):
         self.content_tagger = content_tagger
         self.content_splitter = content_splitter
-        self.basedir = basedir
+        self.local_dir = local_dir    # the folder of video files on local disk, e.g. /var/www/html/videos
+        self.remote_dir = remote_dir  # url to the video folder accessible by other machines, e.g. http://10.0.0.5/videos
         self.videos = set()
         self.threads = None
         self.dsn = dsn  # config of postgres server, e.g. 'dbname=header user=postgres password=secret host=127.0.0.1'
         self.reuse_conn = reuse_conn
 
-        if not os.path.exists(basedir):
+        if not os.path.exists(local_dir):
             try:
-                os.makedirs(basedir)
+                os.makedirs(local_dir)
             except:
-                raise ManagerIOError("Cannot create the directory: " + str(basedir))
-
+                raise ManagerIOError("Cannot create the directory: " + str(local_dir))
 
         self.conn = self.create_conn()
         self.cursor = self.conn.cursor()
@@ -101,17 +101,12 @@ class FullStorageManager(StorageManager):
             conn.commit()
             conn.close()
 
-    def put(self, filename, target, args=DEFAULT_ARGS, in_extern_storage=False, parallel=False, rows=None, hwang=False):
+    def put(self, filename, target, args=DEFAULT_ARGS, parallel=False, rows=None, hwang=False):
         """put adds a video to the storage manager from a file. It should either add
             the video to disk, or a reference in disk to deep storage.
         """
         conn = self.get_conn()
         self.delete(target)
-
-        if in_extern_storage: 
-            physical_dir = self.externdir
-        else:
-            physical_dir = self.basedir
         
         if type(filename) == int:
             stream = True
@@ -126,29 +121,25 @@ class FullStorageManager(StorageManager):
 
         if parallel and not stream:
             dsn = self.dsn
-            write_video_parallel(dsn, filename, target, physical_dir, self.content_splitter, tagger, args=args)
+            write_video_parallel(dsn, filename, target, self.local_dir, self.remote_dir, self.content_splitter, tagger, args=args)
         else:
-            write_video_single(conn, filename, target, physical_dir, self.content_splitter, tagger, stream=stream, args=args, background_scale=args['background_scale'], rows=rows, hwang=hwang)
+            write_video_single(conn, filename, target, self.local_dir, self.remote_dir, self.content_splitter, tagger, stream=stream, args=args, background_scale=args['background_scale'], rows=rows, hwang=hwang)
             
         self.videos.add(target)
 
         self.remove_conn(conn)
 
-    def put_many(self, filenames, targets, args=DEFAULT_ARGS, in_extern_storage=False, log=False):
+    def put_many(self, filenames, targets, args=DEFAULT_ARGS, log=False):
         conn = self.get_conn()
         start_time = time.time()
         put_args = []
         dsn = self.dsn
-        if in_extern_storage: 
-            physical_dir = self.externdir
-        else:
-            physical_dir = self.basedir
         for i, name in enumerate(filenames):
             if self.content_tagger == None:
                 tagger = name
             else:
                 tagger = self.content_tagger
-            put_arg = (dsn, name, targets[i], physical_dir, self.content_splitter, tagger, 0, False, args, log, args['background_scale'])
+            put_arg = (dsn, name, targets[i], self.local_dir, self.remote_dir, self.content_splitter, tagger, 0, False, args, log, args['background_scale'])
             put_args.append(put_arg)
             self.delete(targets[i], conn)
         
@@ -169,14 +160,10 @@ class FullStorageManager(StorageManager):
         return times
 
 
-    def put_fixed(self, filename, target, crops, batch = False, args=DEFAULT_ARGS, in_extern_storage = False):
+    def put_fixed(self, filename, target, crops, batch = False, args=DEFAULT_ARGS):
         conn = self.get_conn()
         self.delete(target, conn)
-        if in_extern_storage: 
-            physical_dir = self.externdir
-        else:
-            physical_dir = self.basedir
-        write_video_fixed(conn, filename, target, physical_dir, crops, batch = batch, args=args)
+        write_video_fixed(conn, filename, target, self.local_dir, self.remote_dir, crops, batch = batch, args=args)
         self.videos.add(target)
         self.remove_conn(conn)
 

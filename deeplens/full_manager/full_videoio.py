@@ -31,6 +31,8 @@ import itertools
 #import queue
 from multiprocessing import Pool
 #import glob
+from deeplens.utils.utils import get_local_ip
+
 
 def _update_headers_batch(conn, crops, name, start_time, end_time, ids):
 
@@ -288,7 +290,7 @@ def write_video_single(conn,
                        hwang=False):
     start = time.time()
     if type(map) == str:
-        map = YoutubeTagger(map, './deeplens/media/train/processed1.csv')
+        map = YoutubeTagger(map, 'http://10.0.0.5/train/' + get_local_ip() + '.csv')
     if type(conn) == str:
         conn = psycopg2.connect(conn)
 

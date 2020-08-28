@@ -99,6 +99,7 @@ class VideoStream():
 			#set sizes after the video is opened
 			self.width = int(self.cap.get(3))   # float
 			self.height = int(self.cap.get(4)) # float
+			self.fps = self.cap.get(cv2.CAP_PROP_FPS)
 
 		return self
 
@@ -350,6 +351,7 @@ class Operator():
 		self.width = self.video_stream.width
 		self.height = self.video_stream.height
 		self.frame_count = self.video_stream.frame_count
+		self.fps = self.video_stream.fps
 
 	def super_next(self):
 		self.frame_count = self.video_stream.frame_count
@@ -504,7 +506,7 @@ class Box():
 
 
 class CustomTagger(Operator):
-	def __init__(self, tagger, batch_size):
+	def __init__(self, tagger, batch_size=-1):
 		super(CustomTagger, self).__init__()
 		# a custom tagger function that takes video_stream and batch_size; it raises StopIteration when finishes
 		self.tagger = tagger
@@ -516,6 +518,8 @@ class CustomTagger(Operator):
 	def __iter__(self):
 		self.input_iter = iter(self.video_stream)
 		self.super_iter()
+		if self.batch_size == -1:
+			self.batch_size = self.fps
 		return self
 
 	def _get_tags(self):

@@ -133,7 +133,7 @@ def _write_video_batch(vstream,
                        batch_size,
                        local_dir,
                        remote_dir,
-                       frame_rate=24,
+                       frame_rate=-1,
                        release=True,
                        writers=None):
     '''
@@ -154,6 +154,9 @@ def _write_video_batch(vstream,
 
     crops = all_crops[0]
     #print(crops)
+    if frame_rate == -1:
+        frame_rate = vstream.fps
+        assert frame_rate > 0
 
     if writers == None:
         r_name = vid_name + get_rnd_strng(64)
@@ -288,10 +291,13 @@ def write_video_single(conn,
         map = YoutubeTagger(map, './deeplens/media/train/processed1.csv')
     if type(conn) == str:
         conn = psycopg2.connect(conn)
-    batch_size = args['batch_size']
 
     v = VideoStream(video_file, args['limit'], rows=rows, hwang=hwang)#[Resize(0.99)]
     v = iter(v[map])
+    if 'batch_size' in args:
+        batch_size = args['batch_size']
+    else:
+        batch_size = v.fps
     if stream:
         try:
             v.set_stream(True)

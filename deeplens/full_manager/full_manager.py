@@ -23,7 +23,7 @@ from multiprocessing import Pool
 import time
 from deeplens.utils.parallel_log_reduce import *
 
-DEFAULT_ARGS = {'encoding': MP4V, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 20, 'num_processes': 4, 'background_scale': 1}
+DEFAULT_ARGS = {'encoding': MP4V, 'limit': -1, 'sample': 1.0, 'offset': 0, 'num_processes': 4, 'background_scale': 1}
 
 # NOTE: bounding boxes are at a clip level
 
@@ -116,7 +116,7 @@ class FullStorageManager(StorageManager):
             tagger = filename
         else:
             tagger = self.content_tagger
-            if tagger.batch_size < args['batch_size']:
+            if 'batch_size' in args and tagger.batch_size < args['batch_size']:
                 raise ValueError("This setting may currently lead to bugs")
 
         if parallel and not stream:

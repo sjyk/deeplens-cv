@@ -1,3 +1,4 @@
+import urllib.request
 import cv2
 import numpy as np
 import csv
@@ -69,7 +70,14 @@ class YoutubeTagger(Operator):
         return xform.apply(self)
     
     def getAllYTTags(self):
-        fd = open(self.labelsPath, 'r')
+        label_local = True
+        try:
+            fd = open(self.labelsPath, 'r')
+        except FileNotFoundError:
+            label_local = False
+            url = self.labelsPath
+            response = urllib.request.urlopen(url)
+            fd = [l.decode('utf-8') for l in response.readlines()]
         labelReader = csv.reader(fd)
         outputDict = dict()
         for i,row in enumerate(labelReader):
@@ -85,7 +93,8 @@ class YoutubeTagger(Operator):
                 else:
                     nlst = [frInfo]
                     outputDict[youtubeID] = nlst
-        fd.close()
+        if label_local:
+            fd.close()
         #sort by frame_no
         for key in outputDict:
             lstOfFrameInfos = outputDict[key]

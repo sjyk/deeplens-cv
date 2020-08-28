@@ -24,7 +24,7 @@ def runFullPut(src):
     def put():
         now = timer()
         manager.put(src, os.path.basename(src),
-                    args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': -1})
+                    args={'encoding': XVID, 'size': -1, 'sample': 1.0, 'offset': 0, 'limit': -1, 'background_scale': 1})
         put_time = timer() - now
         logrecord('full', ({'file': src}), 'put', str({'elapsed': put_time}), 's')
 

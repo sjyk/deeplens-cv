@@ -26,3 +26,7 @@ class InvalidRegionError(Exception):
 class FFMpegError(Exception):
    """Error occurred during ffmpeg command"""
    pass
+
+class MissingIndex(Exception):
+   """Requested index of stream not found"""
+   pass

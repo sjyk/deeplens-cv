@@ -86,7 +86,7 @@ class PutOp(Operator):
         
         for i in range(self.batch_size):
             try:
-                frame = next(self.streams['video'])
+                frame = next(self.f['video'])
             except StopIteration:
                 self.stop = True
                 return {'full_meta': self.meta}         

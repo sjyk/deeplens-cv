@@ -17,15 +17,13 @@ class DataStream():
     def __init__(self, name, stream_type):
         self.name = name
         self.type = stream_type
+        self.iters = {}
 
-    def __iter__(self):
+    def add_iter(self, op_name):
         raise NotImplemented("__iter__ implemented")
     
-    def get(self):
+    def next(self, op_name):
         raise NotImplemented("__iter__ implemented")
-    
-    def __next__(self):
-        return self
     
     @staticmethod
     def init_mat():
@@ -62,25 +60,23 @@ class JSONListStream(DataStream):
                     with open(file, 'r') as f:
                         self.data = self.data.append(json.load(f))
 
-    def __iter__(self):
-        self.index = 0
+    def add_iter(self, op_name):
+        self.iters[op_name] = (iter(self.data), -1)
         return self
 
-    def __next__(self):
-        self.index += 1
+    def next(self, op_name):
+        self.iters[op_name][1] += 1
+        index = self.iters[op_name][1]
         #print(self.limit)
-        if self.index >= len(self.data) or (self.index > self.limit and self.limit > 0):
+        if index >= len(self.data) or (index > self.limit and self.limit > 0):
             raise StopIteration("Iterator is closed")
-        return self
+        return next(self.iters[op_name][0])
     
     def serialize(self, fp = None):
         if not fp:
             return json.dumps(self.data)
         else:
             return json.dump(self.data, fp)
-
-    def get(self):
-        return self.data[self.index - 1]
     
     def size(self):
         return len(self.data)
@@ -114,24 +110,22 @@ class JSONDictStream(DataStream):
                     self.data = self.data.update(json.load(f))
         self.limit = limit
 
-    def __iter__(self):
-        self.index = -1
+    def add_iter(self, op_name):
+        self.iters[op_name] = -1
         return self
 
-    def __next__(self):
-        self.index += 1
-        if self.limit and self.index >= self.limit:
+    def next(self, op_name):
+        self.iters[op_name] += 1
+        index = self.iters[op_name]
+        if self.limit and index >= self.limit:
             raise StopIteration("Iterator is closed")
-        return self
-
-    def size(self):
-        return len(self.data)
-    
-    def get(self):
-        if self.index in self.data:
-            return self.data[self.index]
+        if index in self.data:
+            return self.data[index]
         else:
             return None
+
+    def size(self):
+        return self.limit
     
     def update_limit(self, limit):
         self.limit = limit
@@ -170,15 +164,12 @@ class ConstantStream(DataStream):
         super().__init__(name, stream_type)
         self.data = data
 
-    def __iter__(self):
+    def add_iter(self, op_name):
         return self
     
-    def __next__(self):
-        return self
-    
-    def get(self):
+    def next(self, op_name):
         return self.data
-
+    
     @staticmethod
     def init_mat():
         return None
@@ -190,76 +181,6 @@ class ConstantStream(DataStream):
     @staticmethod
     def materialize(data):
         return data
-
-class CacheStream(DataStream):
-    def __init__(self, name, stream_type = None):
-        if stream_type == None:
-            stream_type = 'cache'
-        super().__init__(name, stream_type)
-        self.data = None
-
-    def __iter__(self):
-        return self
-    
-    def __next__(self):
-        return self
-    
-    def get(self):
-        return self.data
-
-    def update(self, data):
-        self.data = data
-
-    @staticmethod
-    def init_mat():
-        return []
-    
-    @staticmethod
-    def append(data, prev):
-        return prev.append(data)
-    
-    @staticmethod
-    def materialize(data, fp = None):
-        if not fp:
-            return json.dumps(data)
-        else:
-            return json.dump(data, fp)
-
-class CacheFullMetaStream(CacheStream):
-    def __init__(self, name, stream_type):
-        super().__init__(name, stream_type)
-        self.data = 0
-        self.name = name
-        self.vid_name = None
-        self.crops = None
-        self.video_refs = None
-        self.fcoor = None
-        self.scoor = None
-        self.first_frame = None
-        self.new_batch = None
-        self.do_join = None
-
-    def __iter__(self):
-        return self
-    
-    def __next__(self):
-        return self
-
-    def update(self, index, new_batch = False):
-        self.data = index
-        self.new_batch = new_batch
-
-    def update_all(self, index, vid_name, crops, video_refs, fcoor, scoor, do_join):
-        self.data = 0
-        self.name = vid_name
-        self.crops = crops
-        self.video_refs = video_refs
-        self.fcoor = fcoor
-        self.scoor = scoor
-        self.data = index
-        self.first_frame = index
-        self.new_batch = True
-        self.do_join = do_join
     
 
 class VideoStream(DataStream):
@@ -288,51 +209,42 @@ class CVVideoStream(VideoStream):
     def __init__(self, src, name, limit = -1, origin = np.array((0,0)), offset = 0):
         super().__init__(name, src, limit, origin, offset)
         import cv2
-        self.propIds = None
-        self.frame = None
         self.cap = cv2.VideoCapture(self.src)
         self.width = int(self.cap.get(3))   # float
         self.height = int(self.cap.get(4)) # float
-        self.cap = None
+        if limit == -1:
+            self.frame_num = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        else:
+            self.frame_num = limit
+        self.iters = {}
 
-    def __iter__(self):
-        if self.cap == None:
-            # iterate the same videostream again after the previous run has finished
-            self.frame_count = self.offset
-            self.cap = cv2.VideoCapture(self.src)
+    def add_iter(self, op_name, propIds = None):
+        self.iters[op_name] = (cv2.VideoCapture(self.src), self.offset)
         
-        if self.propIds:
-            for propId in self.propIds:
-                self.cap.set(propId, self.propIds[propId])
+        if propIds:
+            for propId in propIds:
+                self.iters[op_name][0].set(propId, self.propIds[propId])
 
         if not self.cap.isOpened():
             raise CorruptedOrMissingVideo(str(self.src) + " is corrupted or missing.")
-        
-        self.width = int(self.cap.get(3))   # float
-        self.height = int(self.cap.get(4)) # float
         return self
 
-    def __next__(self):
-        if self.cap.isOpened() and \
-            (self.limit < 0 or self.frame_count < self.limit):
-            time_start = timer()
-            ret, frame = self.cap.read()
+    def next(self, op_name):
+        cap = self.iters[op_name][0]
+        frame_count = self.iters[op_name][1]
+        if cap.isOpened() and (self.limit < 0 or frame_count < self.limit - 1):
+            ret, frame = cap.read()
             if ret:
-                self.frame_count += 1
-                self.frame = frame
+                frame_count += 1
+                self.iters[op_name][1] += 1
             else:
-                self.frame = None
+                del self.iters[op_name]
+                raise StopIteration("Iterator is closed")
         else:
-            # self.cap.release()  # commented out due to CorruptedOrMissingVideo error
-            self.cap = None
-            self.frame = None
-        if self.frame is None:
+            del self.iters[op_name]
             raise StopIteration("Iterator is closed")
-        else:
-            return self
         
-    def get(self):
-        return self.frame
+        return frame
     
     def get_cap_info(self, propId):
         """ If we currently have a VideoCapture op
@@ -342,15 +254,6 @@ class CVVideoStream(VideoStream):
         else:
             return None
 
-    def __call__(self, propIds = None):
-        """ Sets the propId argument so that we can
-        take advantage of video manipulation already
-        supported by VideoCapture (cv2)
-        Arguments:
-            propIds: {'ID': property}
-        """
-        self.propIds = propIds
-
     @staticmethod
     def init_mat(file_name, encoding, width, height, frame_rate):
         fourcc = cv2.VideoWriter_fourcc(*encoding)
@@ -366,136 +269,37 @@ class CVVideoStream(VideoStream):
         prev.write(data)
         return prev
 
-class CVVideoStreams(VideoStream):
-    def __init__(self, src, name, limit = -1, origin = np.array((0,0)), offset = 0, test_limit = -1):
-        super().__init__(name, src, limit, origin, offset)
-        import cv2
-        self.frame = None
-        self.cap = None
-        self.test_limit = test_limit # only using this in experiment latency testing !!
-    
-    def _cache(self):
-        next_cache = self.src[self.index + 1]
-        self.next_vstream = iter(CVVideoStream(next_cache, self.name, limit = self.test_limit))
-        self.next_frame = next(self.next_vstream).get()
-
-    def __iter__(self):
-        self.index = 0
-        self.frame_count = 0
-        self.vstream = iter(CVVideoStream(self.src[0], self.name, limit = self.test_limit, offset=self.offset))
-        self.thread = threading.Thread(target=self._cache)
-        self.thread.start()
-        return self
-
-    def __next__(self):
-        if self.limit > 0 and self.frame_count >= self.limit:
-            raise StopIteration("Iterator is closed")
-        else:
-            try:
-                print(self.frame_count)
-                self.frame = next(self.vstream).get()
-                self.frame_count += 1
-            except StopIteration:
-                # change vstreams
-                if self.index + 1 < len(self.src):
-                    print(self.frame_count)
-                    self.thread.join()
-                    self.vstream = self.next_vstream
-                    self.frame = self.next_frame
-                    self.frame_count += 1
-                    # start another thread
-                    self.next_frame = None
-                    self.next_vstream = None
-                    self.thread = threading.Thread(target=self._cache)
-                    self.thread.start()
-                    self.index += 1
-                else:
-                    raise StopIteration("Iterator is closed")
-            
-            return self
-        
-    def get(self):
-        return self.frame
-    
-    @staticmethod
-    def init_mat(file_name, encoding, width, height, frame_rate):
-        fourcc = cv2.VideoWriter_fourcc(*encoding)
-        writer = cv2.VideoWriter(file_name,
-                        fourcc,
-                        frame_rate,
-                        (width, height),
-                        True)
-        return writer
-        
-    @staticmethod
-    def append(data, prev):
-        prev.write(data)
-        return prev
-
-class RawVideoStream(VideoStream):
-    def __init__(self, src, name, limit=-1, origin=np.array((0,0)), offset = 0):
-        super().__init__(src, name, limit, origin, offset)
-        self.curr_frame = None
-        self.next_frame = None
-    
-    def __iter__(self):
-        self.origin = origin
-        try:
-            self.frame_iter = iter(self.src)
-        except:
-            raise CorruptedOrMissingVideo(str(self.src) + " is corrupted or missing.")
-        try:
-            frame = next(self.frame_iter)
-            # set sizes after the video is opened
-            self.width = int(self.next_frame.shape[0])  # float
-            self.height = int(self.next_frame.shape[1])  # float
-            self.frame_count = 0 
-            self.next_frame = frame
-        except StopIteration:
-            self.next_frame = None
-        return self
-    
-    def __next__(self):
-        if self.next_frame is None:
-            raise StopIteration("Iterator is closed")
-
-        if (self.limit < 0 or self.frame_count <= self.limit - 1):
-            self.curr_frame = self.next_frame
-            frame = next(self.frame_iter)
-            self.frame_count += 1
-            self.next_frame = frame
-        else:
-            raise StopIteration("Iterator is closed")
-    
-    def get(self):
-        return self.curr_frame
-
-# TODO: Add implementation with hwang backend
 class HwangVideoStream(VideoStream):
-    def __init__(self, src, name, limit=-1, origin=np.array((0, 0)), rows=[]):
+    def __init__(self, src, name, limit=-1, origin=np.array((0, 0))):
         super().__init__(src, limit, name, origin)
         import hwang
-        self.rows = rows
         self.frame_count = 0
-        self.frame = None
         self.decoder = hwang.Decoder(self.src)
-
-    def __iter__(self):
         self.width = self.decoder.video_index.frame_width()
         self.height = self.decoder.video_index.frame_height()
+        if limit == -1:
+            cap = cv2.VideoCapture(self.src)
+            self.frame_num = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) 
+        else:
+            self.frame_num = limit
+        self.frames = self.decoder.retrieve(list(range(self.frame_num))) # TODO(ted): make sure that this is getting every frame?
+        self.iters = {}
 
-        # TODO(swjz): fetch all rows when (limit == -1)
-        self.frames = iter(self.decoder.retrieve(self.rows))
+    def add_iter(self, op_name):
+        self.iters[op_name] = -1
         return self
 
-    def __next__(self):
-        self.frame_count += 1
-        self.frame = {'data': next(self.frames),
-                      'frame': (self.frame_count - 1),
-                      'origin': self.origin}
+    def next(self, op_name):
+        self.iters[op_name] += 1
+        
+        if self.iters[op_name] >= len(self.frames):
+            del self.iters[op_name]
+            raise StopIteration("Iterator is closed")
 
-    def get(self):
-        return self.frame
+        return self.frames[self.iters[op_name]]
+
+    def all(self):
+        return self.frames
 
     def init_mat(self):
         raise NotImplemented("init_mat not implemented")
@@ -506,37 +310,166 @@ class HwangVideoStream(VideoStream):
     def materialize(self, data):
         raise NotImplemented("materialize not implemented")
 
-    def _write_mp4(self, paths, output_name, fps, scale=None):
-        # Adapted from https://github.com/scanner-research/scanner/blob/645fb2/python/scannerpy/column.py
-        temp_paths = []
-        for _ in range(len(paths)):
-            fd, p = tempfile.mkstemp()
-            os.close(fd)
-            temp_paths.append(p)
-        # Copy all files locally before calling ffmpeg
-        for in_path, temp_path in zip(paths, temp_paths):
-            copyfile(in_path, temp_path)
-        files = '|'.join(temp_paths)
+# no threading unlike open cv version -> can implement later
+class HwangVideoStreams(VideoStream):
+    def __init__(self, src, name, limit = -1, origin = np.array((0,0)), offset = 0, test_limit = -1):
+        super().__init__(name, src, limit, origin, offset)
+        import cv2
+        self.frame = None
+        self.cap = None
+        self.test_limit = test_limit # only using this in experiment latency testing !!
+        if len(self.src) < 2:
+            raise CorruptedOrMissingVideo("At least 2 video files required to use HwangVideoStreams."
+                                          "For single video, use HwangVideoStream instead.")
+        self.caches = {}
+        self.iters = {}
+    
+    def _cache(self, index):
+        if index not in self.caches:
+            video = HwangVideoStream(self.src[index], str(index))
+            self.caches[index] = video.all()
+            return True
+        return False
 
-        args = ''
-        if scale:
-            args += '-filter:v "scale={:d}x{:d}" '.format(scale[0], scale[1])
-        encode_lib = 'libx264' # Assume the video is encoded as H264 (potentially supports H265)
+    # only remove if there are no current iterators that need it
+    def _remove_cache(self, index):
+        remove_cache = True
+        for op_name in self.iters:
+            # index  should be video['index'] - 1
+            if self.iters[op_name]['index'] == index:
+                remove_cache = False
+        if remove_cache:
+            del self.caches[index]
+        return remove_cache
 
-        cmd = (
-            'ffmpeg -y '
-            '-r {fps:f} '  # set the input fps
-            '-i "concat:{input_files:s}" '  # concatenate the h264 files
-            '-c:v {encode_lib:s} '
-            '-filter:v "setpts=N" '  # h264 does not have pts' in it
-            '-loglevel panic '
-            '{extra_args:s}'
-            '{output_name:s}.mp4'.format(
-                input_files=files,
-                fps=fps,
-                extra_args=args,
-                output_name=output_name,
-                encode_lib=encode_lib))
-        rc = Popen(cmd, shell=True).wait()
-        if rc != 0:
-            raise FFMpegError('ffmpeg failed during mp4 export!')
+    def add_iter(self, op_name):
+        self.iters[op_name] = {}
+        self.iters[op_name]['index'] = 0
+        self.iters[op_name]['frame_count'] = 0
+        self.iters[op_name]['curr_frame'] = -1
+        self._cache(self.iters[op_name]['index']) 
+        return self
+
+    def next(self, op_name):
+        video = self.iters[op_name]
+        if self.limit > 0 and video['frame_count'] >= self.limit:
+            self._remove_cache(video['index'])
+            del self.iters[op_name]
+            raise StopIteration("Iterator is closed")
+        else:
+            
+            try:
+                index = video['index']
+                if video['curr_frame'] < len(self.caches[index]) - 1:     
+                    video['curr_frame'] +=1
+                    video['frame_count'] += 1
+                    frame = self.caches[index][video['curr_frame']]
+                
+                else:
+                    video['index'] += 1
+                    if video['index'] == len(self.src):
+                        self._remove_cache(index)
+                        del self.iters[op_name]
+                        raise StopIteration
+
+                    self._cache(video['index'])
+                    frame = self.caches[video['index']][0]
+                    video['curr_frame'] = 0
+                    video['frame_count'] += 1
+                    self._remove_cache(index)
+
+            except KeyError:
+                raise KeyError("Cache logic failed - current indexed src not cached")
+
+
+
+
+            #     # change vstreams
+            #     if video['index'] + 1 < len(self.src):
+            #         video['thread'].join()
+            #         video['vstream'] = self.next_vstream
+            #         frame = video['next_frame']
+            #         video['frame_count'] += 1
+            #         # start another thread
+            #         video['next_frame'] = None
+            #         video['next_vstream'] = None
+            #         video['thread'] = threading.Thread(target=self._cache(op_name))
+            #         video['thread'].start()
+            #         video['index'] += 1
+            #     else:
+            #         raise StopIteration("Iterator is closed")
+            # return self
+
+    def get_vstream(self, op_name):
+        return self.iters[op_name]['vstream']
+
+class CVVideoStreams(VideoStream):
+    def __init__(self, src, name, limit = -1, origin = np.array((0,0)), offset = 0, test_limit = -1):
+        super().__init__(name, src, limit, origin, offset)
+        import cv2
+        self.frame = None
+        self.cap = None
+        self.test_limit = test_limit # only using this in experiment latency testing !!
+        if len(self.src) < 2:
+            raise CorruptedOrMissingVideo("At least 2 video files required to use CVVideoStreams."
+                                          "For single video, use CVVideoStream instead.")
+        self.iters = {}
+    
+    def _cache(self, op_name):
+        next_cache = self.src[self.index + 1]
+        self.iters[op_name]['next_vstream'] = CVVideoStream(next_cache, self.name, limit = self.test_limit).add_iter('main')
+        self.iters[op_name]['next_frame'] = self.iters[op_name]['next_vstream'].next('main')
+
+    def add_iter(self, op_name):
+        self.iters[op_name] = {}
+        self.iters[op_name]['index'] = 0
+        self.iters[op_name]['frame_count'] = -1
+        self.iters[op_name]['vstream'] = CVVideoStream(self.src[0], self.name, limit = self.test_limit, offset=self.offset).add_iter('main')
+        self.iters[op_name]['thread'] = threading.Thread(target=self._cache(op_name))
+        self.iters[op_name]['thread'].start()
+        return self
+
+    def next(self, op_name):
+        video = self.iters[op_name]
+        if self.limit > 0 and video['frame_count'] >= self.limit - 1:
+            raise StopIteration("Iterator is closed")
+        else:
+            try:
+                frame = video.next(op_name)
+                video['frame_count'] += 1
+            except StopIteration:
+                # change vstreams
+                if video['index'] + 1 < len(self.src):
+                    video['thread'].join()
+                    video['vstream'] = self.next_vstream
+                    frame = video['next_frame']
+                    video['frame_count'] += 1
+                    # start another thread
+                    video['next_frame'] = None
+                    video['next_vstream'] = None
+                    video['thread'] = threading.Thread(target=self._cache(op_name))
+                    video['thread'].start()
+                    video['index'] += 1
+                else:
+                    raise StopIteration("Iterator is closed")
+            return frame
+    
+    def get_vstream(self, op_name):
+        return self.iters[op_name]['vstream']
+    
+    @staticmethod
+    def init_mat(file_name, encoding, width, height, frame_rate):
+        fourcc = cv2.VideoWriter_fourcc(*encoding)
+        writer = cv2.VideoWriter(file_name,
+                        fourcc,
+                        frame_rate,
+                        (width, height),
+                        True)
+        return writer
+        
+    @staticmethod
+    def append(data, prev):
+        prev.write(data)
+        return prev
+
+

@@ -6,6 +6,7 @@ from deeplens.full_manager.full_manager import *
 from deeplens.streams import *
 from deeplens.utils.utils import *
 import matplotlib.pyplot as plt
+import sys
 import cv2
 
 
@@ -17,21 +18,26 @@ import cv2
 # #print(len(res))
 # #play(res[0])
 
-streams = ['videos/cut4.mp4', 'videos/cut4.mp4', 'videos/cut4.mp4', 'videos/cut4.mp4']
-stream = 'videos/cut2.mp4'
+# Usage: python3 test_basic.py video1.mp4 video2.mp4 video3.mp4 ...
+streams = sys.argv[1:]
+
+limit = 5000
 
 start_0 = time.time()
-vstream = CVVideoStreams(streams, 'test', test_limit = 20) #test_limit defines the batch size here
+vstream = CVVideoStreams(streams, 'test', test_limit=limit) #test_limit defines the batch size here
 #vstream = cv2.VideoCapture('videos/cut2.mp4')
 latency = []
+now = time.time()
 for frame in vstream:
     if start_0:
         start = start_0
-        start_0 = 0 
+        start_0 = 0
     f = frame.get()
     end = time.time()
     latency.append(end - start)
     start = end
 
-plt.plot(latency)
-plt.show()
+print("Total time:", time.time() - now)
+
+# plt.plot(latency)
+# plt.show()

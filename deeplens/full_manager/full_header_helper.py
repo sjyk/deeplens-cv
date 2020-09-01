@@ -49,8 +49,8 @@ def update_headers_batch(conn, crops, name, start_time, end_time, ids):
         update_clip_header(conn, id, name, updates)
 
 
-def new_headers_batch(conn, all_crops, name, video_refs,
-                            full_dim, scaled_dim, start_time, end_time):
+def new_headers_batch(conn, all_crops, name, start_time, end_time, video_refs, 
+                            full_dim, scaled_dim):
     """
     Create new headers all headers for one batch. In terms of updates, we assume certain
     constraints on the system, and only update possible changes.

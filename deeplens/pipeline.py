@@ -9,6 +9,7 @@ import logging
 import networkx as nx
 from deeplens.utils.error import *
 from deeplens.streams import *
+import matplotlib.pyplot as plt
 
 #sources video from the default camera
 DEFAULT_CAMERA = 0
@@ -19,15 +20,15 @@ class Operator():
     is the abstract class of all pipeline components in dlcv.
     """
     # need to initialize appropriate dstreams
-    def __init__(self, name):
+    def __init__(self, name, input_names):
+        self.input_names = input_names
         self.name = name
-        self.id
 
     def __iter__(self):
-        raise NotImplemented("__iter__ implemented")
+        self.index = -1
 
     def __next__(self):
-        return self
+        self.index += 1
 
     #binds previous operators and dstreams to the current stream
     def apply(self, streams):
@@ -54,20 +55,18 @@ class GraphManager():
     def build(self):
         mat_streams = {}
         for name in self.graph.nodes:
-            dstreams = self.graph[name]['dstreams']
+            dstreams = self.graph[name]['in_streams']
             parents = self.graph[name]['parents']
             curr_streams = {}
             for stream in dstreams:
                 curr_streams[stream] = self.dstreams[stream]
-            for par in parents:
-                curr_streams.update(self.graph[par]['streams'])
             self.graph[name]['operator'].apply(curr_streams)
             iter(self.graph[name]['operator'])
 
     # denote which leaves to run
-    def run(self, plan = None):
+    def run(self, plan = None, results = None):
         run_streams = {}
-        if  != None:
+        if  plan != None:
             while True:
                 finished = True
                 for (name, num) in plan:
@@ -90,23 +89,37 @@ class GraphManager():
                         break
                 if finished:
                     break
+        
+        output = {}
+        for result in results:
+            output[result] = self.dstreams[result].all()
+        
+        return result
+
+    def draw(self):
+        nx.draw(self.graph)
+        plt.show()
+
     # do not allow overwriting -> maybe change later
-    def add_operator(self, operator, dstreams = None, parents = None):
+    def add_operator(self, operator):
         nodes = set(self.graph.nodes)
         name = operator.name
+        dstreams = set(operator.input_names)
         if name in self.graph.nodes:
             return False
         elif parents and not nodes.issuperset(set(parents)):
             return False
             
-        elif dstreams and set(self.dstreams.keys()).issuperset(dstreams):
+        elif dstreams and not set(self.dstreams.keys()).issuperset(dstreams):
             return False
         else:
-            self.graph.add_node((name, {'dstreams': dstreams, 'parents': parents, 'operator': operator, 'streams': operator.streams}))
+            self.graph.add_node((name, {'in_streams': dstreams, 'operator': operator, 'out_streams': operator.results}))
             if parents == None:
                 self.roots.add(name)
             self.leaves.add(name)
             self.roots.difference(set(parents))
+            if operator.results != None:
+                self.dstreams.update(operator.results)
     
     def add_stream(self, datastream):
         name = datastream.name

@@ -14,9 +14,8 @@ from deeplens.utils.error import *
 
 
 class DataStream():
-    def __init__(self, name, stream_type):
+    def __init__(self, name):
         self.name = name
-        self.type = stream_type
         self.iters = {}
 
     def add_iter(self, op_name):
@@ -38,8 +37,8 @@ class DataStream():
         raise NotImplemented("materialize not implemented")
 
 class JSONListStream(DataStream):
-    def __init__(self, data, name, stream_type, limit = -1, isList = False):
-        super().__init__(name, stream_type)
+    def __init__(self, data, name, limit = -1, isList = False):
+        super().__init__(name)
         self.data = []
         self.limit = limit
         if data is not None:
@@ -97,8 +96,8 @@ class JSONListStream(DataStream):
             return json.dump(data, fp)
 
 class JSONDictStream(DataStream):
-    def __init__(self, data, name, stream_type, limit = 0):
-        super().__init__(name, stream_type)
+    def __init__(self, data, name, limit = 0):
+        super().__init__(name)
         self.data = {}
         if data is not None:
             if type(data) == str:
@@ -160,8 +159,8 @@ class JSONDictStream(DataStream):
 
 
 class ConstantStream(DataStream):
-    def __init__(self, data, stream_type, name):
-        super().__init__(name, stream_type)
+    def __init__(self, data, name):
+        super().__init__(name)
         self.data = data
 
     def add_iter(self, op_name):
@@ -185,7 +184,7 @@ class ConstantStream(DataStream):
 
 class VideoStream(DataStream):
     def __init__(self, name, src, limit=-1, origin = np.array((0,0)), offset = 0, start_time = 0):
-        super().__init__(name, 'video')
+        super().__init__(name)
         self.src = src
         self.limit = limit
         self.origin = origin

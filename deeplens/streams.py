@@ -379,26 +379,9 @@ class HwangVideoStreams(VideoStream):
                     self._remove_cache(index)
 
             except KeyError:
-                raise KeyError("Cache logic failed - current indexed src not cached")
-
-
-
-
-            #     # change vstreams
-            #     if video['index'] + 1 < len(self.src):
-            #         video['thread'].join()
-            #         video['vstream'] = self.next_vstream
-            #         frame = video['next_frame']
-            #         video['frame_count'] += 1
-            #         # start another thread
-            #         video['next_frame'] = None
-            #         video['next_vstream'] = None
-            #         video['thread'] = threading.Thread(target=self._cache(op_name))
-            #         video['thread'].start()
-            #         video['index'] += 1
-            #     else:
-            #         raise StopIteration("Iterator is closed")
-            # return self
+                raise MissingIndex("Cache logic failed - current indexed src not cached")
+        
+        return frame
 
     def get_vstream(self, op_name):
         return self.iters[op_name]['vstream']
@@ -413,10 +396,7 @@ class CVVideoStreams(VideoStream):
         if len(self.src) < 2:
             raise CorruptedOrMissingVideo("At least 2 video files required to use CVVideoStreams."
                                           "For single video, use CVVideoStream instead.")
-<<<<<<< HEAD
         self.iters = {}
-=======
->>>>>>> 51edaebe6a0c97f8d9888608310806e8591597dd
     
     def _cache(self, op_name):
         next_cache = self.src[self.index + 1]
@@ -438,7 +418,6 @@ class CVVideoStreams(VideoStream):
             raise StopIteration("Iterator is closed")
         else:
             try:
-<<<<<<< HEAD
                 frame = video.next(op_name)
                 video['frame_count'] += 1
             except StopIteration:
@@ -448,17 +427,6 @@ class CVVideoStreams(VideoStream):
                     video['vstream'] = self.next_vstream
                     frame = video['next_frame']
                     video['frame_count'] += 1
-=======
-                self.frame = next(self.vstream).get()
-                self.frame_count += 1
-            except StopIteration:
-                # change vstreams
-                if self.index + 1 < len(self.src):
-                    self.thread.join()
-                    self.vstream = self.next_vstream
-                    self.frame = self.next_frame
-                    self.frame_count += 1
->>>>>>> 51edaebe6a0c97f8d9888608310806e8591597dd
                     # start another thread
                     video['next_frame'] = None
                     video['next_vstream'] = None

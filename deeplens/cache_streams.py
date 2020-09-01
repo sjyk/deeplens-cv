@@ -19,7 +19,7 @@ class CacheStream(DataStream):
         self.iters[op_name] += 1
         i = self.iters[op_name]
         while True:
-            if i >= self.index:
+            if i < self.index:
                 raise MissingIndex('Cache index not saved')
             if i < self.index + size:
                 break

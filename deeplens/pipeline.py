@@ -8,7 +8,6 @@ video input stream as well as operators that can transform this stream.
 import logging
 import networkx as nx
 from deeplens.utils.error import *
-from queue import Queue, Empty
 from deeplens.streams import *
 
 #sources video from the default camera
@@ -38,7 +37,7 @@ class Operator():
 
 class GraphManager():
     """ Creates and manages a DAG graph for pipeline purposes
-    NOTE: We don't really error check for duplicate streams
+    NOTE: We don't safety check for duplicate streams/operators !!!!
     """
     def __init__(self):
         self.roots = {}
@@ -68,7 +67,7 @@ class GraphManager():
     # denote which leaves to run
     def run(self, plan = None):
         run_streams = {}
-        if plan != None:
+        if  != None:
             while True:
                 finished = True
                 for (name, num) in plan:
@@ -109,8 +108,9 @@ class GraphManager():
             self.leaves.add(name)
             self.roots.difference(set(parents))
     
-    def add_stream(self, datastream, stream_name):
-        self.dstreams[stream_name] = datastream
+    def add_stream(self, datastream):
+        name = datastream.name
+        self.dstreams[name] = datastream
 
     def add_streams(self, datastreams):
         self.dstreams.update(datastreams)

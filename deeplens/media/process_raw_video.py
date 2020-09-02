@@ -62,24 +62,24 @@ def extract_props_toCSV(path, input_file):
         video_file=path+item+".mp4"
         time.sleep(1)
         if os.path.exists(video_file):
-            cap = cv2.VideoCapture(item+".mp4")
+            cap = cv2.VideoCapture(video_file)
             fps = round(cap.get(cv2.CAP_PROP_FPS))
             cap.release()
             if fps==0:
                 print("warning!missing fps:",item,",set default fps=30")
                 fps=30
-            else:
-                print("missing file:"+video_file)
-                for index, row in id.iterrows():
-                    trim_id.append(row['youtube_id'])
-                    trim_seconds.append(row['timestamp_ms']/1000-time_start)
-                    trim_frame_no.append(int((row['timestamp_ms']/1000-time_start)*fps))
-                    trim_class.append(row['class_name'])
-                    trim_xmin.append(row['xmin'])
-                    trim_xmax.append(row['xmax'])
-                    trim_ymin.append(row['ymin'])
-                    trim_ymax.append(row['ymax'])
-                    trim_fps.append(fps)
+        else:
+            print("missing file:"+video_file)
+        for index, row in id.iterrows():
+            trim_id.append(row['youtube_id'])
+            trim_seconds.append(row['timestamp_ms']/1000-time_start)
+            trim_frame_no.append(int((row['timestamp_ms']/1000-time_start)*fps))
+            trim_class.append(row['class_name'])
+            trim_xmin.append(row['xmin'])
+            trim_xmax.append(row['xmax'])
+            trim_ymin.append(row['ymin'])
+            trim_ymax.append(row['ymax'])
+            trim_fps.append(fps)
 
         print(item+"duration:"+str(duration))
         data = {"youtube_id": trim_id, "second_no": trim_seconds, "fps": trim_fps, "frame_no": trim_frame_no,

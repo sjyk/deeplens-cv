@@ -31,8 +31,11 @@ from deeplens.struct import RawVideoStream
 sys.path.insert(0,currentdir)
 
 import time
+import os
+import numpy as np
 
 def diagnostic(video_path, size):
+    os.system("sudo sync; echo 1 | sudo tee /proc/sys/vm/drop_caches >/dev/null")
     file_size = None
     time_storage = None
     time_retreive = None
@@ -46,15 +49,16 @@ def diagnostic(video_path, size):
 
     t0 = time.time()
 
-    cache = persist(vstream, 'cache.npz') #how big the size of the stored raw video is
+    # /dev/shm/
+    cache = persist(vstream, '/dev/shm/cache.npz') #how big the size of the stored raw video is
 
     t1 = time.time()
 
-    vstream = RawVideoStream('cache.npz', shape=(LIMIT,size[1],size[0],3)) #retrieving the data (have to provide dimensions (num frames, w, h, channels)
+    vstream = RawVideoStream('/dev/shm/cache.npz', shape=(LIMIT,size[1],size[0],3)) #retrieving the data (have to provide dimensions (num frames, w, h, channels)
     #do something
-    f = 0
+    #f = 0
     for v in vstream:
-        f += 1
+        v['data'][0,0,0]
         pass
 
     t2 = time.time()
@@ -62,7 +66,7 @@ def diagnostic(video_path, size):
     time_storage = t1 - t0
     time_retreive = t2 - t1
 
-    file_size = os.path.getsize('cache.npz')
+    file_size = os.path.getsize('/dev/shm/cache.npz')
 
     return (file_size, time_storage, time_retreive)
 

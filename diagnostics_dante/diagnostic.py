@@ -33,12 +33,30 @@ sys.path.insert(0,currentdir)
 import time
 import os
 import numpy as np
+import psutil
+from multiprocessing import Process, Value, Manager
+from statistics import median
+
+def getResourceUsage(done, mlist):
+    cpu_usage = []
+    mlist.append(cpu_usage)
+    ram_usage = []
+    mlist.append(ram_usage)
+    while done.value:
+        cpu_usage.append(psutil.cpu_percent())
+        ram_usage.append(psutil.virtual_memory().percent)
+        mlist[0] = cpu_usage
+        mlist[1] = ram_usage
+        time.sleep(1)
+    
 
 def diagnostic(video_path, size):
     os.system("sudo sync; echo 1 | sudo tee /proc/sys/vm/drop_caches >/dev/null")
     file_size = None
     time_storage = None
+    usage_storage = None
     time_retreive = None
+    usage_retrieve = None
 
     FILENAME = video_path #the video file that you want to load
     LIMIT = 100
@@ -47,29 +65,47 @@ def diagnostic(video_path, size):
 
     vstream = vstream[Crop(0, 0, size[0], size[1])]
 
+    manager = Manager()
+    mlist = manager.list()
+    done = Value('i', 1)
+    resource = Process(target=getResourceUsage, args=(done, mlist))
+    resource.start()
+
     t0 = time.time()
 
     # /dev/shm/
-    cache = persist(vstream, '/dev/shm/cache.npz') #how big the size of the stored raw video is
+    cache = persist(vstream, 'cache.npz') #how big the size of the stored raw video is
+
+    done.value -= 1
+    resource.join()
+    usage_storage = mlist
+
+    manager = Manager()
+    mlist = manager.list()
+    done = Value('i', 1)
+    resource = Process(target=getResourceUsage, args=(done, mlist))
+    resource.start()
 
     t1 = time.time()
 
-    vstream = RawVideoStream('/dev/shm/cache.npz', shape=(LIMIT,size[1],size[0],3)) #retrieving the data (have to provide dimensions (num frames, w, h, channels)
+    vstream = RawVideoStream('cache.npz', shape=(LIMIT,size[1],size[0],3)) #retrieving the data (have to provide dimensions (num frames, w, h, channels)
     #do something
-    #f = 0
     for v in vstream:
-        v['data'][0,0,0]
+        np.copy(v['data'], order='F')
         pass
 
     t2 = time.time()
 
+    done.value -= 1
+    resource.join()
+    usage_retrieve = mlist
+
     time_storage = t1 - t0
     time_retreive = t2 - t1
 
-    file_size = os.path.getsize('/dev/shm/cache.npz')
+    file_size = os.path.getsize('cache.npz')
 
-    return (file_size, time_storage, time_retreive)
-
+    return (file_size, time_storage, time_retreive, median(usage_storage), max(usage_storage), median(usage_retrieve), max(usage_retrieve))
 
 # Test
 #print(diagnostic('../tcam.mp4', (1080, 1080)))

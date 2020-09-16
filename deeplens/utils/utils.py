@@ -16,6 +16,12 @@ import json
 import random
 import string
 
+def sname_to_class(name):
+    import importlib
+    module = importlib.import_module('deeplens.streams')
+    class_ = getattr(module, name)
+    return class_
+
 def get_rnd_strng(size=10):
 	"""get_rnd_strng() generates a random string for creating temp files.
 

@@ -180,7 +180,43 @@ class ConstantStream(DataStream):
     @staticmethod
     def materialize(data):
         return data
+
+class TimeStream(DataStream):
+    ''' Approximate time stream
+    '''
+    def __init__(self, start_time, name, unit = 1, data_type = 'frame'):
+        super().__init__(name)
+        self.data = data
+        self.iters = {}
+        self.unit = unit
+        self.start_time = start_time
+        self.type = data_type
+
+    def add_iter(self, op_name):
+        self.iters[op_name] = -1
+        return self
     
+    def next(self, op_name):
+        self.iters[op_name] += 1
+        time = self.iters[op_name]*self.unit + self.stat_time
+        return time
+    
+    @staticmethod
+    def init_mat():
+        return []
+    
+    @staticmethod
+    def append(data, prev):
+        return prev.append(data)
+    
+    @staticmethod
+    def materialize(data, fp = None):
+        if not fp:
+            return json.dumps(data)
+        else:
+            return json.dump(data, fp)
+
+
 
 class VideoStream(DataStream):
     def __init__(self, name, src, limit=-1, origin = np.array((0,0)), offset = 0, start_time = 0):
@@ -211,10 +247,7 @@ class CVVideoStream(VideoStream):
         self.cap = cv2.VideoCapture(self.src)
         self.width = int(self.cap.get(3))   # float
         self.height = int(self.cap.get(4)) # float
-        if limit == -1:
-            self.frame_num = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        else:
-            self.frame_num = limit
+        self.limit = limit
         self.iters = {}
 
     def add_iter(self, op_name, propIds = None):
@@ -224,7 +257,7 @@ class CVVideoStream(VideoStream):
             for propId in propIds:
                 self.iters[op_name][0].set(propId, self.propIds[propId])
 
-        if not self.cap.isOpened():
+        if not self.iters[op_name][0].isOpened():
             raise CorruptedOrMissingVideo(str(self.src) + " is corrupted or missing.")
         return self
 
@@ -268,6 +301,58 @@ class CVVideoStream(VideoStream):
         prev.write(data)
         return prev
 
+class CVRealVideoStream(CVVideoStream):
+    def __init__(self, src, name, limit = -1, origin = np.array((0,0)), offset = 0):
+        super.__init__(src, name, limit, origin, offset)
+        self.data = []
+        self.index = 0
+
+
+    def add_iter(self, op_name):
+        if self.index > 0:
+            raise MissingIndex('Cache index not saved')
+        self.iters[op_name] = 0
+        return self
+
+    def next(self, op_name):
+        cap = self.cap
+        frame_count = self.iters[op_name] + self.offset + 1
+        i = self.iters[op_name] + 1
+        if (self.limit < 0 or frame_count < self.limit - 1):
+            while True:
+                if i < self.index:
+                    raise MissingIndex('Cache index not saved')
+                if i < self.index + len(self.data):
+                    break
+                if cap.isOpened():
+                    ret, frame = cap.read()
+                    if ret:
+                        self.data.append(frame)
+                    else:
+                        del self.iters[op_name]
+                        min_index = min(self.iters.values())
+                        if min_index == i:
+                            while self.index < i:
+                                self.index += 1
+                                del self.data[0]
+                        raise StopIteration("Iterator is closed")
+                else:
+                    del self.iters[op_name]
+                    min_index = min(self.iters.values())
+                    if min_index == i:
+                        while self.index < i:
+                            self.index += 1
+                            del self.data[0]
+                    raise StopIteration("Iterator is closed")
+        
+        min_index = min(self.iters.values())
+        if min_index == i:
+            while self.index < i:
+                self.index += 1
+                del self.data[0]
+        
+        return self.data[i - self.index]
+    
 class HwangVideoStream(VideoStream):
     def __init__(self, src, name, limit=-1, origin=np.array((0, 0))):
         super().__init__(src, limit, name, origin)

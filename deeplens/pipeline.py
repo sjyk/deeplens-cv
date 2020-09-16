@@ -41,7 +41,6 @@ class GraphManager():
     NOTE: We don't safety check for duplicate streams/operators !!!!
     """
     def __init__(self):
-        self.roots = {}
         self.dstreams = {}
         self.graph = nx.DiGraph()
         self.leaves = {}
@@ -107,17 +106,14 @@ class GraphManager():
         dstreams = set(operator.input_names)
         if name in self.graph.nodes:
             return False
-        elif parents and not nodes.issuperset(set(parents)):
+        elif operator.input_names and not nodes.issuperset(set(operator.input_names)):
             return False
             
         elif dstreams and not set(self.dstreams.keys()).issuperset(dstreams):
             return False
         else:
             self.graph.add_node((name, {'in_streams': dstreams, 'operator': operator, 'out_streams': operator.results}))
-            if parents == None:
-                self.roots.add(name)
             self.leaves.add(name)
-            self.roots.difference(set(parents))
             if operator.results != None:
                 self.dstreams.update(operator.results)
     

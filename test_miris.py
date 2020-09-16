@@ -11,7 +11,7 @@ from deeplens.utils.testing_utils import get_size
 from deeplens.utils.testing_utils import printCrops
 from datetime import datetime
 
-def miris_tagger(streams, batch_size):
+def miris_tagger(streams, batch_size, start_frame):
     bb_labels = JSONListStream(None, 'map_labels', 'car_tracking')
     for i in range(batch_size):
         try:
@@ -24,7 +24,7 @@ def miris_tagger(streams, batch_size):
             bbs = []
             for lb in curr:
                 bb = Box(lb['left']//2, lb['top']//2, lb['right']//2, lb['bottom']//2)
-                bbs.append({'bb': bb, 'label': lb['track_id']})
+                bbs.append({'bb': bb, 'label': lb['track_id'], 'frame': i + start_frame})
             JSONListStream.append(bbs, bb_labels)
     return bb_labels
 

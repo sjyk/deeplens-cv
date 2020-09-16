@@ -6,7 +6,6 @@ class CacheStream(DataStream):
         super().__init__(name)
         self.data = []
         self.operator = iter(operator)
-        self.size = 0
         self.index = 0
         self.keep_all = False
 
@@ -25,7 +24,7 @@ class CacheStream(DataStream):
         while True:
             if i < self.index:
                 raise MissingIndex('Cache index not saved')
-            if i < self.index + size:
+            if i < self.index + len(self.data):
                 break
             next(self.operator)
         
@@ -33,7 +32,6 @@ class CacheStream(DataStream):
         if not self.keep_all:
             if min_index == i:
                 while self.index < i:
-                    self.size -= 1
                     self.index += 1
                     del self.data[0]
         
@@ -41,7 +39,6 @@ class CacheStream(DataStream):
 
     def insert(self, value):
         self.data.append(value)
-        self.size +=1
 
     def all(self, value):
         return self.data
@@ -59,33 +56,3 @@ class CacheStream(DataStream):
             return json.dumps(data)
         else:
             return json.dump(data, fp)
-
-# class CacheFullMetaStream(CacheStream):
-#     def __init__(self, name, stream_type):
-#         super().__init__(name, stream_type)
-#         self.data = 0
-#         self.name = name
-#         self.vid_name = None
-#         self.crops = None
-#         self.video_refs = None
-#         self.fcoor = None
-#         self.scoor = None
-#         self.first_frame = None
-#         self.new_batch = None
-#         self.do_join = None
-
-#     def update(self, index, new_batch = False):
-#         self.data = index
-#         self.new_batch = new_batch
-
-#     def update_all(self, index, vid_name, crops, video_refs, fcoor, scoor, do_join):
-#         self.data = 0
-#         self.name = vid_name
-#         self.crops = crops
-#         self.video_refs = video_refs
-#         self.fcoor = fcoor
-#         self.scoor = scoor
-#         self.data = index
-#         self.first_frame = index
-#         self.new_batch = True
-#         self.do_join = do_join

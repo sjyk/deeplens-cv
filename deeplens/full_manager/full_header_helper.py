@@ -23,13 +23,23 @@ from multiprocessing import Pool
 from deeplens.utils.utils import Serializer
 
 
-def update_headers_batch(conn, crops, name, start_time, end_time, ids):
-
+def update_headers_batch(conn, crops, name, start_frame, end_frame, start_time, end_time, ids):
     for i, id in enumerate(ids):
         clip_info = query_clip(conn, id, name)[0] # Need to update this
         updates = {}
-        updates['start_time'] = min(start_time, clip_info[2])
-        updates['end_time'] = max(end_time, clip_info[3])
+        updates['start_frame'] = min(start_frame, clip_info[2])
+        updates['end_frame'] = max(end_frame, clip_info[3])
+        
+        if start_time != None and clip_info[4] != 'NULL':
+            updates['start_time'] = min(start_time, int(clip_info[4]))
+        elif start_time != None:
+            updates['start_time'] = start_time
+        
+        if end_time != None and clip_info[5] != 'NULL':
+            end['end_time'] = min(end_time, int(clip_info[5]))
+        elif end_time != None:
+            updates['end_time'] = end_time
+
         if i != 0:
             origin_x = crops[i - 1]['bb'].x0
             origin_y = crops[i - 1]['bb'].y0
@@ -49,36 +59,31 @@ def update_headers_batch(conn, crops, name, start_time, end_time, ids):
         update_clip_header(conn, id, name, updates)
 
 
-def new_headers_batch(conn, all_crops, name, start_time, end_time, video_refs, 
-                            full_dim, scaled_dim):
+def new_headers_batch(conn, all_crops, name, start_frame, end_frame, start_time, end_time, video_refs, 
+                            full_dim, scaled_dim, ids = None):
     """
     Create new headers all headers for one batch. In terms of updates, we assume certain
     constraints on the system, and only update possible changes.
     """
     crops = all_crops[0]
-    ids = [random.getrandbits(63) for i in range(len(crops) + 1)]
+    if ids == None:
+        ids = [random.getrandbits(63) for i in range(len(crops) + 1)]        
     for i in range(1, len(crops) + 1):
         insert_background_header(conn, ids[0], ids[i], name)
     for i in range(0, len(crops) + 1):
         if i == 0:
-            insert_clip_header(conn, ids[0], name, start_time, end_time, 0, 0,
+            insert_clip_header(conn, ids[0], name, start_frame, end_frame, start_time, end_time, 0, 0,
                                 full_dim[0], full_dim[1], scaled_dim[0], scaled_dim[1], video_refs[i], is_background=len(crops))
         else:
             origin_x = crops[i - 1]['bb'].x0
             origin_y = crops[i - 1]['bb'].y0
             width = crops[i - 1]['bb'].x1 - crops[i - 1]['bb'].x0
             height = crops[i - 1]['bb'].y1 - crops[i - 1]['bb'].y0
-            insert_clip_header(conn, ids[i], name, start_time, end_time, origin_x,
+            insert_clip_header(conn, ids[i], name,start_frame, end_frame, start_time, end_time, origin_x,
                                 origin_y,  width, height, width, height, video_refs[i], other = json.dumps(crops[i - 1]['all'], cls=Serializer))
 
-    for i in range(0, len(crops)):
-        if type(crops[i]['label']) is list:
-            for j in range(len(crops[i]['label'])):
-                insert_label_header(conn, crops[i]['label'][j], json.dumps(crops[i]['all'], cls=Serializer), ids[i + 1], name)
-        else:
-            insert_label_header(conn, crops[i]['label'], json.dumps(crops[i]['all'], cls=Serializer), ids[i + 1], name)
     for i in range(1, len(all_crops)):
-        update_headers_batch(conn, all_crops[i], name, start_time, end_time, ids) # TODO
+        update_headers_batch(conn, all_crops[i], name, start_time, end_time, start_frame, end_frame, ids) # TODO
     return ids
 
 def delete_video_if_exists(conn, video_name):
@@ -114,13 +119,13 @@ def move_one_file(conn, clip_id, video_name, dest_ref):
     conn.commit()
 
 
-def insert_clip_header(conn, clip_id, video_name, start_time, end_time, origin_x, origin_y, fwidth, fheight, width, height, video_ref='', is_background = False, translation = 'NULL', other = 'NULL'):
+def insert_clip_header(conn, clip_id, video_name, start_frame, end_frame, start_time, end_time, origin_x, origin_y, fwidth, fheight, width, height, video_ref='', is_background = False, translation = 'NULL', other = 'NULL'):
     c = conn.cursor()
     #print((clip_id, video_name, start_time, end_time, origin_x, origin_y, fwidth, fheight, width, height, video_ref, is_background, translation, other))
     if other == None:
         other = 'NULL'
-    c.execute("INSERT INTO clip VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-               (clip_id, video_name, start_time, end_time, origin_x, origin_y, fwidth, fheight, width, height, video_ref, is_background, translation, other))
+    c.execute("INSERT INTO clip VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+               (clip_id, video_name, start_frame, end_frame, start_time, end_time, origin_x, origin_y, fwidth, fheight, width, height, video_ref, is_background, translation, other))
     conn.commit()
 
 
@@ -129,11 +134,16 @@ def insert_background_header(conn, background_id, clip_id, video_name):
     c.execute("INSERT INTO background VALUES (?, ?, ?)", (background_id, clip_id, video_name))
     conn.commit()
 
-def insert_label_header(conn, label, value, clip_id, video_name, data_type = 'box', frames = None):
+def insert_label_header(conn, label, clip_id, video_name, data_type = 'ListStream', value = None, bbox = None, frame = None, db_name = 'label'):
     c = conn.cursor()
-    if frames == None:
-        frames = 'NULL'
-    c.execute("INSERT INTO label VALUES (?, ?, ?, ?, ?, ?)", (label, value, clip_id, video_name, data_type, frames))
+    if frame == None:
+        frame = 'NULL'
+    if value == None:
+        value = 'NULL'
+    if bbox == None:
+        bbox = 'NULL'
+    s = "INSERT INTO {} VALUES (?, ?, ?, ?, ?, ?)".format(db_name)
+    c.execute(s, (label, value, bbox, clip_id, video_name, data_type, frame))
     conn.commit()
 
 def insert_lineage_header(conn, video_name, lineage, parent):

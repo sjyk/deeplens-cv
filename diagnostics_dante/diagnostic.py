@@ -39,24 +39,45 @@ from statistics import median
 
 def getResourceUsage(done, mlist):
     cpu_usage = []
-    mlist.append(cpu_usage)
     ram_usage = []
-    mlist.append(ram_usage)
+    read_count = []
+    write_count = []
+    read_bytes = []
+    write_bytes = []
     while done.value:
         cpu_usage.append(psutil.cpu_percent())
         ram_usage.append(psutil.virtual_memory().percent)
-        mlist[0] = cpu_usage
-        mlist[1] = ram_usage
+        disk_tuple = psutil.disk_io_counters()
+        read_count.append(disk_tuple[0])
+        write_count.append(disk_tuple[1])
+        read_bytes.append(disk_tuple[2])
+        write_bytes.append(disk_tuple[3])
         time.sleep(1)
+    mlist.append(cpu_usage)
+    mlist.append(ram_usage)
+    mlist.append(read_count)
+    mlist.append(write_count)
+    mlist.append(read_bytes)
+    mlist.append(write_bytes)
     
 
 def diagnostic(video_path, size):
     os.system("sudo sync; echo 1 | sudo tee /proc/sys/vm/drop_caches >/dev/null")
     file_size = None
     time_storage = None
-    usage_storage = None
-    time_retreive = None
-    usage_retrieve = None
+    cpu_storage = None
+    ram_storage = None
+    read_count_storage = None
+    write_count_storage = None
+    read_bytes_storage = None
+    write_bytes_storage = None
+    time_retrieve = None
+    cpu_retrieve = None
+    ram_retrieve = None
+    read_count_retrieve = None
+    write_count_retrieve = None
+    read_bytes_retrieve = None
+    write_bytes_retrieve = None
 
     FILENAME = video_path #the video file that you want to load
     LIMIT = 100
@@ -74,11 +95,16 @@ def diagnostic(video_path, size):
     t0 = time.time()
 
     # /dev/shm/
-    cache = persist(vstream, 'cache.npz') #how big the size of the stored raw video is
+    cache = persist(vstream, '/dev/shm/cache.npz') #how big the size of the stored raw video is
 
     done.value -= 1
     resource.join()
-    usage_storage = mlist
+    cpu_storage = mlist[0]
+    ram_storage = mlist[1]
+    read_count_storage = mlist[2]
+    write_count_storage = mlist[3]
+    read_bytes_storage = mlist[4]
+    write_bytes_storage = mlist[5]
 
     manager = Manager()
     mlist = manager.list()
@@ -88,7 +114,7 @@ def diagnostic(video_path, size):
 
     t1 = time.time()
 
-    vstream = RawVideoStream('cache.npz', shape=(LIMIT,size[1],size[0],3)) #retrieving the data (have to provide dimensions (num frames, w, h, channels)
+    vstream = RawVideoStream('/dev/shm/cache.npz', shape=(LIMIT,size[1],size[0],3)) #retrieving the data (have to provide dimensions (num frames, w, h, channels)
     #do something
     for v in vstream:
         np.copy(v['data'], order='F')
@@ -98,14 +124,26 @@ def diagnostic(video_path, size):
 
     done.value -= 1
     resource.join()
-    usage_retrieve = mlist
+    cpu_retrieve = mlist[0]
+    ram_retrieve = mlist[1]
+    read_count_retrieve = mlist[2]
+    write_count_retrieve = mlist[3]
+    read_bytes_retrieve = mlist[4]
+    write_bytes_retrieve = mlist[5]
 
     time_storage = t1 - t0
-    time_retreive = t2 - t1
+    time_retrieve = t2 - t1
 
-    file_size = os.path.getsize('cache.npz')
+    file_size = os.path.getsize('/dev/shm/cache.npz')
 
-    return (file_size, time_storage, time_retreive, median(usage_storage), max(usage_storage), median(usage_retrieve), max(usage_retrieve))
+    return (file_size, time_storage, time_retrieve, \
+            median(cpu_storage), max(cpu_storage), median(ram_storage), max(ram_storage), \
+            median(read_count_storage), max(read_count_storage), median(write_count_storage), max(write_count_storage), \
+            median(read_bytes_storage), max(read_bytes_storage), median(write_bytes_storage), max(write_bytes_storage), \
+            median(cpu_retrieve), max(cpu_retrieve), median(ram_retrieve), max(ram_retrieve), \
+            median(read_count_retrieve), max(read_count_retrieve), median(write_count_retrieve), max(write_count_retrieve), \
+            median(read_bytes_retrieve), max(read_bytes_retrieve), median(write_bytes_retrieve), max(write_bytes_retrieve), \
+            )
 
 # Test
 #print(diagnostic('../tcam.mp4', (1080, 1080)))

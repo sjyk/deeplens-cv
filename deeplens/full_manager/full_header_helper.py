@@ -36,19 +36,19 @@ def update_headers_batch(conn, crops, name, start_frame, end_frame, start_time, 
             updates['start_time'] = start_time
         
         if end_time != None and clip_info[5] != 'NULL':
-            end['end_time'] = min(end_time, int(clip_info[5]))
+            updates['end_time'] = min(end_time, int(clip_info[5]))
         elif end_time != None:
             updates['end_time'] = end_time
 
         if i != 0:
             origin_x = crops[i - 1]['bb'].x0
             origin_y = crops[i - 1]['bb'].y0
-            translation = clip_info[12]
+            translation = clip_info[14]
             if translation == 'NULL':
-                if origin_x != clip_info[4] or origin_y != clip_info[5]:
+                if origin_x != clip_info[6] or origin_y != clip_info[7]:
                     updates['translation'] = json.dumps([(start_time, origin_x, origin_y)])
             else:
-                translation = json.loads(clip_info[12])
+                translation = json.loads(clip_info[14])
                 if type(translation) is list:
                     if translation[-1][1] != origin_x or translation[-1][2] != origin_y:
                         translation.append((start_time, origin_x, origin_y))
@@ -68,6 +68,7 @@ def new_headers_batch(conn, all_crops, name, start_frame, end_frame, start_time,
     crops = all_crops[0]
     if ids == None:
         ids = [random.getrandbits(63) for i in range(len(crops) + 1)]        
+    
     for i in range(1, len(crops) + 1):
         insert_background_header(conn, ids[0], ids[i], name)
     for i in range(0, len(crops) + 1):
@@ -80,7 +81,7 @@ def new_headers_batch(conn, all_crops, name, start_frame, end_frame, start_time,
             width = crops[i - 1]['bb'].x1 - crops[i - 1]['bb'].x0
             height = crops[i - 1]['bb'].y1 - crops[i - 1]['bb'].y0
             insert_clip_header(conn, ids[i], name,start_frame, end_frame, start_time, end_time, origin_x,
-                                origin_y,  width, height, width, height, video_refs[i], other = json.dumps(crops[i - 1]['all'], cls=Serializer))
+                                origin_y,  width, height, width, height, video_refs[i])
 
     for i in range(1, len(all_crops)):
         update_headers_batch(conn, all_crops[i], name, start_time, end_time, start_frame, end_frame, ids) # TODO
@@ -119,13 +120,11 @@ def move_one_file(conn, clip_id, video_name, dest_ref):
     conn.commit()
 
 
-def insert_clip_header(conn, clip_id, video_name, start_frame, end_frame, start_time, end_time, origin_x, origin_y, fwidth, fheight, width, height, video_ref='', is_background = False, translation = 'NULL', other = 'NULL'):
+def insert_clip_header(conn, clip_id, video_name, start_frame, end_frame, start_time, end_time, origin_x, origin_y, fwidth, fheight, width, height, video_ref='', is_background = False, translation = 'NULL'):
     c = conn.cursor()
     #print((clip_id, video_name, start_time, end_time, origin_x, origin_y, fwidth, fheight, width, height, video_ref, is_background, translation, other))
-    if other == None:
-        other = 'NULL'
-    c.execute("INSERT INTO clip VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-               (clip_id, video_name, start_frame, end_frame, start_time, end_time, origin_x, origin_y, fwidth, fheight, width, height, video_ref, is_background, translation, other))
+    c.execute("INSERT INTO clip VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+               (clip_id, video_name, start_frame, end_frame, start_time, end_time, origin_x, origin_y, fwidth, fheight, width, height, video_ref, is_background, translation))
     conn.commit()
 
 
@@ -142,7 +141,7 @@ def insert_label_header(conn, label, clip_id, video_name, data_type = 'ListStrea
         value = 'NULL'
     if bbox == None:
         bbox = 'NULL'
-    s = "INSERT INTO {} VALUES (?, ?, ?, ?, ?, ?)".format(db_name)
+    s = "INSERT INTO {} VALUES (?, ?, ?, ?, ?, ?, ?)".format(db_name)
     c.execute(s, (label, value, bbox, clip_id, video_name, data_type, frame))
     conn.commit()
 

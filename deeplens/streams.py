@@ -14,9 +14,10 @@ from deeplens.utils.error import *
 
 
 class DataStream():
-    def __init__(self, name):
+    def __init__(self, name, ttype = 'frame'):
         self.name = name
         self.iters = {}
+        self.ttype = ttype
 
     def add_iter(self, op_name):
         raise NotImplemented("__iter__ implemented")
@@ -37,36 +38,33 @@ class DataStream():
         raise NotImplemented("materialize not implemented")
 
 class JSONListStream(DataStream):
-    def __init__(self, data, name, limit = -1, isList = False):
-        super().__init__(name)
+    def __init__(self, data, name, limit = -1, is_file = False, is_list = False, ttype = 'frame'):
+        super().__init__(name, ttype = ttype)
         self.data = []
         self.limit = limit
-        if data is not None:
-            if isList:
-                if type(data) == str:
+        if data is None:
+            return
+        if is_file:
+            if type(data) == str:
                     files = [data]
-                else:
-                    files = data
-                for file in files:
-                    with open(file, 'r') as f:
-                        self.data = self.data + json.load(f)
             else:
-                if type(data) == str:
-                    files = [data]
-                else:
-                    files = data
-                for file in files:
-                    with open(file, 'r') as f:
+                files = data
+            for file in files:
+                with open(file, 'r') as f:
+                    if is_list:
+                        self.data = self.data + json.load(f)
+                    else:
                         self.data = self.data.append(json.load(f))
+        else:
+            self.data = data
 
     def add_iter(self, op_name):
-        self.iters[op_name] = (iter(self.data), -1)
+        self.iters[op_name] = [iter(self.data), -1]
         return self
 
     def next(self, op_name):
         self.iters[op_name][1] += 1
         index = self.iters[op_name][1]
-        #print(self.limit)
         if index >= len(self.data) or (index > self.limit and self.limit > 0):
             raise StopIteration("Iterator is closed")
         return next(self.iters[op_name][0])
@@ -159,14 +157,20 @@ class JSONDictStream(DataStream):
 
 
 class ConstantStream(DataStream):
-    def __init__(self, data, name):
+    def __init__(self, data, name, limit = -1):
         super().__init__(name)
         self.data = data
+        self.iters = {}
+        self.limit = limit
 
     def add_iter(self, op_name):
+        self.iters[op_name] = -1
         return self
     
     def next(self, op_name):
+        self.iters[op_name] += 1
+        if self.limit > 0 and self.iters[op_name] >= self.limit:
+            raise StopIteration()
         return self.data
     
     @staticmethod
@@ -181,42 +185,6 @@ class ConstantStream(DataStream):
     def materialize(data):
         return data
 
-class TimeStream(DataStream):
-    ''' Approximate time stream
-    '''
-    def __init__(self, start_time, name, unit = 1, data_type = 'frame'):
-        super().__init__(name)
-        self.data = data
-        self.iters = {}
-        self.unit = unit
-        self.start_time = start_time
-        self.type = data_type
-
-    def add_iter(self, op_name):
-        self.iters[op_name] = -1
-        return self
-    
-    def next(self, op_name):
-        self.iters[op_name] += 1
-        time = self.iters[op_name]*self.unit + self.stat_time
-        return time
-    
-    @staticmethod
-    def init_mat():
-        return []
-    
-    @staticmethod
-    def append(data, prev):
-        return prev.append(data)
-    
-    @staticmethod
-    def materialize(data, fp = None):
-        if not fp:
-            return json.dumps(data)
-        else:
-            return json.dump(data, fp)
-
-
 
 class VideoStream(DataStream):
     def __init__(self, name, src, limit=-1, origin = np.array((0,0)), offset = 0, start_time = 0):
@@ -229,11 +197,11 @@ class VideoStream(DataStream):
     
     @staticmethod
     def init_mat(self, file_name, encoding, frame_rate):
-        super.init_mat()
+        super().init_mat()
     
     @staticmethod
     def append(self, data, prev):
-        super.append(data, prev)
+        super().append(data, prev)
     
     @staticmethod
     def materialize(self, data):
@@ -251,8 +219,7 @@ class CVVideoStream(VideoStream):
         self.iters = {}
 
     def add_iter(self, op_name, propIds = None):
-        self.iters[op_name] = (cv2.VideoCapture(self.src), self.offset)
-        
+        self.iters[op_name] = [cv2.VideoCapture(self.src), self.offset]
         if propIds:
             for propId in propIds:
                 self.iters[op_name][0].set(propId, self.propIds[propId])
@@ -262,6 +229,8 @@ class CVVideoStream(VideoStream):
         return self
 
     def next(self, op_name):
+        if op_name not in self.iters:
+            raise StopIteration("Iterator is closed")
         cap = self.iters[op_name][0]
         frame_count = self.iters[op_name][1]
         if cap.isOpened() and (self.limit < 0 or frame_count < self.limit - 1):
@@ -303,7 +272,7 @@ class CVVideoStream(VideoStream):
 
 class CVRealVideoStream(CVVideoStream):
     def __init__(self, src, name, limit = -1, origin = np.array((0,0)), offset = 0):
-        super.__init__(src, name, limit, origin, offset)
+        super().__init__(src, name, limit, origin, offset)
         self.data = []
         self.index = 0
 

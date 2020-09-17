@@ -24,18 +24,18 @@ class FixedCameraBGFGSegmenter(object):
 
 
 	#returns a bounding box around the foreground.
-	def segment(self, streams, batch_size, video = False):
+	def segment(self, streams, op_name, batch_size, video = False):
 
 		dynamic_mask = None
 		prev = None
 		count = 0
 		frames = []
-		vstream = streams['video']
-		print(vstream.name)
-		for frame in vstream:
-			frame = vstream.get()
+		for i in range(batch_size):
 			#show(frame)
  			#print(frame['frame'])
+			frame = streams['video'].next(op_name)
+			cv2.imshow('debug', frame)
+			cv2.waitKey(0)
 			if video:
 				frames.append(frame)
 

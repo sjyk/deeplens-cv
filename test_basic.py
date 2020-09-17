@@ -4,6 +4,7 @@ from deeplens.video.tracking.background import FixedCameraBGFGSegmenter
 from deeplens.dataflow.map import *
 from deeplens.full_manager.full_manager import *
 from deeplens.streams import *
+from deeplens.utils.box import *
 from deeplens.utils.utils import *
 import matplotlib.pyplot as plt
 import sys
@@ -11,6 +12,11 @@ import cv2
 
 
 manager = FullStorageManager(FixedCameraBGFGSegmenter().segment, CropUnionSplitter(), 'videos2')
+crop = {'bb': Box(0, 0, 1000, 1000), 'label': 'background'}
+crops = {'crops': ConstantStream(([crop], False), 'crops')}
+
+#label = [{'label': 'test', 'bb': Box(0, 1010, 0, 1010), 'frame': i/60.0} for i in range(120)]
+#labels = {'label': JSONListStream(label, 'label', ttype='time')}
 manager.put('./videos/cut4.mp4', 'test2')
 # res = manager.get("SELECT * FROM clip WHERE video_name = '%s'" %('test2'))
 # print(res)

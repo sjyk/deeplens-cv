@@ -1,13 +1,14 @@
 import json
 from deeplens.utils.error import MissingIndex
+from deeplens.streams import *
 
 class CacheStream(DataStream):
     def __init__(self, name, operator):
         super().__init__(name)
         self.data = []
-        self.operator = iter(operator)
         self.index = 0
         self.keep_all = False
+        self.operator = operator
 
     #only used by GraphManager -> to return results 
     #if you need to keep some datastream, set the results parameter on GraphManager run 
@@ -19,6 +20,8 @@ class CacheStream(DataStream):
         return self
     
     def next(self, op_name):
+        if op_name not in self.iters:
+            raise StopIteration()
         self.iters[op_name] += 1
         i = self.iters[op_name]
         while True:
@@ -26,7 +29,11 @@ class CacheStream(DataStream):
                 raise MissingIndex('Cache index not saved')
             if i < self.index + len(self.data):
                 break
-            next(self.operator)
+            try:
+                next(self.operator)
+            except StopIteration:
+                del self.iters[op_name]
+                raise StopIteration()
         
         min_index = min(self.iters.values())
         if not self.keep_all:
@@ -34,7 +41,6 @@ class CacheStream(DataStream):
                 while self.index < i:
                     self.index += 1
                     del self.data[0]
-        
         return self.data[i - self.index]
 
     def insert(self, value):

@@ -10,6 +10,7 @@ import networkx as nx
 from deeplens.utils.error import *
 from deeplens.streams import *
 import matplotlib.pyplot as plt
+import copy
 
 #sources video from the default camera
 DEFAULT_CAMERA = 0
@@ -20,12 +21,15 @@ class Operator():
     is the abstract class of all pipeline components in dlcv.
     """
     # need to initialize appropriate dstreams
-    def __init__(self, name, input_names):
+    def __init__(self, name, input_names, output_names):
         self.input_names = input_names
         self.name = name
+        self.output_names = output_names
+        self.results = {}
 
     def __iter__(self):
         self.index = -1
+        return self
 
     def __next__(self):
         self.index += 1
@@ -34,7 +38,7 @@ class Operator():
     def apply(self, streams):
         self.streams = streams
         for stream in self.streams:
-            self.streams[stream].add_iter(name)
+            self.streams[stream].add_iter(self.name)
 
 class GraphManager():
     """ Creates and manages a DAG graph for pipeline purposes
@@ -43,57 +47,64 @@ class GraphManager():
     def __init__(self):
         self.dstreams = {}
         self.graph = nx.DiGraph()
-        self.leaves = {}
+        self.leaves = []
 
     def get_operators(self):
         return self.operators.keys()
 
     def get_leaves(self):
-        return self.leaves.keys()
+        return self.leaves
 
     def build(self):
         mat_streams = {}
         for name in self.graph.nodes:
-            dstreams = self.graph[name]['in_streams']
-            parents = self.graph[name]['parents']
+            op = self.graph.nodes[name]['attr_dict']['operator']
+            streams = op.input_names
             curr_streams = {}
-            for stream in dstreams:
+            for stream in streams:
                 curr_streams[stream] = self.dstreams[stream]
-            self.graph[name]['operator'].apply(curr_streams)
-            iter(self.graph[name]['operator'])
+            op.apply(curr_streams)
+            iter(op)
 
     # denote which leaves to run
-    def run(self, plan = None, results = None):
+    def run(self, leaves, plan = None, results = []):
         run_streams = {}
+        self.build()
         if  plan != None:
             while True:
                 finished = True
                 for (name, num) in plan:
                     for i in range(num):
                         try:
-                            next(self.graph[name]['operator'])
+                            next(self.graph.nodes[name]['attr_dict']['operator'])
                             finished = False
                         except StopIteration:
                             break
                 if finished:
                     break
         else:
+            if leaves == 'all':
+                leaves = copy.copy(self.graph.nodes.keys())
+            ops = copy.copy(leaves)
             while True:
-                finished = True
-                for name in self.leaves:
+                fops = []
+                print(ops)
+                for name in ops:
                     try:
-                        next(self.graph[name]['operator'])
+                        next(self.graph.nodes[name]['attr_dict']['operator'])
                         finished = False
                     except StopIteration:
-                        break
-                if finished:
+                        fops.append(name)
+                        continue
+                for op in fops:
+                    ops.remove(op)
+                if len(ops) == 0:
                     break
-        
         output = {}
         for result in results:
             output[result] = self.dstreams[result].all()
         
-        return result
+        return output
 
     def draw(self):
         nx.draw(self.graph)
@@ -106,16 +117,14 @@ class GraphManager():
         dstreams = set(operator.input_names)
         if name in self.graph.nodes:
             return False
-        elif operator.input_names and not nodes.issuperset(set(operator.input_names)):
-            return False
-            
         elif dstreams and not set(self.dstreams.keys()).issuperset(dstreams):
             return False
         else:
-            self.graph.add_node((name, {'in_streams': dstreams, 'operator': operator, 'out_streams': operator.results}))
-            self.leaves.add(name)
+            self.graph.add_node(name, attr_dict={'operator': operator})
+            #self.leaves.append(name)
             if operator.results != None:
                 self.dstreams.update(operator.results)
+            return True
     
     def add_stream(self, datastream):
         name = datastream.name

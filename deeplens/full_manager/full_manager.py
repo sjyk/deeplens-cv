@@ -35,8 +35,8 @@ class FullStorageManager():
     directory
     """
     def __init__(self, content_tagger, content_splitter, basedir, db_name='header.db', reuse_conn = True):
-        self.content_tagger = content_tagger
-        self.content_splitter = content_splitter
+        self.tagger = content_tagger
+        self.splitter = content_splitter
         self.basedir = basedir
         self.videos = set()
         self.threads = None
@@ -76,7 +76,6 @@ class FullStorageManager():
                                        video_ref text NOT NULL,
                                        is_background NOT NULL,
                                        translation text,
-                                       other text,
                                        PRIMARY KEY (clip_id, video_name)
                                    );
         """
@@ -87,11 +86,11 @@ class FullStorageManager():
                                        clip_id integer NOT NULL,
                                        video_name text NOT NULL,
                                        type text NOT NULL,
-                                       frame integer,
-                                       PRIMARY KEY (label, clip_id, video_name, type)
+                                       frame integer, 
                                        FOREIGN KEY (clip_id, video_name) REFERENCES clip(clip_id, video_name)
                                    );
         """
+        #PRIMARY KEY (label, clip_id, video_name)
         sql_create_lineage_table = """CREATE TABLE IF NOT EXISTS lineage (
                                        video_name text NOT NULL,
                                        lineage text NOT NULL,
@@ -138,7 +137,7 @@ class FullStorageManager():
             conn.commit()
             conn.close()
 
-    def put(self, vstream, name, args=DEFAULT_ARGS, aux_streams = None, fixed=False):
+    def put(self, vstream, name, args=DEFAULT_ARGS, map_streams = None, aux_streams = None, fixed=False):
         """put adds a video to the storage manager from a file. It should either add
             the video to disk, or a reference in disk to deep storage.
             Ags:
@@ -154,18 +153,18 @@ class FullStorageManager():
         conn = self.get_conn()
         self.delete(name, conn)
         
-        if self.content_tagger == None or fixed:
+        if fixed:
                 tagger = None
         else:
-            tagger = self.content_tagger
+            tagger = self.tagger
         
-        write_video_single(conn, vstream, name, self.basedir, self.content_splitter, self.tagger, args, aux_streams, fixed)
+        write_video_single(conn, vstream, name, self.basedir, self.splitter, tagger, args, map_streams, aux_streams, fixed)
         
         self.videos.add(name)
 
         self.remove_conn(conn)
 
-    def put_many(self, vstreams, names, args=DEFAULT_ARGS, aux_streams = None, fixed = False):
+    def put_many(self, vstreams, names, args=DEFAULT_ARGS, map_streams = None, aux_streams = None, fixed = False):
         conn = self.get_conn()
         start_time = time.time()
         put_args = []
@@ -175,8 +174,10 @@ class FullStorageManager():
             streams = None
             if aux_streams != None:
                 streams = aux_streams[i]
+            if map_streams != None:
+                mstreams = map_streams[i]
             #Note: streams might have to be modified to pass into threads situationally
-            put_arg = (db_path, v, names[i], self.basedir, self.content_splitter, self.tagger, args, streams, fixed)
+            put_arg = (db_path, v, names[i], self.basedir, self.splitter, self.tagger, args, mstreams, streams, fixed)
             put_args.append(put_arg)
             self.delete(names[i], conn)
         

@@ -37,9 +37,9 @@ def putManager(manager, base_dir):
                 print("name: " + name)
                 print("original size: " + str(os.path.getsize(vid_dir)))
                 names.append(name)
-                labels = {'tracking': JSONListStream(lb_dir, 'tracking', is_file = True, is_list = True)}
+                lbs = {'tracking': JSONListStream(lb_dir, 'tracking', is_file = True, is_list = True)}
                 start = time.time()
-                manager.put(vid_dir, name, map_streams=labels) # we might have to use put-many?
+                manager.put(vid_dir, name, map_streams=lbs) # we might have to use put-many?
                 end = time.time()
                 print("storage size: " + str(manager.size(name)))
                 print("put time: " + str(end - start), flush=True)

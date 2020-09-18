@@ -41,8 +41,8 @@ def update_headers_batch(conn, crops, name, start_frame, end_frame, start_time, 
             updates['end_time'] = end_time
 
         if i != 0:
-            origin_x = crops[i - 1]['bb'].x0
-            origin_y = crops[i - 1]['bb'].y0
+            origin_x = crops[i - 1].x0
+            origin_y = crops[i - 1].y0
             translation = clip_info[14]
             if translation == 'NULL':
                 if origin_x != clip_info[6] or origin_y != clip_info[7]:
@@ -76,10 +76,10 @@ def new_headers_batch(conn, all_crops, name, start_frame, end_frame, start_time,
             insert_clip_header(conn, ids[0], name, start_frame, end_frame, start_time, end_time, 0, 0,
                                 full_dim[0], full_dim[1], scaled_dim[0], scaled_dim[1], video_refs[i], is_background=len(crops))
         else:
-            origin_x = crops[i - 1]['bb'].x0
-            origin_y = crops[i - 1]['bb'].y0
-            width = crops[i - 1]['bb'].x1 - crops[i - 1]['bb'].x0
-            height = crops[i - 1]['bb'].y1 - crops[i - 1]['bb'].y0
+            origin_x = crops[i - 1].x0
+            origin_y = crops[i - 1].y0
+            width = crops[i - 1].x1 - crops[i - 1].x0
+            height = crops[i - 1].y1 - crops[i - 1].y0
             insert_clip_header(conn, ids[i], name,start_frame, end_frame, start_time, end_time, origin_x,
                                 origin_y,  width, height, width, height, video_refs[i])
 

@@ -108,7 +108,7 @@ def reverse_crop(frame, crops):
     """
     frame = copy.deepcopy(frame)
     for crop in crops:
-        box = crop['bb']
+        box = crop
         frame[box.y0:box.y1, box.x0:box.x1] = 0
     return frame
 

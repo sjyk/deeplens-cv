@@ -54,15 +54,14 @@ class PutCropOp(Operator):
             if i == 0:
                 out = CVVideoStream.init_mat(file_name, self.encoding, self.scoor[0], self.scoor[1], self.frame_rate)
             else:
-                width = abs(crops[i - 1]['bb'].x1 - crops[i - 1]['bb'].x0)
-                height = abs(crops[i - 1]['bb'].y1 - crops[i - 1]['bb'].y0)
+                width = abs(crops[i - 1].x1 - crops[i - 1].x0)
+                height = abs(crops[i - 1].y1 - crops[i - 1].y0)
                 out = CVVideoStream.init_mat(file_name, self.encoding, width, height, self.frame_rate)
 
             self.writers.append(out)
             
     def __next__(self):
-        super().__iter__()                
-
+        super().__next__()
         crops, do_join = self.crops.next(self.name)
         meta = []
         for i in range(self.batch_size):
@@ -70,6 +69,8 @@ class PutCropOp(Operator):
                 frame = self.vid.next(self.name)
             except StopIteration:
                 if i > 0:
+                    meta[3] = self.curr_index
+                    meta[5] = self.time
                     self.meta.insert(meta)
                 raise StopIteration()
             
@@ -82,8 +83,9 @@ class PutCropOp(Operator):
             #data_scaled = cv2.resize(frame, self.scoor) # need to check that this copies data
 
             for j, cr in enumerate(crops):
-                fr = crop_box(frame, cr['bb'])
+                fr = crop_box(frame, cr)
                 CVVideoStream.append(fr, self.writers[j + 1])
+            
             fdata = reverse_crop(frame, crops)
             data_scaled = cv2.resize(fdata, self.scoor) 
             CVVideoStream.append(fdata, self.writers[0])
@@ -113,7 +115,7 @@ class PutOp(Operator):
         self.vid = self.streams[self.input_names[0]]
         self.scoor = (int(self.vid.width * self.scale), int(self.vid.height*self.scale))
         self.fcoor =  (self.vid.width, self.vid.height)
-        self.curr_index = 0
+        self.curr_index = 0        
         return self
     
     def __next__(self):
@@ -130,6 +132,8 @@ class PutOp(Operator):
                 frame = self.vid.next(self.name)
             except StopIteration:
                 if i > 0:
+                    meta[3] = self.curr_index
+                    meta[5] = self.time
                     self.meta.insert(meta)
                 raise StopIteration()
             
@@ -169,13 +173,14 @@ class HeaderOp(Operator):
 
 
 class LabelMapOp(Operator):
-    def __init__(self, name, conn, vid_name, label_db = 'label' , input_names=['map_labels', 'meta_data']):
+    def __init__(self, name, conn, vid_name, dtype = 'JSONListStream', label_db = 'label' , input_names=['map_labels', 'meta_data']):
         super().__init__(name, input_names, [])
         self.conn = conn
         self.vid_name = vid_name
         self.frames = {}
         self.ids = None
         self.label_db = label_db
+        self.dtype = dtype
 
 
     def __next__(self):
@@ -184,32 +189,29 @@ class LabelMapOp(Operator):
         labels = self.streams[self.input_names[0]].next(self.name)
         ids = meta[-2]
         crops = meta[0]
-        dtype = str(type(labels))
-        start = dtype.find("'")
-        end = dtype.rfind("'")
-        dtype = dtype[start + 1:end]
-        for label in labels:
-            indices = []
-            if 'bb' in label:
-                for i, crop in enumerate(crops):
-                    if crop['bb'].contains(label['bb']):
-                        indices.append(i + 1)
-            if len(indices) == 0:
-                indices.append(0)
-            for i in indices:
-                if 'value' in label:
-                    value = label['value']
-                else:
-                    value = None
+        for frame in labels:
+            for label in frame:
+                indices = []
                 if 'bb' in label:
-                    bb = json.dumps((label['bb'].serialize()))
-                else:
-                    bb = None
-                if 'frame' in label:
-                    frame = label['frame']
-                else:
-                    frame = None
-                insert_label_header(self.conn, label['label'], ids[i], self.vid_name, data_type = dtype, value = value, bbox = bb, frame = frame, db_name = self.label_db)
+                    for i, crop in enumerate(crops):
+                        if crop.contains(label['bb']):
+                            indices.append(i + 1)
+                if len(indices) == 0:
+                    indices.append(0)
+                for i in indices:
+                    if 'value' in label:
+                        value = label['value']
+                    else:
+                        value = None
+                    if 'bb' in label:
+                        bb = json.dumps((label['bb'].serialize()))
+                    else:
+                        bb = None
+                    if 'frame' in label:
+                        frame = label['frame']
+                    else:
+                        frame = None
+                    insert_label_header(self.conn, label['label'], ids[i], self.vid_name, data_type = self.dtype, value = value, bbox = bb, frame = frame, db_name = self.label_db)
         return self.index
 
 class LabelOp(Operator):
@@ -292,7 +294,7 @@ class LabelOp(Operator):
         return self.index
 
 class ConvertMap(Operator):
-    def __init__(self, name, tagger, batch_size, multi = False, input_names = ['video'], output_names = ['map_labels']):
+    def __init__(self, name, tagger, batch_size, multi = True, input_names = ['video'], output_names = ['map_labels']):
         super().__init__(name, input_names, output_names)
         self.tagger = tagger
         self.batch_size = batch_size
@@ -303,7 +305,7 @@ class ConvertMap(Operator):
     def __next__(self):
         super().__next__()
 		# we assume it iterates the entire batch size and save the results
-        tag = self.tagger(self.streams, self.name, self.batch_size) # TODO: need to update miris experiments !!
+        tag = self.tagger(self.streams, self.name, self.batch_size, self.batch_size*self.index) # TODO: need to update miris experiments !!
         if tag and self.multi:
             tags = tag
         elif tag:

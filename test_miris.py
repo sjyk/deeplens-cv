@@ -10,22 +10,26 @@ from deeplens.full_manager.full_video_processing import Splitter
 from deeplens.utils.testing_utils import get_size
 from deeplens.utils.testing_utils import printCrops
 from datetime import datetime
+from miris_splitters import *
 
-def miris_tagger(streams, batch_size, start_frame):
-    bb_labels = JSONListStream(None, 'map_labels', 'car_tracking')
+def miris_tagger(streams, op_name, batch_size, fframe):
+    bb_labels = []
     for i in range(batch_size):
         try:
-            curr = next(streams['tracking']).get()
+            curr = streams['tracking'].next(op_name)
         except StopIteration:
-            return bb_labels
+            if i != 0:
+                return bb_labels
+            else:
+                raise StopIteration()
         if curr is None:
-            JSONListStream.append([], bb_labels)
+            bb_labels.append([])
         else:
             bbs = []
             for lb in curr:
                 bb = Box(lb['left']//2, lb['top']//2, lb['right']//2, lb['bottom']//2)
-                bbs.append({'bb': bb, 'label': lb['track_id'], 'frame': i + start_frame})
-            JSONListStream.append(bbs, bb_labels)
+                bbs.append({'bb': bb, 'label': lb['track_id'], 'frame': fframe + i})
+            bb_labels.append(bbs)
     return bb_labels
 
 def logrecord(baseline,settings,operation,measurement,*args):
@@ -34,9 +38,9 @@ def logrecord(baseline,settings,operation,measurement,*args):
 
 # We can directly use a JSONListStream to 
 def main(video, json_labels):
-    labels = {'tracking': JSONListStream(json_labels, 'tracking', 'labels', isList = True)}
-    manager = FullStorageManager(miris_tagger, CropAreaSplitter(4), 'miris4')
-    manager.put(video, 'test0', aux_streams = labels)
+    labels = {'tracking': JSONListStream(json_labels, 'tracking', is_file = True, is_list = True)}
+    manager = FullStorageManager(miris_tagger, AreaTrackSplitter(4), 'miris_test')
+    manager.put(video, 'test0', map_streams = labels)
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:

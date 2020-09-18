@@ -32,6 +32,7 @@ class Operator():
         return self
 
     def __next__(self):
+        #print(self.name)
         self.index += 1
 
     #binds previous operators and dstreams to the current stream
@@ -86,8 +87,11 @@ class GraphManager():
             if leaves == 'all':
                 leaves = copy.copy(self.graph.nodes.keys())
             ops = copy.copy(leaves)
+            i = 0
             while True:
                 fops = []
+                if i % 100 == 0:
+                    print(i, flush = True)
                 for name in ops:
                     try:
                         next(self.graph.nodes[name]['attr_dict']['operator'])
@@ -99,6 +103,7 @@ class GraphManager():
                     ops.remove(op)
                 if len(ops) == 0:
                     break
+                i +=1
         output = {}
         for result in results:
             output[result] = self.dstreams[result].all()

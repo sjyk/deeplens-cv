@@ -88,7 +88,6 @@ class GraphManager():
             ops = copy.copy(leaves)
             while True:
                 fops = []
-                print(ops)
                 for name in ops:
                     try:
                         next(self.graph.nodes[name]['attr_dict']['operator'])

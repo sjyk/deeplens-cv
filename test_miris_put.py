@@ -19,7 +19,7 @@ SPLITTERS = {'track': TrackSplitter()}
 #SPLITTERS = {'track': TrackSplitter(), 'area7': AreaSplitter(0.7), 'area3': AreaSplitter(0.3), 'area1': AreaSplitter(0.1), 'area7': AreaSplitter(0), 
 #            'tarea7': AreaTrackSplitter(0.7), 'tarea3': AreaTrackSplitter(0.3), 'tarea1': AreaTrackSplitter(0.1), 'tarea7': AreaTrackSplitter(0)}
 
-def putManager(manager, base_dir, splitter):
+def putManager(manager, base_dir):
     
     vid_dirs = VID_TYPES
     names = []
@@ -50,7 +50,7 @@ def main(base_dir, storage_dir):
         print('!!!!!!!!!!!!!!!!!!!!NEW SPLITTER!!!!!!!!!!!!!!!!!!!!')
         print(splitter)
         dire = storage_dir + splitter
-        manager = FullStorageManager(miris_tagger, splitter, dire)
+        manager = FullStorageManager(miris_tagger, SPLITTERS[splitter], dire)
         names = putManager(manager, base_dir)
 
 if __name__ == '__main__':

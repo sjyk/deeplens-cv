@@ -39,7 +39,7 @@ def logrecord(baseline,settings,operation,measurement,*args):
 # We can directly use a JSONListStream to 
 def main(video, json_labels):
     labels = {'tracking': JSONListStream(json_labels, 'tracking', is_file = True, is_list = True)}
-    manager = FullStorageManager(miris_tagger, AreaTrackSplitter(4), 'miris_test')
+    manager = FullStorageManager(miris_tagger, AreaSplitter(4), 'miris_test_4')
     manager.put(video, 'test0', map_streams = labels)
 
 if __name__ == '__main__':

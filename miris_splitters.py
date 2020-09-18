@@ -108,10 +108,9 @@ class TrackSplitter(Splitter):
     #     return crops, (crops, labels1), True
 
 class AreaSplitter(Splitter):
-    def __init__(self, num_crops, iou = 0.7, tran = 0.05):
+    def __init__(self, iou = 0.1):
         super().__init__()
         self.iou = iou
-        self.tran = 0.05
         self.num_crops = num_crops
     
     def initialize(self, data):
@@ -156,7 +155,10 @@ class AreaSplitter(Splitter):
                 if max_iou < pair_iou[i][j]:
                     max_iou = pair_iou[i][j]
                     pair = (i, j)
-        return pair
+        if max_iou > self.iou:
+            return pair
+        else:
+            return (None, None)
 
     def map(self, data):
         """
@@ -188,33 +190,32 @@ class AreaSplitter(Splitter):
                     crops[index] = ob['bb']
                     index +=1
         
-        if len(crops) > self.num_crops:
-            for i in range(len(crops) - self.num_crops):
-                if i == 0:
-                    pair_iou = self._pair_iou(crops, pair_iou = pair_iou)
-                else:
-                    pair_iou = self._pair_iou(crops, pair_iou = pair_iou, index= index - 1)
-                i, j = self._max_iou(pair_iou)
-                # account for zero
-                if i is None:
-                    break
-                crop1 = crops[i]
-                crop2 = crops[j]
-                bb = crop1.union_box(crop2)
-                del crops[i]
-                del crops[j]
-                crops[index] = bb
-                index += 1
-                del pair_iou[i]
-                del pair_iou[j]
-                
-                for a in pair_iou:
-                    kee = copy.copy(list(pair_iou[a].keys()))
-                    for b in kee:
-                        if b == i or b == j:
-                            del pair_iou[a][b]
-            cropsl = [crops[i] for i in crops]
-            crops = cropsl
+        while True:
+            if i == 0:
+                pair_iou = self._pair_iou(crops, pair_iou = pair_iou)
+            else:
+                pair_iou = self._pair_iou(crops, pair_iou = pair_iou, index= index - 1)
+            i, j = self._max_iou(pair_iou)
+            # account for zero
+            if i is None:
+                break
+            crop1 = crops[i]
+            crop2 = crops[j]
+            bb = crop1.union_box(crop2)
+            del crops[i]
+            del crops[j]
+            crops[index] = bb
+            index += 1
+            del pair_iou[i]
+            del pair_iou[j]
+            
+            for a in pair_iou:
+                kee = copy.copy(list(pair_iou[a].keys()))
+                for b in kee:
+                    if b == i or b == j:
+                        del pair_iou[a][b]
+        cropsl = [crops[i] for i in crops]
+        crops = cropsl
         return crops
         
     def join(self, map1, map2):
@@ -248,32 +249,31 @@ class AreaTrackSplitter(AreaSplitter):
         
         pair_iou = None
         index = len(crops)
-        if len(crops) > self.num_crops:
-            for i in range(len(crops) - self.num_crops):
-                if i == 0:
-                    pair_iou = self._pair_iou(crops, pair_iou = pair_iou)
-                else:
-                    pair_iou = self._pair_iou(crops, pair_iou = pair_iou, index= index - 1)
-                i, j = self._max_iou(pair_iou)
-                # account for zero
-                if i is None:
-                    break
-                crop1 = crops[i]
-                crop2 = crops[j]
-                bb = crop1.union_box(crop2)
-                del crops[i]
-                del crops[j]
-                crops[index] = bb
-                index += 1
-                del pair_iou[i]
-                del pair_iou[j]
-                
-                for a in pair_iou:
-                    kee = copy.copy(list(pair_iou[a].keys()))
-                    for b in kee:
-                        if b == i or b == j:
-                            del pair_iou[a][b]
-            cropsl = [crops[i] for i in crops]
-            crops = cropsl
+        while True:
+            if i == 0:
+                pair_iou = self._pair_iou(crops, pair_iou = pair_iou)
+            else:
+                pair_iou = self._pair_iou(crops, pair_iou = pair_iou, index= index - 1)
+            i, j = self._max_iou(pair_iou)
+            # account for zero
+            if i is None:
+                break
+            crop1 = crops[i]
+            crop2 = crops[j]
+            bb = crop1.union_box(crop2)
+            del crops[i]
+            del crops[j]
+            crops[index] = bb
+            index += 1
+            del pair_iou[i]
+            del pair_iou[j]
+            
+            for a in pair_iou:
+                kee = copy.copy(list(pair_iou[a].keys()))
+                for b in kee:
+                    if b == i or b == j:
+                        del pair_iou[a][b]
+        cropsl = [crops[i] for i in crops]
+        crops = cropsl
 
         return crops

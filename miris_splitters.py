@@ -111,7 +111,6 @@ class AreaSplitter(Splitter):
     def __init__(self, iou = 0.1):
         super().__init__()
         self.iou = iou
-        self.num_crops = num_crops
     
     def initialize(self, data):
         """

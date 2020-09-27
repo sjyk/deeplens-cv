@@ -12,7 +12,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 def graph_compare(path_to_many_results, shapes):
-    os.mkdir('comparison_results')
+    #os.mkdir('comparison_results')
     results = []
     for dirpath, dirnames, filenames in os.walk(path_to_many_results):
         for fname in filenames:
@@ -32,23 +32,23 @@ def graph_compare(path_to_many_results, shapes):
         dfo['Total Time'] = dfo.apply(lambda x: x['Retrieval Time Median'] + x['Storage Time Median'], axis=1)
         for shape, df in dfo.groupby('Shape'):
             sizes = df['Size'].tolist()
-            data = df['Total Time'].tolist()
+            data = df["Retrieval Write Count Median"].tolist()
             dict_data_by_shapes[shape].append((name, sizes, data))
-    
+
     for shape in dict_data_by_shapes:
         fig = plt.figure(figsize = (10, 5))
         results = dict_data_by_shapes[shape]
         for result in results:
             plt.plot(result[1], result[2], label=result[0])
         plt.xlabel('Frame Size (pixels)')
-        plt.ylabel('Total Time (seconds)')
-        plt.title(f'Total Time of {shape} results')
+        #plt.ylabel("Storage Read Count Median")
+        #plt.title(f'"Storage Read Count Median" of {shape} results')
         plt.legend()
-        plt.savefig(f"comparison_results/{shape}_totaltime.png")
+        plt.savefig(f"comparison_results/{shape}_retrievalwritecount.png")
 
 
 
 
 
 # Test
-#graph_compare("../../Results", [(16,9), (4,3), (1,1), (10,1), (1,10), (20,1), (1,20)])
+graph_compare("../../Results Usage", [(16,9)])

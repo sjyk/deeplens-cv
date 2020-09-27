@@ -14,7 +14,7 @@ def test_videos(video_path, dictionary_of_video_sizes, number_of_trials):
                          "Storage Read Bytes Median", "Storage Read Bytes Max", "Storage Write Bytes Median", "Storage Write Bytes Max", \
                          "Retrieval CPU Median", "Retrieval CPU Max", "Retrieval RAM Median", "Retrieval RAM Max", \
                          "Retrieval Read Count Median", "Retrieval Read Count Max", "Retrieval Write Count Median", "Retrieval Write Count Max", \
-                         "Retrieval Read Bytes Median", "Retrieval Read Bytes Max", "Retrieval Write Bytes Median", "Retrieval Write Bytes Max", \
+                         "Retrieval Read Bytes Median", "Retrieval Read Bytes Max", "Retrieval Write Bytes Median", "Retrieval Write Bytes Max" \
                         ])
     
     print(dictionary_of_video_sizes)

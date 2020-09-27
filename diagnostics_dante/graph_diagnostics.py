@@ -81,15 +81,6 @@ def graph_diagnostics(path_to_csv, path_to_agg_csv):
         plt.savefig(f"results/graphs/total_time/{shape}_totaltime.png")
         fig.clf()
 
-    # for size, df in dfo.groupby('Size'):
-    #     fig0 = plt.figure(figsize = (10, 5))
-    #     p1 = plt.bar(df['Shape'], height=df['Storage Time Median'])
-    #     p2 = plt.bar(df['Shape'], height=df['Retrieval Time Median'], bottom=df['Storage Time Median'])
-    #     plt.xlabel("Shape") 
-    #     plt.ylabel("Total Time (seconds)") 
-    #     plt.title(f"{size} Total Time") 
-    #     plt.savefig(f"results/graphs/{size}_totaltime.png")
-
     path_to_graphs = 'results/graphs' # A folder of graphs
     return path_to_graphs
 

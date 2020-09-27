@@ -1,18 +1,9 @@
-# Script that compares different results as line graph
-# Take all folders in path folder
-# Go in folder -> go in results -> take aggregate csv file
-# Make a pandas df
-# separate by shape
-# add label that says what results they are from
-# graph?
-# add key and x, y, title
-
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
 def graph_compare(path_to_many_results, shapes):
-    #os.mkdir('comparison_results')
+    os.mkdir('comparison_results')
     results = []
     for dirpath, dirnames, filenames in os.walk(path_to_many_results):
         for fname in filenames:
@@ -32,6 +23,7 @@ def graph_compare(path_to_many_results, shapes):
         dfo['Total Time'] = dfo.apply(lambda x: x['Retrieval Time Median'] + x['Storage Time Median'], axis=1)
         for shape, df in dfo.groupby('Shape'):
             sizes = df['Size'].tolist()
+            # change to be for every col
             data = df["Retrieval Write Count Median"].tolist()
             dict_data_by_shapes[shape].append((name, sizes, data))
 
@@ -41,8 +33,8 @@ def graph_compare(path_to_many_results, shapes):
         for result in results:
             plt.plot(result[1], result[2], label=result[0])
         plt.xlabel('Frame Size (pixels)')
-        #plt.ylabel("Storage Read Count Median")
-        #plt.title(f'"Storage Read Count Median" of {shape} results')
+        plt.ylabel("Storage Read Count Median")
+        plt.title(f'"Storage Read Count Median" of {shape} results')
         plt.legend()
         plt.savefig(f"comparison_results/{shape}_retrievalwritecount.png")
 

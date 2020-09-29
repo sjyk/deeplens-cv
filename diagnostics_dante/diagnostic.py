@@ -94,8 +94,9 @@ def diagnostic(video_path, size):
 
     t0 = time.time()
 
-    # /dev/shm/
-    cache = persist(vstream, '/dev/shm/cache.npz') #how big the size of the stored raw video is
+    # compress vstream with autoencoder
+
+    cache = persist(vstream, '/dev/shm/cache.npz')
 
     done.value -= 1
     resource.join()
@@ -115,6 +116,9 @@ def diagnostic(video_path, size):
     t1 = time.time()
 
     vstream = RawVideoStream('/dev/shm/cache.npz', shape=(LIMIT,size[1],size[0],3)) #retrieving the data (have to provide dimensions (num frames, w, h, channels)
+
+    # decompress vstream
+
     #do something
     for v in vstream:
         np.copy(v['data'], order='C')

@@ -452,15 +452,16 @@ class CVVideoStreams(VideoStream):
         self.iters = {}
     
     def _cache(self, op_name):
-        next_cache = self.src[self.index + 1]
-        self.iters[op_name]['next_vstream'] = CVVideoStream(next_cache, self.name, limit = self.test_limit).add_iter('main')
-        self.iters[op_name]['next_frame'] = self.iters[op_name]['next_vstream'].next('main')
+        index = self.iters[op_name]['index']
+        next_cache = self.src[index + 1]
+        self.iters[op_name]['next_vstream'] = CVVideoStream(next_cache, self.name, limit = self.test_limit).add_iter(op_name)
+        self.iters[op_name]['next_frame'] = self.iters[op_name]['next_vstream'].next(op_name)
 
     def add_iter(self, op_name):
         self.iters[op_name] = {}
         self.iters[op_name]['index'] = 0
         self.iters[op_name]['frame_count'] = -1
-        self.iters[op_name]['vstream'] = CVVideoStream(self.src[0], self.name, limit = self.test_limit, offset=self.offset).add_iter('main')
+        self.iters[op_name]['vstream'] = CVVideoStream(self.src[0], self.name, limit = self.test_limit, offset=self.offset).add_iter(op_name)
         self.iters[op_name]['thread'] = threading.Thread(target=self._cache(op_name))
         self.iters[op_name]['thread'].start()
         return self
@@ -471,13 +472,13 @@ class CVVideoStreams(VideoStream):
             raise StopIteration("Iterator is closed")
         else:
             try:
-                frame = video.next(op_name)
+                frame = video['vstream'].next(op_name)
                 video['frame_count'] += 1
             except StopIteration:
                 # change vstreams
                 if video['index'] + 1 < len(self.src):
                     video['thread'].join()
-                    video['vstream'] = self.next_vstream
+                    video['vstream'] = video['next_vstream'] 
                     frame = video['next_frame']
                     video['frame_count'] += 1
                     # start another thread
@@ -492,6 +493,12 @@ class CVVideoStreams(VideoStream):
     
     def get_vstream(self, op_name):
         return self.iters[op_name]['vstream']
+
+    def get_width(self, op_name):
+        return self.iters[op_name]['vstream'].width
+
+    def get_height(self, op_name):
+        return self.iters[op_name]['vstream'].hieght
     
     @staticmethod
     def init_mat(file_name, encoding, width, height, frame_rate):

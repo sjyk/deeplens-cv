@@ -9,8 +9,8 @@ import logging
 TEST_QUERIES = {}
 
 # type of videos used from the miris dataset
-#VID_TYPES = ['beach', 'shibuya', 'uav', 'warsaw']
-VID_TYPES = ['shibuya']
+VID_TYPES = ['beach', 'shibuya', 'uav', 'warsaw']
+#VID_TYPES = ['shibuya']
 
 #directory of the storage manager
 #BASE_STORAGE_DIR = '../miris_test_'
@@ -18,9 +18,9 @@ VID_TYPES = ['shibuya']
 BASE_STORAGE_DIR = '../miris_test_'
 BASE_VIDEO_DIR = '../experiments/data'
 
-SPLITTERS = {'track': TrackSplitter()}
-#SPLITTERS = {'track': TrackSplitter(), 'area7': AreaSplitter(0.7), 'area3': AreaSplitter(0.3), 'area1': AreaSplitter(0.1), 'area7': AreaSplitter(0), 
-#            'tarea7': AreaTrackSplitter(0.7), 'tarea3': AreaTrackSplitter(0.3), 'tarea1': AreaTrackSplitter(0.1), 'tarea7': AreaTrackSplitter(0)}
+#SPLITTERS = {'track': TrackSplitter()}
+#'track': TrackSplitter(), 'area7': AreaSplitter(0.7), 'area3': AreaSplitter(0.3), 'area1': AreaSplitter(0.1), 'area0': AreaSplitter(0), 
+SPLITTERS = {'tarea7': AreaTrackSplitter(0.7), 'tarea3': AreaTrackSplitter(0.3), 'tarea1': AreaTrackSplitter(0.1), 'tarea0': AreaTrackSplitter(0)}
 
 def putManager(manager, base_dir):
     
@@ -51,6 +51,7 @@ def putManager(manager, base_dir):
 
 
 def main(base_dir, storage_dir):
+    print(SPLITTERS.keys)
     logging.basicConfig(filename="miris_put.log", level=logging.INFO)
     for splitter in SPLITTERS:
         logging.info('!!!!!!!!!!!!!!!!!!!!NEW SPLITTER!!!!!!!!!!!!!!!!!!!!')

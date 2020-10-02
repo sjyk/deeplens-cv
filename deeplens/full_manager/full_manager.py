@@ -26,7 +26,7 @@ import time
 from deeplens.utils.utils import *
 import itertools
 
-DEFAULT_ARGS = {'frame_rate': 1, 'encoding': MP4V, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 30, 'num_processes': 4, 'background_scale': 1}
+DEFAULT_ARGS = {'frame_rate': 24, 'encoding': MP4V, 'limit': -1, 'sample': 1.0, 'offset': 0, 'batch_size': 120, 'num_processes': 4, 'background_scale': 1}
 
 class FullStorageManager():
     """ TieredStorageManager is the implementation of a 3 tiered
@@ -137,7 +137,7 @@ class FullStorageManager():
             conn.commit()
             conn.close()
 
-    def put(self, vstream, name, args=DEFAULT_ARGS, map_streams = None, aux_streams = None, fixed=False):
+    def put(self, vstream, name, args=DEFAULT_ARGS, map_streams = None, aux_streams = None, fixed=False, start_time = 0):
         """put adds a video to the storage manager from a file. It should either add
             the video to disk, or a reference in disk to deep storage.
             Ags:
@@ -158,7 +158,7 @@ class FullStorageManager():
         else:
             tagger = self.tagger
         
-        write_video_single(conn, vstream, name, self.basedir, self.splitter, tagger, args, map_streams, aux_streams, fixed)
+        write_video_single(conn, vstream, name, self.basedir, self.splitter, tagger, args, map_streams, aux_streams, fixed, start_time)
         
         self.videos.add(name)
 
@@ -193,7 +193,7 @@ class FullStorageManager():
         #paralleL_log_delete(logs) -> currently not deleting logs for safety
         self.remove_conn(conn)
 
-    # def put_streams(self, name, vstream, dstreams = None, materialize = True, args=None, batch_size = -1):
+    # def put_streams(self, name, dstreams, args=None, batch_size = -1):
     #     if args == None:
     #         args = DEFAULT_ARGS
     #     pipeline = PipelineManager(vstream)
@@ -242,11 +242,15 @@ class FullStorageManager():
         return result
 
     def get_vstreams(self, query):
-        video_refs = self.get(query)
-        video_refs.sort(key=lambda tup: tup[2])
-        vstreams = CVVideoStreams(video_refs, 'video')
-        clip_ids = [clip[0] for clip in video_refs]
-        return vstreams, clip_ids
+        clips = self.get(query)
+        refs = []
+        for clip in clips:       
+            if clip[0] != None:
+                refs.append(clip)
+        refs.sort(key=lambda tup: tup[1])
+        video_refs = [refs[i][0] for i in range(len(refs))]
+        clip_ids = [clip[1] for clip in refs]
+        return video_refs, clip_ids
 
     
     def create_vstream(self, video_name, clip_id, name = 'video', stream_type = CVVideoStream):

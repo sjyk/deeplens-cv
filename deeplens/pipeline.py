@@ -90,6 +90,7 @@ class GraphManager():
             i = 0
             while True:
                 fops = []
+                print(i)
                 if i % 100 == 0:
                     print(i, flush = True)
                 for name in ops:

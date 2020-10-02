@@ -120,7 +120,7 @@ class AreaSplitter(Splitter):
         return crops, crops, False 
 
     def _pair_iou(self, crops, pair_iou = None, index = None):
-        if pair_iou == None or index:
+        if pair_iou == None or index == None:
             pair_iou = {}
             for i in crops:
                 pair_iou[i] = {}
@@ -189,9 +189,11 @@ class AreaSplitter(Splitter):
                     crops[index] = ob['bb']
                     index +=1
         
+        first = True
         while True:
-            if i == 0:
+            if first:
                 pair_iou = self._pair_iou(crops, pair_iou = pair_iou)
+                first = False
             else:
                 pair_iou = self._pair_iou(crops, pair_iou = pair_iou, index= index - 1)
             i, j = self._max_iou(pair_iou)
@@ -248,9 +250,11 @@ class AreaTrackSplitter(AreaSplitter):
         
         pair_iou = None
         index = len(crops)
+        first = True
         while True:
-            if i == 0:
+            if first:
                 pair_iou = self._pair_iou(crops, pair_iou = pair_iou)
+                first = False
             else:
                 pair_iou = self._pair_iou(crops, pair_iou = pair_iou, index= index - 1)
             i, j = self._max_iou(pair_iou)

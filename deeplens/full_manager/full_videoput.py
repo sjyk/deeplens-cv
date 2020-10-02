@@ -397,6 +397,7 @@ def write_video_single(conn, vstream, name, base_dir, splitter, tagger, args, ma
             raise ValueError('map_streams can only take one stream (crops) when it is fixed')
         lnames = ['video', list(map_streams.keys())[0]]
         ret = manager.add_operator(PutCropOp('put', name, args, start_time, base_dir, input_names=lnames))
+    
     else:
         ret = manager.add_operator(PutOp('put', name, args, start_time, base_dir))
         

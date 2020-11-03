@@ -35,4 +35,4 @@ def human_format(num):
     return '{}{}'.format('{:f}'.format(num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T'][magnitude])
 
 # Test
-aggregate_csv("results/diagnostics.csv")
+#aggregate_csv("results/diagnostics.csv")

@@ -43,4 +43,4 @@ def graph_compare(path_to_many_results, shapes):
 
 
 # Test
-graph_compare("../../Results Usage", [(16,9)])
+#graph_compare("../../Results Usage", [(16,9)])

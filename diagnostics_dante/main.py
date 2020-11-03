@@ -6,7 +6,7 @@ from graph_diagnostics import graph_diagnostics
 video_path = '4KFootage.mkv'
 video_width = 3840
 video_height = 2160
-number_of_trials = 50
+number_of_trials = 1
 
 shapes = [(16,9)] # An array of aspect ratio tuples (width, height)
 

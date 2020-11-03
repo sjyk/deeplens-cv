@@ -18,6 +18,7 @@ def generate_videos(video_width, video_height, shapes, max_pixels, min_pixels, r
             height_temp = math.ceil(height_temp * math.sqrt(reducing_factor))
             width_temp = math.ceil(width_temp * math.sqrt(reducing_factor))
             dictionary_of_video_sizes[key].append((width_temp, height_temp))
+    dictionary_of_video_sizes['16:9'] = list(reversed(dictionary_of_video_sizes['16:9']))
     return dictionary_of_video_sizes
 
 # Test

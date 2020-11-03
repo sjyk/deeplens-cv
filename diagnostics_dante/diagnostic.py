@@ -1,6 +1,8 @@
 import os
 import sys
 import inspect
+import tfci
+import tensorflow.compat.v1 as tf
 
 # Is there a better way?
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -94,7 +96,9 @@ def diagnostic(video_path, size):
 
     t0 = time.time()
 
-    # compress vstream with autoencoder
+    for v in vstream:
+        vi = v['data']
+        tfci.compress('mbt2018-mean-msssim-8', vi, 't.tfci')
 
     cache = persist(vstream, '/dev/shm/cache.npz')
 

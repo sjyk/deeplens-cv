@@ -96,9 +96,10 @@ def diagnostic(video_path, size):
 
     t0 = time.time()
 
-    for v in vstream:
-        vi = v['data']
-        tfci.compress('mbt2018-mean-msssim-8', vi, 't.tfci')
+    os.mkdir('cache')
+    for i, v in enumerate(vstream):
+        tfci.compress('mbt2018-mean-msssim-8', v['data'], f"cache/{i}.tfci")
+        v['data'] = None
 
     cache = persist(vstream, '/dev/shm/cache.npz')
 
@@ -121,7 +122,8 @@ def diagnostic(video_path, size):
 
     vstream = RawVideoStream('/dev/shm/cache.npz', shape=(LIMIT,size[1],size[0],3)) #retrieving the data (have to provide dimensions (num frames, w, h, channels)
 
-    # decompress vstream
+    for i, v in enumerate(vstream):
+        v['data'] = tfci.decompress(f"cache/{i}.tfci")
 
     #do something
     for v in vstream:
@@ -142,7 +144,11 @@ def diagnostic(video_path, size):
     time_storage = t1 - t0
     time_retrieve = t2 - t1
 
-    file_size = os.path.getsize('/dev/shm/cache.npz')
+    total_size = 0
+    for root, dirs, files in os.walk("cache"):
+        for f in files:
+            total_size += os.path.getsize(os.path.join(root, f))
+    file_size = total_size
 
     return (file_size, time_storage, time_retrieve, \
             median(cpu_storage), max(cpu_storage), median(ram_storage), max(ram_storage), \

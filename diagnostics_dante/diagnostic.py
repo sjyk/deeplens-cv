@@ -38,6 +38,7 @@ import numpy as np
 import psutil
 from multiprocessing import Process, Value, Manager
 from statistics import median
+import shutil
 
 def getResourceUsage(done, mlist):
     cpu_usage = []
@@ -149,6 +150,8 @@ def diagnostic(video_path, size):
         for f in files:
             total_size += os.path.getsize(os.path.join(root, f))
     file_size = total_size
+
+    shutil.rmtree("cache")
 
     return (file_size, time_storage, time_retrieve, \
             median(cpu_storage), max(cpu_storage), median(ram_storage), max(ram_storage), \

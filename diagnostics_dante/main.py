@@ -22,7 +22,7 @@ dictionary_of_video_sizes = generate_videos(video_width, video_height, shapes, m
 path_to_csv = test_videos(video_path, dictionary_of_video_sizes, number_of_trials)
 
 # Aggregate csv by shape and size (min, med, max)
-#path_to_agg_csv = aggregate_csv(path_to_csv)
+path_to_agg_csv = aggregate_csv(path_to_csv)
 
 # Graph aggregate csv and put results in new folder
-#path_to_graphs = graph_diagnostics(path_to_csv, path_to_agg_csv)
+path_to_graphs = graph_diagnostics(path_to_csv, path_to_agg_csv)

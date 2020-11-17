@@ -3,6 +3,7 @@ import sys
 import inspect
 import tfci
 import tensorflow.compat.v1 as tf
+import gzip
 
 # Is there a better way?
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -99,7 +100,10 @@ def diagnostic(video_path, size):
 
     os.mkdir('cache')
     for i, v in enumerate(vstream):
-        tfci.compress('mbt2018-mean-msssim-8', v['data'], f"cache/{i}.tfci")
+        f = gzip.GzipFile(f"cache/{i}.tfci", "w")
+        np.save(file=f, arr=v)
+        f.close()
+        #tfci.compress('mbt2018-mean-msssim-8', v['data'], f"cache/{i}.tfci")
         v['data'] = None
 
     cache = persist(vstream, '/dev/shm/cache.npz')
@@ -124,6 +128,9 @@ def diagnostic(video_path, size):
     vstream = RawVideoStream('/dev/shm/cache.npz', shape=(LIMIT,size[1],size[0],3)) #retrieving the data (have to provide dimensions (num frames, w, h, channels)
 
     for i, v in enumerate(vstream):
+        f = gzip.GzipFile(f"cache/{i}.tfci", "w")
+        np.load(f)
+        f.close()
         v['data'] = tfci.decompress(f"cache/{i}.tfci")
 
     #do something

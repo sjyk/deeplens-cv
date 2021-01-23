@@ -12,7 +12,7 @@ class CacheStream(DataStream):
 
     #only used by GraphManager -> to return results 
     #if you need to keep some datastream, set the results parameter on GraphManager run 
-    def keep_all(self):
+    def set_keep_all(self):
         self.keep_all = True
 
     def add_iter(self, op_name):

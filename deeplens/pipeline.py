@@ -47,19 +47,14 @@ class GraphManager():
     """
     def __init__(self):
         self.dstreams = {}
-        self.graph = nx.DiGraph()
-        self.leaves = []
+        self.nodes = {}
 
     def get_operators(self):
-        return self.operators.keys()
-
-    def get_leaves(self):
-        return self.leaves
+        return self.nodes.keys()
 
     def build(self):
-        mat_streams = {}
-        for name in self.graph.nodes:
-            op = self.graph.nodes[name]['attr_dict']['operator']
+        for name in self.nodes:
+            op = self.nodes[name]
             streams = op.input_names
             curr_streams = {}
             for stream in streams:
@@ -69,15 +64,14 @@ class GraphManager():
 
     # denote which leaves to run
     def run(self, leaves, plan = None, results = []):
-        run_streams = {}
         self.build()
-        if  plan != None:
+        if plan != None:
             while True:
                 finished = True
                 for (name, num) in plan:
                     for i in range(num):
                         try:
-                            next(self.graph.nodes[name]['attr_dict']['operator'])
+                            next(self.nodes[name])
                             finished = False
                         except StopIteration:
                             break
@@ -85,7 +79,7 @@ class GraphManager():
                     break
         else:
             if leaves == 'all':
-                leaves = copy.copy(self.graph.nodes.keys())
+                leaves = copy.copy(self.nodes.keys())
             ops = copy.copy(leaves)
             i = 0
             while True:
@@ -95,7 +89,7 @@ class GraphManager():
                     print(i, flush = True)
                 for name in ops:
                     try:
-                        next(self.graph.nodes[name]['attr_dict']['operator'])
+                        next(self.nodes[name])
                         finished = False
                     except StopIteration:
                         fops.append(name)
@@ -111,22 +105,16 @@ class GraphManager():
         
         return output
 
-    def draw(self):
-        nx.draw(self.graph)
-        plt.show()
-
     # do not allow overwriting -> maybe change later
     def add_operator(self, operator):
-        nodes = set(self.graph.nodes)
         name = operator.name
         dstreams = set(operator.input_names)
-        if name in self.graph.nodes:
+        if name in self.nodes:
             return False
         elif dstreams and not set(self.dstreams.keys()).issuperset(dstreams):
             return False
         else:
-            self.graph.add_node(name, attr_dict={'operator': operator})
-            #self.leaves.append(name)
+            self.nodes[name] = operator
             if operator.results != None:
                 self.dstreams.update(operator.results)
             return True

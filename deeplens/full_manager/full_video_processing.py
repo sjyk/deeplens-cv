@@ -18,15 +18,15 @@ class MapJoin():
         """
         Maps a batch of data to an intermediate data structure (temp)
         """
-        raise NotImplemented("MapJoin must implement a map function")
+        raise NotImplementedError("MapJoin must implement a map function")
     def join(self, map1, map2):
         """
         Returns the final output given the temp of current batch, and the temp
         of previous batch
         """
-        raise NotImplemented("MapJoin must implement a join function")
+        raise NotImplementedError("MapJoin must implement a join function")
     def initialize(self, data):
-        raise NotImplemented("MapJoin must implement an initialize function")
+        raise NotImplementedError("MapJoin must implement an initialize function")
 
 """ Defines a video splitter operation - Not Used
 """
@@ -38,18 +38,20 @@ class Splitter():
         """
         Maps a batch of data to an intermediate data structure (temp)
         """
-        raise NotImplemented("MapJoin must implement a map function")
+        raise NotImplementedError("MapJoin must implement a map function")
     def join(self):
         """
         Returns the final output given the temp of current batch, and the temp
         of previous batch
         """
-        raise NotImplemented("MapJoin must implement a join function")
+        raise NotImplementedError("MapJoin must implement a join function")
     def initialize(self):
-        raise NotImplemented("MapJoin must implement an initialize function")
+        raise NotImplementedError("MapJoin must implement an initialize function")
+
 
 """ Creates a crop across different frames
     data: bounding boxes across different frames
+    NOTE: These splitters need to be re-tested because of API changes?
 """
 class IoUSplitter(Splitter):
     def __init__(self, iou = 0.2, tran = 0.05):

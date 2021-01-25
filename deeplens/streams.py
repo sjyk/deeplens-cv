@@ -20,22 +20,22 @@ class DataStream():
         self.ttype = ttype
 
     def add_iter(self, op_name):
-        raise NotImplemented("__iter__ implemented")
+        raise NotImplementedError("__iter__ implemented")
     
     def next(self, op_name):
-        raise NotImplemented("__iter__ implemented")
+        raise NotImplementedError("__iter__ implemented")
     
     @staticmethod
     def init_mat():
-        raise NotImplemented("init_mat not implemented")
+        raise NotImplementedError("init_mat not implemented")
 
     @staticmethod
     def append(data, prev):
-        raise NotImplemented("append not implemented")
+        raise NotImplementedError("append not implemented")
 
     @staticmethod
     def materialize(self, data):
-        raise NotImplemented("materialize not implemented")
+        raise NotImplementedError("materialize not implemented")
 
 class JSONListStream(DataStream):
     def __init__(self, data, name, limit = -1, is_file = False, is_list = False, ttype = 'frame'):

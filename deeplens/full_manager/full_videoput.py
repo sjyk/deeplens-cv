@@ -87,7 +87,7 @@ class PutCropOp(Operator):
                 CVVideoStream.append(fr, self.writers[j + 1])
             
             fdata = reverse_crop(frame, crops)
-            data_scaled = cv2.resize(fdata, self.scoor) 
+            #data_scaled = cv2.resize(fdata, self.scoor) 
             CVVideoStream.append(fdata, self.writers[0])
             
             self.curr_index += 1

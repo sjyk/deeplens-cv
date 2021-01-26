@@ -19,7 +19,7 @@ from deeplens.dataflow.feedback import *
 from deeplens.full_manager.full_header_helper import *
 
 import os
-import sqlite3
+import psycopg2
 import logging
 from multiprocessing import Pool
 import time
@@ -34,34 +34,35 @@ class FullStorageManager():
     is in the same location as disk, and external storage is another
     directory
     """
-    def __init__(self, content_tagger, content_splitter, basedir, db_name='header.db', reuse_conn = True):
+    def __init__(self, content_tagger, content_splitter, local_dir, remote_dir, dsn='dbname=header user=postgres password=secret host=127.0.0.1', reuse_conn=True):
         self.tagger = content_tagger
         self.splitter = content_splitter
-        self.basedir = basedir
+        self.local_dir = local_dir  # the folder of video files on local disk, e.g. /var/www/html/videos
+        self.remote_dir = remote_dir  # url to the video folder accessible by other machines, e.g. http://10.0.0.5/videos
+        self.dsn = dsn
         self.videos = set()
         self.threads = None
-        self.db_name =  db_name
         self.reuse_conn = reuse_conn
 
-        if not os.path.exists(basedir):
+        if not os.path.exists(local_dir):
             try:
-                os.makedirs(basedir)
+                os.makedirs(local_dir)
             except:
-                raise ManagerIOError("Cannot create the directory: " + str(basedir))
+                raise ManagerIOError("Cannot create the directory: " + str(local_dir))
 
 
         self.conn = self.create_conn()
         self.cursor = self.conn.cursor()
         sql_create_background_table = """CREATE TABLE IF NOT EXISTS background (
-                                             background_id integer NOT NULL,
-                                             clip_id integer NOT NULL,
+                                             background_id bigint NOT NULL,
+                                             clip_id bigint NOT NULL,
                                              video_name text NOT NULL,
-                                             PRIMARY KEY (background_id, clip_id, video_name)
-                                             FOREIGN KEY (background_id, clip_id, video_name) REFERENCES clip(clip_id, clip_id, video_name)
+                                             PRIMARY KEY (background_id, clip_id, video_name),
+                                             FOREIGN KEY (clip_id, video_name) REFERENCES clip(clip_id, video_name) ON DELETE CASCADE
                                          );
         """
         sql_create_clip_table = """CREATE TABLE IF NOT EXISTS clip (
-                                       clip_id integer NOT NULL,
+                                       clip_id bigint NOT NULL,
                                        video_name text NOT NULL,
                                        start_frame integer NOT NULL,
                                        end_frame integer NOT NULL,
@@ -74,7 +75,7 @@ class FullStorageManager():
                                        width integer NOT NULL,
                                        height integer NOT NULL,
                                        video_ref text NOT NULL,
-                                       is_background NOT NULL,
+                                       is_background integer NOT NULL,
                                        translation text,
                                        PRIMARY KEY (clip_id, video_name)
                                    );
@@ -83,20 +84,20 @@ class FullStorageManager():
                                        label text NOT NULL,
                                        value text,
                                        bbox text,
-                                       clip_id integer NOT NULL,
+                                       clip_id bigint NOT NULL,
                                        video_name text NOT NULL,
                                        type text NOT NULL,
-                                       frame integer, 
-                                       FOREIGN KEY (clip_id, video_name) REFERENCES clip(clip_id, video_name)
+                                       frame integer,
+                                       PRIMARY KEY (label, clip_id, video_name),
+                                       FOREIGN KEY (clip_id, video_name) REFERENCES clip(clip_id, video_name) ON DELETE CASCADE
                                    );
         """
-        #PRIMARY KEY (label, clip_id, video_name)
         sql_create_lineage_table = """CREATE TABLE IF NOT EXISTS lineage (
                                        video_name text NOT NULL,
                                        lineage text NOT NULL,
                                        parent text NOT NULL,
-                                       PRIMARY KEY (video_name)
-                                       FOREIGN KEY (video_name) REFERENCES clip(video_name)
+                                       PRIMARY KEY (video_name),
+                                       FOREIGN KEY (video_name) REFERENCES clip(video_name) ON DELETE CASCADE
                                    );
         """
         self.cursor.execute(sql_create_label_table)
@@ -124,7 +125,7 @@ class FullStorageManager():
 
 
     def create_conn(self):
-        return sqlite3.connect(os.path.join(self.basedir, self.db_name))
+        return psycopg2.connect(self.dsn)
 
     def get_conn(self):
         conn = self.conn
@@ -154,11 +155,11 @@ class FullStorageManager():
         self.delete(name, conn)
         
         if fixed:
-                tagger = None
+            tagger = None
         else:
             tagger = self.tagger
         
-        write_video_single(conn, vstream, name, self.basedir, self.splitter, tagger, args, map_streams, aux_streams, fixed, start_time)
+        write_video_single(conn, vstream, name, self.local_dir, self.remote_dir, self.splitter, tagger, args, map_streams, aux_streams, fixed, start_time)
         
         self.videos.add(name)
 

@@ -15,7 +15,7 @@ from deeplens.utils.constants import *
 from deeplens.cache_streams import *
 import json
 
-import sqlite3
+import psycopg2
 import random
 
 
@@ -342,7 +342,7 @@ class ConvertSplit(Operator):
         self.results[self.output_names[0]].insert((crops, do_join))        
         return self.index
 
-def write_video_single(conn, vstream, name, base_dir, splitter, tagger, args, map_streams, aux_streams, fixed, start_time = 0):
+def write_video_single(conn, vstream, name, local_dir, remote_dir, splitter, tagger, args, map_streams, aux_streams, fixed, start_time = 0):
     # get vstream
     if type(vstream) == int:
             stream = CVRealVideoStream(vstream, 'video', args['limit'],offset=args['offset'])
@@ -352,11 +352,11 @@ def write_video_single(conn, vstream, name, base_dir, splitter, tagger, args, ma
             return None
         stream = CVVideoStream(vstream, 'video', args['limit'], offset=args['offset'])
     else:
-        stream = stream
+        stream = vstream
 
     #
     if type(conn) == str:
-        conn = sqlite3.Connection(conn)
+        conn = psycopg2.connect(conn)
     batch_size = args['batch_size']
 
     manager = GraphManager()
@@ -386,20 +386,20 @@ def write_video_single(conn, vstream, name, base_dir, splitter, tagger, args, ma
         lnames.append('video')
         manager.add_operator(ConvertMap('map', tagger, batch_size, input_names=lnames))
         manager.add_operator(ConvertSplit('crops', splitter))
-        manager.add_operator(PutCropOp('put', name, args, start_time, base_dir))
+        manager.add_operator(PutCropOp('put', name, args, start_time, local_dir))
     elif not fixed:
         manager.add_operator(ConvertMap('map', tagger, batch_size, input_names=['video']))
         manager.add_operator(ConvertSplit('crops', splitter))
-        manager.add_operator(PutCropOp('put', name, args, start_time, base_dir))
+        manager.add_operator(PutCropOp('put', name, args, start_time, local_dir))
     
     elif map_streams != None and fixed:
         if len(map_streams) > 1:
             raise ValueError('map_streams can only take one stream (crops) when it is fixed')
         lnames = ['video', list(map_streams.keys())[0]]
-        ret = manager.add_operator(PutCropOp('put', name, args, start_time, base_dir, input_names=lnames))
+        ret = manager.add_operator(PutCropOp('put', name, args, start_time, local_dir, input_names=lnames))
     
     else:
-        ret = manager.add_operator(PutOp('put', name, args, start_time, base_dir))
+        ret = manager.add_operator(PutOp('put', name, args, start_time, remote_dir))
         
     manager.add_operator(HeaderOp('headers', conn, name))
     if not fixed:

@@ -25,7 +25,8 @@ def main(inputs, block_size=60):
         while count * block_size < length:
             input_name = os.path.splitext(input_file)[0] # remove extension of input filename
             output_file = input_name + '_part'+str(count+1)+'.mp4'
-            subprocess.call(['ffmpeg', '-i', input_file, '-ss', str(count * block_size), '-t', str((count + 1) * block_size), output_file])
+            subprocess.call(['ffmpeg', '-i', input_file, '-ss', str(count * block_size),
+                             '-t', str((count + 1) * block_size), '-c', 'copy', output_file])
             channel.basic_publish(exchange='', routing_key='deeplens', body=output_file)
             print(" [x] Sent " + output_file)
             count += 1

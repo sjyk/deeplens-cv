@@ -58,8 +58,10 @@ def main():
     def callback(ch, method, properties, body):
         print(datetime.datetime.now(), "[x] Received %r" % body)
         runFullPut(body.decode("utf-8"), batch_size=72)
+        print(datetime.datetime.now(), "[x] Done %r" % body)
+        ch.basic_ack(delivery_tag=method.delivery_tag)
 
-    channel.basic_consume(queue='deeplens', on_message_callback=callback, auto_ack=True)
+    channel.basic_consume(queue='deeplens', on_message_callback=callback, auto_ack=False)
     channel.start_consuming()
 
 

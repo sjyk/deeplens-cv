@@ -55,8 +55,7 @@ class FullStorageManager(StorageManager):
                                              background_id bigint NOT NULL,
                                              clip_id bigint NOT NULL,
                                              video_name text NOT NULL,
-                                             PRIMARY KEY (background_id, clip_id, video_name),
-                                             FOREIGN KEY (clip_id, video_name) REFERENCES clip(clip_id, video_name) ON DELETE CASCADE
+                                             PRIMARY KEY (background_id, clip_id, video_name)
                                          );
         """
         sql_create_clip_table = """CREATE TABLE IF NOT EXISTS clip (
@@ -79,8 +78,7 @@ class FullStorageManager(StorageManager):
                                        label text NOT NULL,
                                        clip_id bigint NOT NULL,
                                        video_name text NOT NULL,
-                                       PRIMARY KEY (label, clip_id, video_name),
-                                       FOREIGN KEY (clip_id, video_name) REFERENCES clip(clip_id, video_name) ON DELETE CASCADE
+                                       PRIMARY KEY (label, clip_id, video_name)
                                    );
         """
         self.cursor.execute(sql_create_clip_table)

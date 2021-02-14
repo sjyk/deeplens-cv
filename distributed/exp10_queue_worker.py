@@ -44,13 +44,13 @@ def runFullPut(src, batch_size=20):
                           'batch_size': batch_size, 'num_processes': 4, 'background_scale': 1})
         put_time = timer() - now
         print("Put time for full:", put_time)
-        print("Batch size:", batch_size, "Folder size:", get_size(local_folder))
+        # print("Batch size:", batch_size, "Folder size:", get_size(local_folder))
 
     put()
 
 
 def main():
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='10.0.0.4', heartbeat=7200))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='10.0.0.4', heartbeat=600))
     channel = connection.channel()
 
     channel.queue_declare(queue='deeplens')

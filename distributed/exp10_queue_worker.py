@@ -1,6 +1,7 @@
 import os
 import pika
 import sys
+import datetime
 from timeit import default_timer as timer
 
 import environ
@@ -24,17 +25,17 @@ def fixed_tagger(vstream, batch_size):
             break
     if count == 0:
         raise StopIteration("Iterator is closed")
-    return {'label': 'foreground', 'bb': Box(1600/3, 1600/3, 2175/3, 1800/3)}
+    return {'label': 'foreground', 'bb': Box(1600, 1600, 2175, 1800)}
 
 
 def runFullPut(src, batch_size=20):
     # local_folder = '/var/www/html/videos'
     # ip_addr = get_local_ip()
     # remote_folder = 'http://' + ip_addr + '/videos'
-    local_folder = './videos'
-    remote_folder = './videos'
+    local_folder = '/shared/db/'
+    remote_folder = '/shared/db/'
     manager = FullStorageManager(CustomTagger(fixed_tagger, batch_size=batch_size), NullSplitter(),
-                                 local_folder, remote_folder, dsn='dbname=header user=swjz password=deeplens host=127.0.0.1')
+                                 local_folder, remote_folder, dsn='dbname=header user=postgres password=deeplens host=10.0.0.4')
 
     def put():
         now = timer()
@@ -49,13 +50,13 @@ def runFullPut(src, batch_size=20):
 
 
 def main():
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='10.0.0.4', heartbeat=7200))
     channel = connection.channel()
 
     channel.queue_declare(queue='deeplens')
 
     def callback(ch, method, properties, body):
-        print(" [x] Received %r" % body)
+        print(datetime.datetime.now(), "[x] Received %r" % body)
         runFullPut(body.decode("utf-8"), batch_size=72)
 
     channel.basic_consume(queue='deeplens', on_message_callback=callback, auto_ack=True)

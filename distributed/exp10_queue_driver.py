@@ -2,6 +2,7 @@ import os
 import sys
 import pika
 import subprocess
+import datetime
 
 import environ
 
@@ -15,7 +16,7 @@ def get_video_length(filename):
 
 def main(inputs, block_size=60):
     connection = pika.BlockingConnection(
-        pika.ConnectionParameters(host='localhost'))
+        pika.ConnectionParameters(host='localhost', heartbeat=7200))
     channel = connection.channel()
     channel.queue_declare(queue='deeplens')
 
@@ -26,8 +27,8 @@ def main(inputs, block_size=60):
             input_name = os.path.splitext(input_file)[0] # remove extension of input filename
             extension = os.path.splitext(input_file)[1] if len(os.path.splitext(input_file)) > 1 else ''
             output_file = input_name + '_part' + str(count + 1) + extension
-            subprocess.call(['ffmpeg', '-i', input_file, '-ss', str(count * block_size),
-                             '-t', str((count + 1) * block_size), '-c', 'copy', '-strict', '-2', output_file])
+            subprocess.call(['ffmpeg', '-ss', str(count * block_size), '-i', input_file,
+                             '-t', str(block_size), '-c', 'copy', '-strict', '-2', output_file])
             channel.basic_publish(exchange='', routing_key='deeplens', body=output_file)
             print(" [x] Sent " + output_file)
             count += 1
@@ -40,8 +41,10 @@ if __name__ == '__main__':
         print("Usage: python3 exp10_queue_driver.py block_size file1.mp4 file2.mp4 ...")
         sys.exit(0)
     try:
+        print(datetime.datetime.now())
         inputs = sys.argv[2:]
         main(inputs=inputs, block_size=int(sys.argv[1]))
+        print(datetime.datetime.now())
     except KeyboardInterrupt:
         print('Interrupted')
         try:

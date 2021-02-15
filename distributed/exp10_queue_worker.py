@@ -50,8 +50,9 @@ def runFullPut(src, batch_size=20):
 
 
 def main():
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='10.0.0.4', heartbeat=600))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='10.0.0.4', heartbeat=900))
     channel = connection.channel()
+    channel.basic_qos(prefetch_count=1)
 
     channel.queue_declare(queue='deeplens')
 

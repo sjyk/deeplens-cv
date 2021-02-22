@@ -137,7 +137,8 @@ def _write_video_batch(vstream,
                        remote_dir,
                        frame_rate=-1,
                        release=True,
-                       writers=None):
+                       writers=None,
+                       azure=False):
     '''
     Private function which processes and stores a batch of video frames
     Arguments:
@@ -192,6 +193,20 @@ def _write_video_batch(vstream,
                                           (width, height),
                                           True)
             out_vids.append(out_vid)
+
+            # write to azure blob storage
+            if azure:
+                from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
+                connect_str = os.getenv('AZURE_STORAGE_CONNECTION_STRING')
+                # Create the BlobServiceClient object which will be used to create a container client
+                blob_service_client = BlobServiceClient.from_connection_string(connect_str)
+                container_client = blob_service_client.get_container_client(vid_name)
+                blob_client = blob_service_client.get_blob_client(container=vid_name, blob=file_name)
+                print("\nUploading to Azure Storage as blob:\n\t" + file_name)
+
+                # Upload the video file
+                with open(file_name, "rb") as data:
+                    blob_client.upload_blob(data)
     else:
         out_vids = writers
     index = 0

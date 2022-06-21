@@ -1,5 +1,5 @@
 pika==1.1.0
-numpy==1.17.2
+numpy==1.22.0
 opencv-python==4.1.1.26
 absl-py==0.8.0
 astor==0.8.0
